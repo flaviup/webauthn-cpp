@@ -30,6 +30,7 @@ project "webauthn-cpp"
 
     links {
         "cbor",
+        "nlohmann-json",
         "sodium",
         "ssl"
     }
