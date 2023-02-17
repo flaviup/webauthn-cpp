@@ -10,12 +10,22 @@
 #define WEBAUTHN_PROTOCOL_BASE64_IPP
 
 #include <cstdint>
+#include <string>
+#include "../../cpp-base64/base64.h"
 
 #pragma GCC visibility push(default)
 
 namespace WebAuthN::Protocol {
 
-    using URLEncodedBase64 = uint8_t[];
+    using URLEncodedBase64 = std::string;
+
+    inline URLEncodedBase64 JsonToURLEncodedBase64(const std::string& json) {
+        return base64_encode(json, true);
+    }
+
+    inline std::string URLEncodedBase64ToJson(const URLEncodedBase64& encoded) {
+        return base64_decode(encoded);
+    }
 
 } // namespace WebAuthN::Protocol
 
