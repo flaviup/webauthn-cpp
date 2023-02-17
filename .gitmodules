@@ -1,0 +1,4 @@
+[submodule "cpp-base64"]
+	path = cpp-base64
+	url = https://github.com/flaviup/cpp-base64.git
+	branch = minimal
