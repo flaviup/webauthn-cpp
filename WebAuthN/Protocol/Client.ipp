@@ -199,7 +199,7 @@ namespace WebAuthN::Protocol {
         std::optional<TokenBindingType> TokenBinding; //*TokenBinding
 
         // Chromium (Chrome) returns a hint sometimes about how to handle clientDataJSON in a safe manner.
-        std::optional<std::string> Hint; // `json:"new_keys_may_be_added_here,omitempty"`
+        std::optional<std::string> Hint;
     };
 
     inline void to_json(json& j, const CollectedClientDataType& collectedClientData) {
