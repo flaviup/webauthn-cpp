@@ -17,7 +17,6 @@
 #include "Core.ipp"
 #include "Authenticator.ipp"
 #include "Extensions.ipp"
-#include "../../expected.hh"
 
 #pragma GCC visibility push(default)
 

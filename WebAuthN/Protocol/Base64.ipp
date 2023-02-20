@@ -9,7 +9,6 @@
 #ifndef WEBAUTHN_PROTOCOL_BASE64_IPP
 #define WEBAUTHN_PROTOCOL_BASE64_IPP
 
-#include <cstdint>
 #include <string>
 #include "../../cpp-base64/base64.h"
 

@@ -17,8 +17,6 @@
 #include <nlohmann/json.hpp>
 #include "Base64.ipp"
 #include "Core.ipp"
-#include "Errors.ipp"
-#include "../../expected.hh"
 
 #pragma GCC visibility push(default)
 
