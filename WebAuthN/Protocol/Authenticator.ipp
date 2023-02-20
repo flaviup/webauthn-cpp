@@ -303,6 +303,7 @@ namespace WebAuthN::Protocol {
     // map AuthenticatorAttachmentType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorAttachmentType, {
         {AuthenticatorAttachmentType::Invalid, nullptr},
+        {AuthenticatorAttachmentType::Invalid, ""},
         {AuthenticatorAttachmentType::Platform, "platform"},
         {AuthenticatorAttachmentType::CrossPlatform, "cross-platform"}
     })
@@ -382,6 +383,7 @@ namespace WebAuthN::Protocol {
     // map AuthenticatorTransportType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorTransportType, {
         {AuthenticatorTransportType::Invalid, nullptr},
+        {AuthenticatorTransportType::Invalid, ""},
         {AuthenticatorTransportType::USB, "usb"},
         {AuthenticatorTransportType::NFC, "nfc"},
         {AuthenticatorTransportType::BLE, "ble"},
@@ -412,6 +414,7 @@ namespace WebAuthN::Protocol {
     // map UserVerificationRequirementType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(UserVerificationRequirementType, {
         {UserVerificationRequirementType::Invalid, nullptr},
+        {UserVerificationRequirementType::Invalid, ""},
         {UserVerificationRequirementType::Required, "required"},
         {UserVerificationRequirementType::Preferred, "preferred"},
         {UserVerificationRequirementType::Discouraged, "discouraged"}
