@@ -36,7 +36,7 @@ namespace WebAuthN::Protocol {
             DevInfo(j["debug"].get<std::string>()) {
         }
 
-        explicit inline operator std::string() const {
+        explicit inline operator std::string() const noexcept {
             return Details; 
         }
 

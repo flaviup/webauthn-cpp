@@ -29,6 +29,7 @@ project "webauthn-cpp"
     }
 
     links {
+        "fmt",
         "nlohmann-json",
         "sodium",
         "ssl"

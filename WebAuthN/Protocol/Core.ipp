@@ -9,6 +9,8 @@
 #ifndef WEBAUTHN_PROTOCOL_CORE_IPP
 #define WEBAUTHN_PROTOCOL_CORE_IPP
 
+#define JSON_DISABLE_ENUM_SERIALIZATION 1
+
 #include <string>
 #include <vector>
 #include <optional>

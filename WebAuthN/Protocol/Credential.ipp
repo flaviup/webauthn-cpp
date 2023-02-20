@@ -52,7 +52,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialType& credential) {
         j = json{
             {"id", credential.ID},
-            {"type", credential.Type},
+            {"type", credential.Type}
         };
     }
 
@@ -81,7 +81,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const ParsedCredentialType& parsedCredential) {
         j = json{
             {"id", parsedCredential.ID},
-            {"type", parsedCredential.Type},
+            {"type", parsedCredential.Type}
         };
     }
 

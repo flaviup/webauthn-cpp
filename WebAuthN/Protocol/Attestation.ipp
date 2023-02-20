@@ -15,84 +15,18 @@
 #include <map>
 #include <optional>
 #include <tuple>
+#include <utility>
 #include <nlohmann/json.hpp>
 #include "Base64.ipp"
 #include "Extensions.ipp"
 #include "Credential.ipp"
+#include "Authenticator.ipp"
 
 #pragma GCC visibility push(default)
 
 namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
-
-    // AuthenticatorAttestationResponseType is the initial unpacked 'response' object received by the relying party. This
-    // contains the clientDataJSON object, which will be marshalled into CollectedClientDataType, and the 'attestationObject',
-    // which contains information about the authenticator, and the newly minted public key credential. The information in
-    // both objects are used to verify the authenticity of the ceremony and new credential.
-    //
-    // See: https://www.w3.org/TR/webauthn/#typedefdef-publickeycredentialjson
-    struct AuthenticatorAttestationResponseType : public AuthenticatorResponseType {
-
-        AuthenticatorAttestationResponseType() noexcept = default;
-        AuthenticatorAttestationResponseType(const json& j) :
-            AuthenticatorResponseType(j), // // The byte slice of clientDataJSON, which becomes CollectedClientData
-            AttestationObject(j["attestationObject"].get<URLEncodedBase64Type>()) {
-            
-            if (j.find("transports") != j.end()) {
-                Transports.emplace(j["transports"].get<std::vector<std::string>>());
-            }
-        }
-
-        // Parse the values returned in the authenticator response and perform attestation verification
-        // Step 8. This returns a fully decoded struct with the data put into a format that can be
-        // used to verify the user and credential that was created.
-        inline expected<ParsedAttestationResponse> Parse() const {
-        }
-
-        // AttestationObject is the byte slice version of attestationObject.
-        // This attribute contains an attestation object, which is opaque to, and
-        // cryptographically protected against tampering by, the client. The
-        // attestation object contains both authenticator data and an attestation
-        // statement. The former contains the AAGUID, a unique credential ID, and
-        // the credential public key. The contents of the attestation statement are
-        // determined by the attestation statement format used by the authenticator.
-        // It also contains any additional information that the Relying Party's server
-        // requires to validate the attestation statement, as well as to decode and
-        // validate the authenticator data along with the JSON-serialized client data.
-        URLEncodedBase64Type AttestationObject;
-        std::optional<std::vector<std::string>> Transports;
-    };
-
-    inline void to_json(json& j, const AuthenticatorAttestationResponseType& authenticatorAttestationResponse) {
-        json _j;
-        to_json(_j, static_cast<const AuthenticatorResponseType&>(authenticatorAttestationResponse));
-        _j["attestationObject"] = authenticatorAttestationResponse.AttestationObject;
-
-        if (authenticatorAttestationResponse.Transports) {
-            _j["transports"] = authenticatorAttestationResponse.Transports.value();
-        }
-        j = _j;
-    }
-
-    inline void from_json(const json& j, AuthenticatorAttestationResponseType& authenticatorAttestationResponse) {
-        from_json(j, static_cast<AuthenticatorResponseType&>(authenticatorAttestationResponse));
-        j.at("attestationObject").get_to(authenticatorAttestationResponse.AttestationObject);
-
-        if (j.find("transports") != j.end()) {
-            authenticatorAttestationResponse.Transports.emplace(j["transports"].get<std::vector<std::string>>());
-        }
-    }
-
-    // ParsedAttestationResponseType is the parsed version of AuthenticatorAttestationResponseType.
-    struct ParsedAttestationResponseType {
-        
-        ParsedAttestationResponseType() noexcept = default;
-
-        CollectedClientDataType CollectedClientData;
-        AttestationObjectType AttestationObject;
-        std::vector<AuthenticatorTransportType> Transports;
-    };
 
     // AttestationObjectType is the raw attestationObject.
     //
@@ -141,7 +75,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const AttestationObjectType& attestationObject) {
         j = json{
             {"authData", attestationObject.RawAuthData},
-            {"fmt", attestationObject.Format},
+            {"fmt", attestationObject.Format}
         };
 
         if (attestationObject.AttStatement) {
@@ -158,8 +92,75 @@ namespace WebAuthN::Protocol {
         }
     }
 
-    //type AttestationFormatValidationHandler func(AttestationObjectType, []byte) (string, []interface{}, error)
-    using AttestationFormatValidationHandlerType = std::string (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
+    // ParsedAttestationResponseType is the parsed version of AuthenticatorAttestationResponseType.
+    struct ParsedAttestationResponseType {
+        
+        ParsedAttestationResponseType() noexcept = default;
+
+        CollectedClientDataType CollectedClientData;
+        AttestationObjectType AttestationObject;
+        std::vector<AuthenticatorTransportType> Transports;
+    };
+
+    // AuthenticatorAttestationResponseType is the initial unpacked 'response' object received by the relying party. This
+    // contains the clientDataJSON object, which will be marshalled into CollectedClientDataType, and the 'attestationObject',
+    // which contains information about the authenticator, and the newly minted public key credential. The information in
+    // both objects are used to verify the authenticity of the ceremony and new credential.
+    //
+    // See: https://www.w3.org/TR/webauthn/#typedefdef-publickeycredentialjson
+    struct AuthenticatorAttestationResponseType : public AuthenticatorResponseType {
+
+        AuthenticatorAttestationResponseType() noexcept = default;
+        AuthenticatorAttestationResponseType(const json& j) :
+            AuthenticatorResponseType(j), // // The byte slice of clientDataJSON, which becomes CollectedClientData
+            AttestationObject(j["attestationObject"].get<URLEncodedBase64Type>()) {
+            
+            if (j.find("transports") != j.end()) {
+                Transports.emplace(j["transports"].get<std::vector<std::string>>());
+            }
+        }
+
+        // Parse the values returned in the authenticator response and perform attestation verification
+        // Step 8. This returns a fully decoded struct with the data put into a format that can be
+        // used to verify the user and credential that was created.
+        inline expected<ParsedAttestationResponseType> Parse() const {
+        }
+
+        // AttestationObject is the byte slice version of attestationObject.
+        // This attribute contains an attestation object, which is opaque to, and
+        // cryptographically protected against tampering by, the client. The
+        // attestation object contains both authenticator data and an attestation
+        // statement. The former contains the AAGUID, a unique credential ID, and
+        // the credential public key. The contents of the attestation statement are
+        // determined by the attestation statement format used by the authenticator.
+        // It also contains any additional information that the Relying Party's server
+        // requires to validate the attestation statement, as well as to decode and
+        // validate the authenticator data along with the JSON-serialized client data.
+        URLEncodedBase64Type AttestationObject;
+        std::optional<std::vector<std::string>> Transports;
+    };
+
+    inline void to_json(json& j, const AuthenticatorAttestationResponseType& authenticatorAttestationResponse) {
+        json _j;
+        to_json(_j, static_cast<const AuthenticatorResponseType&>(authenticatorAttestationResponse));
+        _j["attestationObject"] = authenticatorAttestationResponse.AttestationObject;
+
+        if (authenticatorAttestationResponse.Transports) {
+            _j["transports"] = authenticatorAttestationResponse.Transports.value();
+        }
+        j = _j;
+    }
+
+    inline void from_json(const json& j, AuthenticatorAttestationResponseType& authenticatorAttestationResponse) {
+        from_json(j, static_cast<AuthenticatorResponseType&>(authenticatorAttestationResponse));
+        j.at("attestationObject").get_to(authenticatorAttestationResponse.AttestationObject);
+
+        if (j.find("transports") != j.end()) {
+            authenticatorAttestationResponse.Transports.emplace(j["transports"].get<std::vector<std::string>>());
+        }
+    }
+
+    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::any>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
 
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
 

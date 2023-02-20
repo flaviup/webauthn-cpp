@@ -17,6 +17,7 @@
 #include "Errors.ipp"
 #include "Extensions.ipp"
 #include "Credential.ipp"
+#include "Authenticator.ipp"
 
 #pragma GCC visibility push(default)
 
