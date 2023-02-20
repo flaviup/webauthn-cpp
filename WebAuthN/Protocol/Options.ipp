@@ -48,6 +48,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.8.3. Credential Descriptor (https://www.w3.org/TR/webauthn/#dictionary-credential-descriptor)
     enum class CredentialTypeType {
+
         // PublicKey - Currently one credential type is defined, namely "public-key".
         PublicKey,
         Invalid // Invalid value
@@ -75,6 +76,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialParameterType& credentialParameter) {
+
         j = json{
             {"type", credentialParameter.Type},
             {"alg", credentialParameter.Algorithm}
@@ -82,6 +84,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CredentialParameterType& credentialParameter) {
+
         j.at("type").get_to(credentialParameter.Type);
         j.at("alg").get_to(credentialParameter.Algorithm);
     }
@@ -119,6 +122,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialDescriptorType& credentialDescriptor) {
+
         j = json{
             {"type", credentialDescriptor.Type},
             {"id", credentialDescriptor.CredentialID}
@@ -130,6 +134,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CredentialDescriptorType& credentialDescriptor) {
+
         j.at("type").get_to(credentialDescriptor.Type);
         j.at("id").get_to(credentialDescriptor.CredentialID);
 
@@ -186,6 +191,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AuthenticatorSelectionType& authenticatorSelection) {
+
         j = json{};
 
         if (authenticatorSelection.AuthenticatorAttachment) {
@@ -231,6 +237,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.4.7. Attestation Conveyance Preference Enumeration (https://www.w3.org/TR/webauthn/#enum-attestation-convey)
     enum class ConveyancePreferenceType {
+
         // NoAttestation is a ConveyancePreferenceType value.
         //
         // This value indicates that the Relying Party is not interested in authenticator attestation. For example, in order
@@ -345,6 +352,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const PublicKeyCredentialCreationOptionsType& publicKeyCredentialCreationOptions) {
+
         j = json{
             {"rp", publicKeyCredentialCreationOptions.RelyingParty},
             {"user", publicKeyCredentialCreationOptions.User},
@@ -377,6 +385,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, PublicKeyCredentialCreationOptionsType& publicKeyCredentialCreationOptions) {
+
         j.at("rp").get_to(publicKeyCredentialCreationOptions.RelyingParty);
         j.at("user").get_to(publicKeyCredentialCreationOptions.User);
         j.at("challenge").get_to(publicKeyCredentialCreationOptions.Challenge);
@@ -465,6 +474,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const PublicKeyCredentialRequestOptionsType& publicKeyCredentialRequestOptions) {
+
         j = json{
             {"challenge", publicKeyCredentialRequestOptions.Challenge}
         };
@@ -491,6 +501,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, PublicKeyCredentialRequestOptionsType& publicKeyCredentialRequestOptions) {
+
         j.at("challenge").get_to(publicKeyCredentialRequestOptions.Challenge);
 
 
@@ -526,12 +537,14 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialCreationType& credentialCreation) {
+
         j = json{
             {"publicKey", credentialCreation.Response}
         };
     }
 
     inline void from_json(const json& j, CredentialCreationType& credentialCreation) {
+
         j.at("publicKey").get_to(credentialCreation.Response);
     }
 
@@ -546,16 +559,19 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialAssertionType& credentialAssertion) {
+
         j = json{
             {"publicKey", credentialAssertion.Response}
         };
     }
 
     inline void from_json(const json& j, CredentialAssertionType& credentialAssertion) {
+
         j.at("publicKey").get_to(credentialAssertion.Response);
     }
 
     enum class ServerResponseStatusType {
+
         Ok,
         Failed,
         Invalid  // Invalid value
@@ -582,6 +598,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const ServerResponseType& serverResponse) {
+
         j = json{
             {"status", serverResponse.Status},
             {"errorMessage", serverResponse.Message}
@@ -589,6 +606,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, ServerResponseType& serverResponse) {
+
         j.at("status").get_to(serverResponse.Status);
         j.at("errorMessage").get_to(serverResponse.Message);
     }

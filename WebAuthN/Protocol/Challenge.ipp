@@ -31,7 +31,6 @@ namespace WebAuthN::Protocol {
 
         return JsonToURLEncodedBase64(std::string(challenge));
     }
-
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop

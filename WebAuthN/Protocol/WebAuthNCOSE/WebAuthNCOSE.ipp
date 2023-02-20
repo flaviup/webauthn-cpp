@@ -27,6 +27,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     //
     // Specification: §5.8.5. Cryptographic Algorithm Identifier (https://www.w3.org/TR/webauthn/#sctn-alg-identifier)
     enum class COSEAlgorithmIdentifierType : int {
+
         // AlgES256 ECDSA with SHA-256.
         AlgES256 = -7,
 

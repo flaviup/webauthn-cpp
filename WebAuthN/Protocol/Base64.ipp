@@ -19,10 +19,12 @@ namespace WebAuthN::Protocol {
     using URLEncodedBase64Type = std::string;
 
     inline URLEncodedBase64Type JsonToURLEncodedBase64(const std::string& json) {
+
         return base64_encode(json, true);
     }
 
     inline std::string URLEncodedBase64ToJson(const URLEncodedBase64Type& encoded) {
+
         return base64_decode(encoded);
     }
 

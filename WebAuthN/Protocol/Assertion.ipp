@@ -36,6 +36,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialAssertionResponseType& credentialAssertionResponse) {
+
         json _j;
         to_json(_j, static_cast<const PublicKeyCredentialType&>(credentialAssertionResponse));
         _j["response"] = credentialAssertionResponse.AssertionResponse;
@@ -43,6 +44,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CredentialAssertionResponseType& credentialAssertionResponse) {
+
         from_json(j, static_cast<PublicKeyCredentialType&>(credentialAssertionResponse));
         j.at("response").get_to(credentialAssertionResponse.AssertionResponse);
     }
@@ -72,10 +74,12 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const ParsedCredentialAssertionDataType& parsedCredentialAssertionData) {
+
         to_json(j, static_cast<const ParsedPublicKeyCredentialType&>(parsedCredentialAssertionData));
     }
 
     inline void from_json(const json& j, ParsedCredentialAssertionDataType& parsedCredentialAssertionData) {
+
         from_json(j, static_cast<ParsedPublicKeyCredentialType&>(parsedCredentialAssertionData));
     }
 
@@ -100,6 +104,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AuthenticatorAssertionResponseType& authenticatorAssertionResponse) {
+
         json _j;
         to_json(_j, static_cast<const AuthenticatorResponseType&>(authenticatorAssertionResponse));
         _j["authenticatorData"] = authenticatorAssertionResponse.AuthenticatorData;
@@ -112,6 +117,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, AuthenticatorAssertionResponseType& authenticatorAssertionResponse) {
+
         from_json(j, static_cast<AuthenticatorResponseType&>(authenticatorAssertionResponse));
         j.at("authenticatorData").get_to(authenticatorAssertionResponse.AuthenticatorData);
 

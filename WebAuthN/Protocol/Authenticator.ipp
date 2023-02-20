@@ -48,12 +48,14 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AuthenticatorResponseType& authenticatorResponse) {
+
         j = json{
             {"clientDataJSON", authenticatorResponse.ClientDataJSON}
         };
     }
 
     inline void from_json(const json& j, AuthenticatorResponseType& authenticatorResponse) {
+
         j.at("clientDataJSON").get_to(authenticatorResponse.ClientDataJSON);
     }
 
@@ -88,6 +90,7 @@ namespace WebAuthN::Protocol {
         // The authenticator data structure is a byte array of 37 bytes or more, and is laid out in this table:
         // https://www.w3.org/TR/webauthn/#table-authData
         inline std::optional<ErrorType> Unmarshal(const std::vector<uint8_t>& rawAuthData) noexcept {
+
             /*if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
                 return ErrBadRequest.
                     WithDetails("Authenticator data length too short").
@@ -184,6 +187,7 @@ namespace WebAuthN::Protocol {
     private:
         // If Attestation Data is present, unmarshall that into the appropriate public key structure.
         inline std::optional<ErrorType> _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
+
             /*AttData.AAGUID = rawAuthData[37:53];
 
             auto idLength = binary.BigEndian.Uint16(rawAuthData[53:55]);
@@ -207,6 +211,7 @@ namespace WebAuthN::Protocol {
 
         // Unmarshall the credential's Public Key into CBOR encoding.
         inline static expected<std::vector<uint8_t>> _UnmarshalCredentialPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
+
             std::any m;
 
             /*auto exp = webauthncbor.Unmarshal(keyBytes, &m);
@@ -224,6 +229,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AuthenticatorDataType& authenticatorData) {
+
         j = json{
             {"rpid", authenticatorData.RPIDHash},
             {"flags", authenticatorData.Flags},
@@ -234,6 +240,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, AuthenticatorDataType& authenticatorData) {
+
         j.at("rpid").get_to(authenticatorData.RPIDHash);
         j.at("flags").get_to(authenticatorData.Flags);
         j.at("sign_count").get_to(authenticatorData.Counter);
@@ -258,6 +265,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AttestedCredentialDataType& attestedCredentialData) {
+
         j = json{
             {"aaguid", attestedCredentialData.AAGUID},
             {"credential_id", attestedCredentialData.CredentialID},
@@ -266,6 +274,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, AttestedCredentialDataType& attestedCredentialData) {
+
         j.at("aaguid").get_to(attestedCredentialData.AAGUID);
         j.at("credential_id").get_to(attestedCredentialData.CredentialID);
         j.at("public_key").get_to(attestedCredentialData.CredentialPublicKey);
@@ -286,6 +295,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.4.5. Authenticator Attachment Enumeration (https://www.w3.org/TR/webauthn/#enum-attachment)
     enum class AuthenticatorAttachmentType {
+
         // Platform represents a platform authenticator is attached using a client device-specific transport, called
         // platform attachment, and is usually not removable from the client device. A public key credential bound to a
         // platform authenticator is called a platform credential.
@@ -323,6 +333,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.4.6. Resident Key Requirement Enumeration (https://www.w3.org/TR/webauthn/#enumdef-residentkeyrequirement)
     enum class ResidentKeyRequirementType {
+
         // Discouraged indicates the Relying Party prefers creating a server-side credential, but will
         // accept a client-side discoverable credential. This is the default.
         Discouraged,
@@ -356,6 +367,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.8.4. Authenticator Transport Enumeration (https://www.w3.org/TR/webauthn/#enumdef-authenticatortransport)
     enum class AuthenticatorTransportType {
+
         // USB indicates the respective authenticator can be contacted over removable USB.
         USB,
 
@@ -398,6 +410,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.8.6. User Verification Requirement Enumeration (https://www.w3.org/TR/webauthn/#enum-userVerificationRequirement)
     enum class UserVerificationRequirementType {
+
         // Required User verification is required to create/release a credential
         Required,
 
@@ -461,10 +474,12 @@ namespace WebAuthN::Protocol {
     };
 
     inline constexpr enum AuthenticatorFlagsType operator |(const enum AuthenticatorFlagsType selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
+
         return static_cast<enum AuthenticatorFlagsType>(static_cast<uint8_t>(selfValue) | static_cast<uint8_t>(inValue));
     }
 
     inline constexpr enum AuthenticatorFlagsType& operator |=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
+
         return reinterpret_cast<enum AuthenticatorFlagsType&>(reinterpret_cast<uint8_t&>(selfValue) |= static_cast<uint8_t>(inValue));
     }
 

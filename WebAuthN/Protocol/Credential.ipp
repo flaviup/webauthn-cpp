@@ -49,6 +49,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialType& credential) {
+
         j = json{
             {"id", credential.ID},
             {"type", credential.Type}
@@ -56,6 +57,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CredentialType& credential) {
+
         j.at("id").get_to(credential.ID);
         j.at("type").get_to(credential.Type);
     }
@@ -78,6 +80,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const ParsedCredentialType& parsedCredential) {
+
         j = json{
             {"id", parsedCredential.ID},
             {"type", parsedCredential.Type}
@@ -85,6 +88,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, ParsedCredentialType& parsedCredential) {
+
         j.at("id").get_to(parsedCredential.ID);
         j.at("type").get_to(parsedCredential.Type);
     }
@@ -111,6 +115,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const PublicKeyCredentialType& publicKeyCredential) {
+
         json _j;
         to_json(_j, static_cast<const CredentialType&>(publicKeyCredential));
         _j["rawId"] = publicKeyCredential.RawID;
@@ -126,6 +131,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, PublicKeyCredentialType& publicKeyCredential) {
+
         from_json(j, static_cast<CredentialType&>(publicKeyCredential));
         j.at("rawId").get_to(publicKeyCredential.RawID);
 
@@ -171,6 +177,7 @@ namespace WebAuthN::Protocol {
         // 9. Return the appid extension value from the Session data.
         inline expected<std::string> GetAppID(const AuthenticationExtensionsType& authExt, 
             const std::string& credentialAttestationType) const {
+
             return std::string("");
         }
 
@@ -180,6 +187,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const ParsedPublicKeyCredentialType& parsedPublicKeyCredential) {
+
         json _j;
         to_json(_j, static_cast<const ParsedCredentialType&>(parsedPublicKeyCredential));
         _j["rawId"] = parsedPublicKeyCredential.RawID;
@@ -195,6 +203,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, ParsedPublicKeyCredentialType& parsedPublicKeyCredential) {
+
         from_json(j, static_cast<ParsedCredentialType&>(parsedPublicKeyCredential));
         j.at("rawId").get_to(parsedPublicKeyCredential.RawID);
 
@@ -227,6 +236,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialCreationResponseType& credentialCreationResponse) {
+
         json _j;
         to_json(_j, static_cast<const PublicKeyCredentialType&>(credentialCreationResponse));
         _j["response"] = credentialCreationResponse.AttestationResponse;
@@ -238,6 +248,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CredentialCreationResponseType& credentialCreationResponse) {
+
         from_json(j, static_cast<PublicKeyCredentialType&>(credentialCreationResponse));
         j.at("response").get_to(credentialCreationResponse.AttestationResponse);
 
@@ -268,10 +279,12 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const ParsedCredentialCreationDataType& parsedCredentialCreationData) {
+
         to_json(j, static_cast<const ParsedPublicKeyCredentialType&>(parsedCredentialCreationData));
     }
 
     inline void from_json(const json& j, ParsedCredentialCreationDataType& parsedCredentialCreationData) {
+
         from_json(j, static_cast<ParsedPublicKeyCredentialType&>(parsedCredentialCreationData));
     }
 } // namespace WebAuthN::Protocol

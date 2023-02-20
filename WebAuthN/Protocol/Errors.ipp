@@ -37,6 +37,7 @@ namespace WebAuthN::Protocol {
         }
 
         explicit inline operator std::string() const noexcept {
+
             return Details; 
         }
 
@@ -63,6 +64,7 @@ namespace WebAuthN::Protocol {
     };
 
     void to_json(json& j, const ErrorType& error) {
+
         j = json{
             {"type", error.Type}, 
             {"error", error.Details}, 
@@ -71,6 +73,7 @@ namespace WebAuthN::Protocol {
     }
 
     void from_json(const json& j, ErrorType& error) {
+
         j.at("type").get_to(error.Type);
         j.at("error").get_to(error.Details);
         j.at("debug").get_to(error.DevInfo);

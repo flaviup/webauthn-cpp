@@ -57,6 +57,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CredentialEntityType& credentialEntity) {
+
         j = json{
             {"name", credentialEntity.Name}
         };
@@ -67,6 +68,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CredentialEntityType& credentialEntity) {
+
         j.at("name").get_to(credentialEntity.Name);
 
         if (j.find("icon") != j.end()) {
@@ -91,6 +93,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const RelyingPartyEntityType& relyingPartyEntity) {
+
         json _j;
         to_json(_j, static_cast<const CredentialEntityType&>(relyingPartyEntity));
         _j["id"] = relyingPartyEntity.ID;
@@ -98,6 +101,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, RelyingPartyEntityType& relyingPartyEntity) {
+
         from_json(j, static_cast<CredentialEntityType&>(relyingPartyEntity));
         j.at("id").get_to(relyingPartyEntity.ID);
     }
@@ -131,6 +135,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const UserEntityType& userEntity) {
+
         json _j;
         to_json(_j, static_cast<const CredentialEntityType&>(userEntity));
         _j["id"] = userEntity.ID;
@@ -142,6 +147,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, UserEntityType& userEntity) {
+
         from_json(j, static_cast<CredentialEntityType&>(userEntity));
         j.at("id").get_to(userEntity.ID);
 

@@ -71,6 +71,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AttestationObjectType& attestationObject) {
+
         j = json{
             {"authData", attestationObject.RawAuthData},
             {"fmt", attestationObject.Format}
@@ -82,6 +83,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, AttestationObjectType& attestationObject) {
+
         j.at("authData").get_to(attestationObject.RawAuthData);
         j.at("fmt").get_to(attestationObject.Format);
 
@@ -139,6 +141,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const AuthenticatorAttestationResponseType& authenticatorAttestationResponse) {
+
         json _j;
         to_json(_j, static_cast<const AuthenticatorResponseType&>(authenticatorAttestationResponse));
         _j["attestationObject"] = authenticatorAttestationResponse.AttestationObject;
@@ -150,6 +153,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, AuthenticatorAttestationResponseType& authenticatorAttestationResponse) {
+
         from_json(j, static_cast<AuthenticatorResponseType&>(authenticatorAttestationResponse));
         j.at("attestationObject").get_to(authenticatorAttestationResponse.AttestationObject);
 
@@ -165,6 +169,7 @@ namespace WebAuthN::Protocol {
     // RegisterAttestationFormat is a method to register attestation formats with the library. Generally using one of the
     // locally registered attestation formats is sufficient.
     inline void RegisterAttestationFormat(const std::string& format, AttestationFormatValidationHandlerType handler) {
+
 	    ATTESTATION_REGISTRY[format] = handler;
     }
 } // namespace WebAuthN::Protocol

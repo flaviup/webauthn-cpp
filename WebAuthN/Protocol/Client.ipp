@@ -79,6 +79,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const TokenBindingType& tokenBinding) {
+
         j = json{
             {"status", tokenBinding.Status}
         };
@@ -89,6 +90,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, TokenBindingType& tokenBinding) {
+
         j.at("status").get_to(tokenBinding.Status);
 
         if (j.find("id") != j.end()) {
@@ -125,6 +127,7 @@ namespace WebAuthN::Protocol {
         inline  std::optional<ErrorType> Verify(const std::string& storedChallenge, 
             CeremonyType ceremony, 
             const std::vector<std::string>& rpOrigins) noexcept {
+
             // Registration Step 3. Verify that the value of C.type is webauthn.create.
 
             // Assertion Step 7. Verify that the value of C.type is the string webauthn.get.
@@ -204,6 +207,7 @@ namespace WebAuthN::Protocol {
     };
 
     inline void to_json(json& j, const CollectedClientDataType& collectedClientData) {
+
         j = json{
             {"type", collectedClientData.Type},
             {"challenge", collectedClientData.Challenge},
@@ -220,6 +224,7 @@ namespace WebAuthN::Protocol {
     }
 
     inline void from_json(const json& j, CollectedClientDataType& collectedClientData) {
+
         j.at("type").get_to(collectedClientData.Type);
         j.at("challenge").get_to(collectedClientData.Challenge);
         j.at("origin").get_to(collectedClientData.Origin);
@@ -235,6 +240,7 @@ namespace WebAuthN::Protocol {
 
     // FullyQualifiedOrigin returns the origin per the HTML spec: (scheme)://(host)[:(port)].
     inline expected<std::string> FullyQualifiedOrigin(const std::string& rawOrigin) noexcept {
+
         /*if strings.HasPrefix(rawOrigin, "android:apk-key-hash:") {
             return rawOrigin, nil
         }
@@ -253,7 +259,6 @@ namespace WebAuthN::Protocol {
 
         return origin.String(), nil*/
     }
-
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop
