@@ -15,7 +15,7 @@
 
 namespace WebAuthN::Protocol {
 
-    class PublicKeyCredentialCreationOptions {
+    class PublicKeyCredentialCreationOptionsType {
 
     };
 
