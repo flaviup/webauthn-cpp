@@ -17,10 +17,8 @@
 #include <tuple>
 #include <utility>
 #include <nlohmann/json.hpp>
-#include "Base64.ipp"
-#include "Extensions.ipp"
+#include "Client.ipp"
 #include "Credential.ipp"
-#include "Authenticator.ipp"
 
 #pragma GCC visibility push(default)
 

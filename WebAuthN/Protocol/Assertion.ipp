@@ -13,11 +13,8 @@
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
-#include "Base64.ipp"
-#include "Errors.ipp"
-#include "Extensions.ipp"
+#include "Client.ipp"
 #include "Credential.ipp"
-#include "Authenticator.ipp"
 
 #pragma GCC visibility push(default)
 
