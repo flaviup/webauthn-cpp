@@ -9,6 +9,7 @@
 #ifndef WEBAUTHN_PROTOCOL_WEBAUTHNCOSE_IPP
 #define WEBAUTHN_PROTOCOL_WEBAUTHNCOSE_IPP
 
+#include <any>
 #include <string>
 #include <vector>
 #include <optional>
