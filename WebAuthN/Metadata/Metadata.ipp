@@ -58,6 +58,95 @@ namespace WebAuthN::Metadata {
 	// Example from https://fidoalliance.org/specs/mds/fido-metadata-service-v3.0-ps-20210518.html
 	inline const std::string EXAMPLE_MDS_ROOT = "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";
 
+    // AuthenticatorAttestationType - The ATTESTATION constants are 16 bit long integers indicating the specific attestation that authenticator supports.
+    // Each constant has a case-sensitive string representation (in quotes), which is used in the authoritative metadata for FIDO authenticators.
+    enum class AuthenticatorAttestationType {
+
+        // BasicFull - Indicates full basic attestation, based on an attestation private key shared among a class of authenticators (e.g. same model). Authenticators must provide its attestation signature during the registration process for the same reason. The attestation trust anchor is shared with FIDO Servers out of band (as part of the Metadata). This sharing process should be done according to [UAFMetadataService].
+        BasicFull,
+        // BasicSurrogate - Just syntactically a Basic Attestation. The attestation object self-signed, i.e. it is signed using the UAuth.priv key, i.e. the key corresponding to the UAuth.pub key included in the attestation object. As a consequence it does not provide a cryptographic proof of the security characteristics. But it is the best thing we can do if the authenticator is not able to have an attestation private key.
+        BasicSurrogate,
+        // Ecdaa - Indicates use of elliptic curve based direct anonymous attestation as defined in [FIDOEcdaaAlgorithm]. Support for this attestation type is optional at this time. It might be required by FIDO Certification.
+        Ecdaa,
+        // AttCA - Indicates PrivacyCA attestation as defined in [TCG-CMCProfile-AIKCertEnroll]. Support for this attestation type is optional at this time. It might be required by FIDO Certification.
+        AttCA,
+        // AnonCA In this case, the authenticator uses an Anonymization CA which dynamically generates per-credential attestation certificates such that the attestation statements presented to Relying Parties do not provide uniquely identifiable information, e.g., that might be used for tracking purposes. The applicable [WebAuthn] attestation formats "fmt" are Google SafetyNet Attestation "android-safetynet", Android Keystore Attestation "android-key", Apple Anonymous Attestation "apple", and Apple Application Attestation "apple-appattest".
+        AnonCA,
+        // None - Indicates absence of attestation
+        None,
+        Invalid
+    };
+
+    // map AuthenticatorAttestationType values to JSON as strings
+    NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorAttestationType, {
+        {AuthenticatorAttestationType::Invalid, nullptr},
+        {AuthenticatorAttestationType::Invalid, ""},
+        {AuthenticatorAttestationType::BasicFull, "basic_full"},
+        {AuthenticatorAttestationType::BasicSurrogate, "basic_surrogate"},
+        {AuthenticatorAttestationType::Ecdaa, "ecdaa"},
+        {AuthenticatorAttestationType::AttCA, "attca"},
+        {AuthenticatorAttestationType::AnonCA, "anonca"},
+        {AuthenticatorAttestationType::None, "none"}
+    })
+
+    // AuthenticatorStatusType - This enumeration describes the status of an authenticator model as identified by its AAID and potentially some additional information (such as a specific attestation key).
+    // https://fidoalliance.org/specs/mds/fido-metadata-service-v3.0-ps-20210518.html#authenticatorstatus-enum
+    enum class AuthenticatorStatusType {
+
+        // NotFidoCertified - This authenticator is not FIDO certified.
+        NotFidoCertified,
+        // FidoCertified - This authenticator has passed FIDO functional certification. This certification scheme is phased out and will be replaced by FIDO_CERTIFIED_L1.
+        FidoCertified,
+        // UserVerificationBypass - Indicates that malware is able to bypass the user verification. This means that the authenticator could be used without the user's consent and potentially even without the user's knowledge.
+        UserVerificationBypass,
+        // AttestationKeyCompromise - Indicates that an attestation key for this authenticator is known to be compromised. Additional data should be supplied, including the key identifier and the date of compromise, if known.
+        AttestationKeyCompromise,
+        // UserKeyRemoteCompromise - This authenticator has identified weaknesses that allow registered keys to be compromised and should not be trusted. This would include both, e.g. weak entropy that causes predictable keys to be generated or side channels that allow keys or signatures to be forged, guessed or extracted.
+        UserKeyRemoteCompromise,
+        // UserKeyPhysicalCompromise - This authenticator has known weaknesses in its key protection mechanism(s) that allow user keys to be extracted by an adversary in physical possession of the device.
+        UserKeyPhysicalCompromise,
+        // UpdateAvailable - A software or firmware update is available for the device. Additional data should be supplied including a URL where users can obtain an update and the date the update was published.
+        UpdateAvailable,
+        // Revoked - The FIDO Alliance has determined that this authenticator should not be trusted for any reason, for example if it is known to be a fraudulent product or contain a deliberate backdoor.
+        Revoked,
+        // SelfAssertionSubmitted - The authenticator vendor has completed and submitted the self-certification checklist to the FIDO Alliance. If this completed checklist is publicly available, the URL will be specified in StatusReport.url.
+        SelfAssertionSubmitted,
+        // FidoCertifiedL1 - The authenticator has passed FIDO Authenticator certification at level 1. This level is the more strict successor of FIDO_CERTIFIED.
+        FidoCertifiedL1,
+        // FidoCertifiedL1plus - The authenticator has passed FIDO Authenticator certification at level 1+. This level is the more than level 1.
+        FidoCertifiedL1plus,
+        // FidoCertifiedL2 - The authenticator has passed FIDO Authenticator certification at level 2. This level is more strict than level 1+.
+        FidoCertifiedL2,
+        // FidoCertifiedL2plus - The authenticator has passed FIDO Authenticator certification at level 2+. This level is more strict than level 2.
+        FidoCertifiedL2plus,
+        // FidoCertifiedL3 - The authenticator has passed FIDO Authenticator certification at level 3. This level is more strict than level 2+.
+        FidoCertifiedL3,
+        // FidoCertifiedL3plus - The authenticator has passed FIDO Authenticator certification at level 3+. This level is more strict than level 3.
+        FidoCertifiedL3plus,
+        Invalid
+    };
+
+    // map AuthenticatorStatusType values to JSON as strings
+    NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorStatusType, {
+        {AuthenticatorStatusType::Invalid, nullptr},
+        {AuthenticatorStatusType::Invalid, ""},
+        {AuthenticatorStatusType::NotFidoCertified, "NOT_FIDO_CERTIFIED"},
+        {AuthenticatorStatusType::FidoCertified, "FIDO_CERTIFIED"},
+        {AuthenticatorStatusType::UserVerificationBypass, "USER_VERIFICATION_BYPASS"},
+        {AuthenticatorStatusType::AttestationKeyCompromise, "ATTESTATION_KEY_COMPROMISE"},
+        {AuthenticatorStatusType::UserKeyRemoteCompromise, "USER_KEY_REMOTE_COMPROMISE"},
+        {AuthenticatorStatusType::UserKeyPhysicalCompromise, "USER_KEY_PHYSICAL_COMPROMISE"},
+        {AuthenticatorStatusType::UpdateAvailable, "UPDATE_AVAILABLE"},
+        {AuthenticatorStatusType::Revoked, "REVOKED"},
+        {AuthenticatorStatusType::SelfAssertionSubmitted, "SELF_ASSERTION_SUBMITTED"},
+        {AuthenticatorStatusType::FidoCertifiedL1, "FIDO_CERTIFIED_L1"},
+        {AuthenticatorStatusType::FidoCertifiedL1plus, "FIDO_CERTIFIED_L1plus"},
+        {AuthenticatorStatusType::FidoCertifiedL2, "FIDO_CERTIFIED_L2"},
+        {AuthenticatorStatusType::FidoCertifiedL2plus, "FIDO_CERTIFIED_L2plus"},
+        {AuthenticatorStatusType::FidoCertifiedL3, "FIDO_CERTIFIED_L3"},
+        {AuthenticatorStatusType::FidoCertifiedL3plus, "FIDO_CERTIFIED_L3plus"}
+    })
+
     enum class PublicKeyAlgAndEncodingType {
 
         // Raw ANSI X9.62 formatted Elliptic Curve public key.
