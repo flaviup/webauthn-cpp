@@ -79,74 +79,116 @@ namespace WebAuthN::Protocol {
         j.at("debug").get_to(error.DevInfo);
     }
 
-    inline const ErrorType ErrBadRequest{
-		"invalid_request",
-		"Error reading the request data"
+    class ErrBadRequest : public ErrorType {
+		ErrBadRequest() :
+		ErrorType(
+			"invalid_request",
+			"Error reading the request data") {
+		}
 	};
 
-	inline const ErrorType ErrChallengeMismatch{
-		"challenge_mismatch",
-		"Stored challenge and received challenge do not match"
+	class ErrChallengeMismatch : public ErrorType {
+		ErrChallengeMismatch() :
+		ErrorType(
+			"challenge_mismatch",
+			"Stored challenge and received challenge do not match") {
+		}
 	};
 	
-	inline const ErrorType ErrParsingData{
-		"parse_error",
-		"Error parsing the authenticator response"
+	class ErrParsingData : public ErrorType {
+		ErrParsingData() :
+		ErrorType(
+			"parse_error",
+			"Error parsing the authenticator response") {
+		}
 	};
 	
-	inline const ErrorType ErrAuthData{
-		"auth_data",
-		"Error verifying the authenticator data"
+	class ErrAuthData : public ErrorType {
+		ErrAuthData() :
+		ErrorType(
+			"auth_data",
+			"Error verifying the authenticator data") {
+		}
 	};
 	
-	inline const ErrorType ErrVerification{
-		"verification_error",
-		"Error validating the authenticator response"
+	class ErrVerification : public ErrorType {
+		ErrVerification() :
+		ErrorType(
+			"verification_error",
+			"Error validating the authenticator response") {
+		}
 	};
 	
-	inline const ErrorType ErrAttestation{
-		"attestation_error",
-		"Error validating the attestation data provided"
+	class ErrAttestation : public ErrorType {
+		ErrAttestation() :
+		ErrorType(
+			"attestation_error",
+			"Error validating the attestation data provided") {
+		}
 	};
 	
-	inline const ErrorType ErrInvalidAttestation{
-		"invalid_attestation",
-		"Invalid attestation data"
+	class ErrInvalidAttestation : public ErrorType {
+		ErrInvalidAttestation() :
+		ErrorType(
+			"invalid_attestation",
+			"Invalid attestation data") {
+		}
 	};
 	
-	inline const ErrorType ErrAttestationFormat{
-		"invalid_attestation",
-		"Invalid attestation format"
+	class ErrAttestationFormat : public ErrorType {
+		ErrAttestationFormat() :
+		ErrorType(
+			"invalid_attestation",
+			"Invalid attestation format") {
+		}
 	};
 	
-	inline const ErrorType ErrAttestationCertificate{
-		"invalid_certificate",
-		"Invalid attestation certificate"
+	class ErrAttestationCertificate : public ErrorType {
+		ErrAttestationCertificate() :
+		ErrorType(
+			"invalid_certificate",
+			"Invalid attestation certificate") {
+		}
 	};
 	
-	inline const ErrorType ErrAssertionSignature{
-		"invalid_signature",
-		"Assertion Signature against auth data and client hash is not valid"
+	class ErrAssertionSignature : public ErrorType {
+		ErrAssertionSignature() :
+		ErrorType(
+			"invalid_signature",
+			"Assertion Signature against auth data and client hash is not valid") {
+		}
 	};
 	
-	inline const ErrorType ErrUnsupportedKey{
-		"invalid_key_type",
-		"Unsupported Public Key Type"
+	class ErrUnsupportedKey : public ErrorType {
+		ErrUnsupportedKey() :
+		ErrorType(
+			"invalid_key_type",
+			"Unsupported Public Key Type") {
+		}
 	};
 	
-	inline const ErrorType ErrUnsupportedAlgorithm{
-		"unsupported_key_algorithm",
-		"Unsupported public key algorithm"
+	class ErrUnsupportedAlgorithm : public ErrorType {
+		ErrUnsupportedAlgorithm() :
+		ErrorType(
+			"unsupported_key_algorithm",
+			"Unsupported public key algorithm") {
+		}
 	};
 
-	inline const ErrorType ErrNotSpecImplemented{
-		"spec_unimplemented",
-		"This field is not yet supported by the WebAuthn spec"
+	class ErrNotSpecImplemented : public ErrorType {
+		ErrNotSpecImplemented() :
+		ErrorType(
+			"spec_unimplemented",
+			"This field is not yet supported by the WebAuthn spec") {
+		}
 	};
 	
-	inline const ErrorType ErrNotImplemented{
-		"not_implemented",
-		"This field is not yet supported by this library",
+	class ErrNotImplemented : public ErrorType {
+		ErrNotImplemented() :
+		ErrorType(
+			"not_implemented",
+			"This field is not yet supported by this library") {
+		}
 	};
 } // namespace WebAuthN::Protocol
 
