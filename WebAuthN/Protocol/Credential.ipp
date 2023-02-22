@@ -215,9 +215,6 @@ namespace WebAuthN::Protocol {
             parsedPublicKeyCredential.AuthenticatorAttachment.emplace(j["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
         }
     }
-    
-    using TransportType = std::string;
-    using TransportsType = std::vector<TransportType>;
 
     struct CredentialCreationResponseType : PublicKeyCredentialType {
 
@@ -227,12 +224,12 @@ namespace WebAuthN::Protocol {
             AttestationResponse(j["response"].get<AuthenticatorAttestationResponseType>()) {
             
             if (j.find("transports") != j.end()) {
-                Transports.emplace(j["transports"].get<TransportsType>());
+                Transports.emplace(j["transports"].get<std::vector<std::string>>());
             }
         }
 
         AuthenticatorAttestationResponseType AttestationResponse;
-        std::optional<TransportsType> Transports;
+        std::optional<std::vector<std::string>> Transports;
     };
 
     inline void to_json(json& j, const CredentialCreationResponseType& credentialCreationResponse) {
@@ -253,7 +250,7 @@ namespace WebAuthN::Protocol {
         j.at("response").get_to(credentialCreationResponse.AttestationResponse);
 
         if (j.find("transports") != j.end()) {
-            credentialCreationResponse.Transports.emplace(j["transports"].get<TransportsType>());
+            credentialCreationResponse.Transports.emplace(j["transports"].get<std::vector<std::string>>());
         }
     }
 

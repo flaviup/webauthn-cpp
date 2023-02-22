@@ -26,7 +26,7 @@ namespace WebAuthN::Protocol {
     struct ErrorType {
 
         ErrorType() noexcept = default;
-        ErrorType(std::string&& type, std::string&& details) :
+        ErrorType(std::string&& type, std::string&& details) noexcept :
             Type(std::move(type)),
             Details(std::move(details)) {
         }
@@ -41,13 +41,13 @@ namespace WebAuthN::Protocol {
             return Details; 
         }
 
-        inline ErrorType& WithDetails(const std::string& details) {
+        inline ErrorType& WithDetails(const std::string& details) noexcept {
             
             Details = details;
             return *this;
         }
 
-        inline ErrorType& WithInfo(const std::string& info) {
+        inline ErrorType& WithInfo(const std::string& info) noexcept {
             
             DevInfo = info;
             return *this;
@@ -79,112 +79,126 @@ namespace WebAuthN::Protocol {
         j.at("debug").get_to(error.DevInfo);
     }
 
-    class ErrBadRequest : public ErrorType {
-		ErrBadRequest() :
+    struct ErrBadRequest : public ErrorType {
+
+		ErrBadRequest() noexcept :
 		ErrorType(
 			"invalid_request",
 			"Error reading the request data") {
 		}
 	};
 
-	class ErrChallengeMismatch : public ErrorType {
-		ErrChallengeMismatch() :
+	struct ErrChallengeMismatch : public ErrorType {
+
+		ErrChallengeMismatch() noexcept :
 		ErrorType(
 			"challenge_mismatch",
 			"Stored challenge and received challenge do not match") {
 		}
 	};
 	
-	class ErrParsingData : public ErrorType {
-		ErrParsingData() :
+	struct ErrParsingData : public ErrorType {
+
+		ErrParsingData() noexcept :
 		ErrorType(
 			"parse_error",
 			"Error parsing the authenticator response") {
 		}
 	};
 	
-	class ErrAuthData : public ErrorType {
-		ErrAuthData() :
+	struct ErrAuthData : public ErrorType {
+
+		ErrAuthData() noexcept :
 		ErrorType(
 			"auth_data",
 			"Error verifying the authenticator data") {
 		}
 	};
 	
-	class ErrVerification : public ErrorType {
-		ErrVerification() :
+	struct ErrVerification : public ErrorType {
+
+		ErrVerification() noexcept :
 		ErrorType(
 			"verification_error",
 			"Error validating the authenticator response") {
 		}
 	};
 	
-	class ErrAttestation : public ErrorType {
-		ErrAttestation() :
+	struct ErrAttestation : public ErrorType {
+
+		ErrAttestation() noexcept :
 		ErrorType(
 			"attestation_error",
 			"Error validating the attestation data provided") {
 		}
 	};
 	
-	class ErrInvalidAttestation : public ErrorType {
-		ErrInvalidAttestation() :
+	struct ErrInvalidAttestation : public ErrorType {
+
+		ErrInvalidAttestation() noexcept :
 		ErrorType(
 			"invalid_attestation",
 			"Invalid attestation data") {
 		}
 	};
 	
-	class ErrAttestationFormat : public ErrorType {
-		ErrAttestationFormat() :
+	struct ErrAttestationFormat : public ErrorType {
+
+		ErrAttestationFormat() noexcept :
 		ErrorType(
 			"invalid_attestation",
 			"Invalid attestation format") {
 		}
 	};
 	
-	class ErrAttestationCertificate : public ErrorType {
-		ErrAttestationCertificate() :
+	struct ErrAttestationCertificate : public ErrorType {
+
+		ErrAttestationCertificate() noexcept :
 		ErrorType(
 			"invalid_certificate",
 			"Invalid attestation certificate") {
 		}
 	};
 	
-	class ErrAssertionSignature : public ErrorType {
-		ErrAssertionSignature() :
+	struct ErrAssertionSignature : public ErrorType {
+
+		ErrAssertionSignature() noexcept :
 		ErrorType(
 			"invalid_signature",
 			"Assertion Signature against auth data and client hash is not valid") {
 		}
 	};
 	
-	class ErrUnsupportedKey : public ErrorType {
-		ErrUnsupportedKey() :
+	struct ErrUnsupportedKey : public ErrorType {
+
+		ErrUnsupportedKey() noexcept :
 		ErrorType(
 			"invalid_key_type",
 			"Unsupported Public Key Type") {
 		}
 	};
 	
-	class ErrUnsupportedAlgorithm : public ErrorType {
-		ErrUnsupportedAlgorithm() :
+	struct ErrUnsupportedAlgorithm : public ErrorType {
+
+		ErrUnsupportedAlgorithm() noexcept :
 		ErrorType(
 			"unsupported_key_algorithm",
 			"Unsupported public key algorithm") {
 		}
 	};
 
-	class ErrNotSpecImplemented : public ErrorType {
-		ErrNotSpecImplemented() :
+	struct ErrNotSpecImplemented : public ErrorType {
+
+		ErrNotSpecImplemented() noexcept :
 		ErrorType(
 			"spec_unimplemented",
 			"This field is not yet supported by the WebAuthn spec") {
 		}
 	};
 	
-	class ErrNotImplemented : public ErrorType {
-		ErrNotImplemented() :
+	struct ErrNotImplemented : public ErrorType {
+
+		ErrNotImplemented() noexcept :
 		ErrorType(
 			"not_implemented",
 			"This field is not yet supported by this library") {
