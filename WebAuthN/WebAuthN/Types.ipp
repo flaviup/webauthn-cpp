@@ -9,8 +9,8 @@
 #ifndef WEBAUTHN_WEBAUTHN_TYPES_IPP
 #define WEBAUTHN_WEBAUTHN_TYPES_IPP
 
-#include <chrono>
 #include <fmt/format.h>
+#include "Consts.ipp"
 #include "Credential.ipp"
 
 #pragma GCC visibility push(default)
@@ -19,14 +19,7 @@ namespace WebAuthN::WebAuthN {
 
     using json = nlohmann::json;
 
-	inline constexpr const auto ERR_FMT_FIELD_EMPTY         = "the field {} must be configured but it is empty";
-	inline constexpr const auto ERR_FMT_FIELD_NOT_VALID_URI = "field {} is not a valid URI: {}";
-	inline constexpr const auto ERR_FMT_CONFIG_VALIDATE     = "error occurred validating the configuration: {}";
-
-	inline constexpr const auto DEFAULT_TIMEOUT_UVD = std::chrono::milliseconds(120'000ULL);
-	inline constexpr const auto DEFAULT_TIMEOUT     = std::chrono::milliseconds(300'000ULL);
-
-    // TimeoutConfigType represents the WebAuthN timeouts configuration for either registration or login..
+    // TimeoutConfigType represents the WebAuthN timeouts configuration for either registration or login.
     struct TimeoutConfigType {
 
         TimeoutConfigType() noexcept = default;
@@ -101,7 +94,7 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (RPOrigins.empty()) {
-                return Protocol::ErrorType().WithDetails(fmt::format("must provide at least one value to the 'RPOrigins' field"));
+                return Protocol::ErrorType().WithDetails("must provide at least one value to the 'RPOrigins' field");
             }
 
             if (!AuthenticatorSelection.RequireResidentKey.has_value()) {
