@@ -19,6 +19,7 @@ namespace WebAuthN::Protocol {
 
     template<typename T>
     using expected = tl::expected<T, ErrorType>;
+    using unexpected = tl::unexpected<ErrorType>;
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop

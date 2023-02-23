@@ -65,7 +65,7 @@ namespace WebAuthN::WebAuthN {
     };
 
     // SelectAuthenticator allow for easy marshaling of authenticator options that are provided to the user.
-    inline Protocol::AuthenticatorSelectionType SelectAuthenticator(const std::string& att, bool rrk, const std::string& uv) noexcept {
+    inline Protocol::AuthenticatorSelectionType SelectAuthenticator(const std::string& att, bool rrk, const std::string& uv) {
 
         Protocol::AuthenticatorSelectionType ast;
         ast.AuthenticatorAttachment = json(att).get<Protocol::AuthenticatorAttachmentType>();

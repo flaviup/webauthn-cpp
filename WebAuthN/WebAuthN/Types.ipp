@@ -19,9 +19,9 @@ namespace WebAuthN::WebAuthN {
 
     using json = nlohmann::json;
 
-	inline constexpr const auto ERR_FMT_FIELD_EMPTY         = "the field '%s' must be configured but it is empty";
-	inline constexpr const auto ERR_FMT_FIELD_NOT_VALID_URI = "field '%s' is not a valid URI: %w";
-	inline constexpr const auto ERR_FMT_CONFIG_VALIDATE     = "error occurred validating the configuration: %w";
+	inline constexpr const auto ERR_FMT_FIELD_EMPTY         = "the field {} must be configured but it is empty";
+	inline constexpr const auto ERR_FMT_FIELD_NOT_VALID_URI = "field {} is not a valid URI: {}";
+	inline constexpr const auto ERR_FMT_CONFIG_VALIDATE     = "error occurred validating the configuration: {}";
 
 	inline constexpr const auto DEFAULT_TIMEOUT_UVD = std::chrono::milliseconds(120'000ULL);
 	inline constexpr const auto DEFAULT_TIMEOUT     = std::chrono::milliseconds(300'000ULL);
@@ -63,23 +63,21 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (RPDisplayName.empty()) {
-                return fmt::format_error(ERR_FMT_FIELD_EMPTY, "RPDisplayName");
+                return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPDisplayName"));
             }
 
             if (RPID.empty()) {
-                return fmt::format_error(ERR_FMT_FIELD_EMPTY, "RPID");
+                return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPID"));
             }
 
-            Protocol::ErrorType err{};
-
             if (!url.Parse(RPID)) {
-                return fmt::format_error(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", err);
+                return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", RPID));
             }
 
             if (!RPIcon.empty()) {
 
                 if (!url.Parse(RPIcon)) {
-                    return fmt::format_error(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", err);
+                    return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon));
                 }
             }
 
@@ -103,7 +101,7 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (RPOrigins.empty()) {
-                return fmt::format_error("must provide at least one value to the 'RPOrigins' field");
+                return Protocol::ErrorType().WithDetails(fmt::format("must provide at least one value to the 'RPOrigins' field"));
             }
 
             if (!AuthenticatorSelection.RequireResidentKey.has_value()) {
@@ -129,7 +127,7 @@ namespace WebAuthN::WebAuthN {
         // AttestationPreference sets the default attestation conveyance preferences.
         Protocol::ConveyancePreferenceType AttestationPreference;
         // AuthenticatorSelection sets the default authenticator selection options.
-        Protocol::AuthenticatorSelectionType AuthenticatorSelection;
+        mutable Protocol::AuthenticatorSelectionType AuthenticatorSelection;
         // Debug enables various debug options.
         bool Debug;
         // EncodeUserIDAsString ensures the user.id value during registrations is encoded as a raw UTF8 string. This is
@@ -160,8 +158,7 @@ namespace WebAuthN::WebAuthN {
 
         if (result) {
 
-            fmt::format_error(""); //errFmtConfigValidate, err
-            return result.value();
+            return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, result.value()));
         }
 
         return WebAuthNType{.Config = config};
