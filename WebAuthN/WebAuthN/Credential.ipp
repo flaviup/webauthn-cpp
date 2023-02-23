@@ -41,7 +41,7 @@ namespace WebAuthN::WebAuthN {
         // Descriptor converts the CredentialType into a Protocol::CredentialDescriptorType.
         inline Protocol::CredentialDescriptorType ToDescriptorType() const noexcept {
 
-            Protocol::URLEncodedBase64Type credentialID;
+            Protocol::URLEncodedBase64Type credentialID{};
             credentialID.reserve(this->ID.size());
             for (int value : this->ID) credentialID += std::to_string(value);
 
@@ -72,7 +72,7 @@ namespace WebAuthN::WebAuthN {
     };
 
     // MakeNewCredential will return a credential pointer on successful validation of a registration response.
-    inline expected<CredentialType> MakeNewCredential(const Protocol::ParsedCredentialCreationDataType& c) noexcept {
+    inline Protocol::expected<CredentialType> MakeNewCredential(const Protocol::ParsedCredentialCreationDataType& c) noexcept {
 
         auto newCredential = CredentialType{
             ID:              c.Response.AttestationObject.AuthData.AttData.CredentialID,
