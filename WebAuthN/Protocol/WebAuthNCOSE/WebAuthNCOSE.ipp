@@ -33,37 +33,26 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         // AlgES256 ECDSA with SHA-256.
         AlgES256 = -7,
-
         // AlgES384 ECDSA with SHA-384.
         AlgES384 = -35,
-
         // AlgES512 ECDSA with SHA-512.
         AlgES512 = -36,
-
         // AlgRS1 RSASSA-PKCS1-v1_5 with SHA-1.
         AlgRS1 = -65535,
-
         // AlgRS256 RSASSA-PKCS1-v1_5 with SHA-256.
         AlgRS256 = -257,
-
         // AlgRS384 RSASSA-PKCS1-v1_5 with SHA-384.
         AlgRS384 = -258,
-
         // AlgRS512 RSASSA-PKCS1-v1_5 with SHA-512.
         AlgRS512 = -259,
-
         // AlgPS256 RSASSA-PSS with SHA-256.
         AlgPS256 = -37,
-
         // AlgPS384 RSASSA-PSS with SHA-384.
         AlgPS384 = -38,
-
         // AlgPS512 RSASSA-PSS with SHA-512.
         AlgPS512 = -39,
-
         // AlgEdDSA EdDSA.
         AlgEdDSA = -8,
-
         // AlgES256K is ECDSA using secp256k1 curve and SHA-256.
         AlgES256K = -47
     };
@@ -86,19 +75,14 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         // KeyTypeReserved is a reserved value.
         KeyTypeReserved,
-
         // OctetKey is an Octet Key.
         OctetKey,
-
         // EllipticKey is an Elliptic Curve Public Key.
         EllipticKey,
-
         // RSAKey is an RSA Public Key.
         RSAKey,
-
         // Symmetric Keys.
         Symmetric,
-
         // HSSLMS is the public key for HSS/LMS hash-based digital signature.
         HSSLMS
     };
@@ -123,28 +107,20 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         // EllipticCurveReserved is the COSE EC Reserved value.
         EllipticCurveReserved,
-
         // P256 represents NIST P-256 also known as secp256r1.
         P256,
-
         // P384 represents NIST P-384 also known as secp384r1.
         P384,
-
         // P521 represents NIST P-521 also known as secp521r1.
         P521,
-
         // X25519 for use w/ ECDH only.
         X25519,
-
         // X448 for use w/ ECDH only.
         X448,
-
         // Ed25519 for use w/ EdDSA only.
         Ed25519,
-
         // Ed448 for use w/ EdDSA only.
         Ed448,
-
         // Secp256k1 is the SECG secp256k1 curve.
         Secp256k1
     };
@@ -202,17 +178,17 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         std::string name;
         hash.Hash hasher;
     } SignatureAlgorithmDetails[] {
-        {SignatureAlgorithmType::SHA1WithRSA, COSEAlgorithmIdentifierType::AlgRS1, "SHA1-RSA", crypto.SHA1.New},
-        {SignatureAlgorithmType::SHA256WithRSA, COSEAlgorithmIdentifierType::AlgRS256, "SHA256-RSA", crypto.SHA256.New},
-        {SignatureAlgorithmType::SHA384WithRSA, COSEAlgorithmIdentifierType::AlgRS384, "SHA384-RSA", crypto.SHA384.New},
-        {SignatureAlgorithmType::SHA512WithRSA, COSEAlgorithmIdentifierType::AlgRS512, "SHA512-RSA", crypto.SHA512.New},
-        {SignatureAlgorithmType::SHA256WithRSAPSS, COSEAlgorithmIdentifierType::AlgPS256, "SHA256-RSAPSS", crypto.SHA256.New},
-        {SignatureAlgorithmType::SHA384WithRSAPSS, COSEAlgorithmIdentifierType::AlgPS384, "SHA384-RSAPSS", crypto.SHA384.New},
-        {SignatureAlgorithmType::SHA512WithRSAPSS, COSEAlgorithmIdentifierType::AlgPS512, "SHA512-RSAPSS", crypto.SHA512.New},
-        {SignatureAlgorithmType::ECDSAWithSHA256, COSEAlgorithmIdentifierType::AlgES256, "ECDSA-SHA256", crypto.SHA256.New},
-        {SignatureAlgorithmType::ECDSAWithSHA384, COSEAlgorithmIdentifierType::AlgES384, "ECDSA-SHA384", crypto.SHA384.New},
-        {SignatureAlgorithmType::ECDSAWithSHA512, COSEAlgorithmIdentifierType::AlgES512, "ECDSA-SHA512", crypto.SHA512.New},
-        {SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA, "EdDSA", crypto.SHA512.New}
+        { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA",   crypto.SHA1.New },
+        { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA", crypto.SHA256.New },
+        { SignatureAlgorithmType::SHA384WithRSA,             COSEAlgorithmIdentifierType::AlgRS384,    "SHA384-RSA", crypto.SHA384.New },
+        { SignatureAlgorithmType::SHA512WithRSA,             COSEAlgorithmIdentifierType::AlgRS512,    "SHA512-RSA", crypto.SHA512.New },
+        { SignatureAlgorithmType::SHA256WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS256, "SHA256-RSAPSS", crypto.SHA256.New },
+        { SignatureAlgorithmType::SHA384WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS384, "SHA384-RSAPSS", crypto.SHA384.New },
+        { SignatureAlgorithmType::SHA512WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS512, "SHA512-RSAPSS", crypto.SHA512.New },
+        { SignatureAlgorithmType::ECDSAWithSHA256,           COSEAlgorithmIdentifierType::AlgES256,  "ECDSA-SHA256", crypto.SHA256.New },
+        { SignatureAlgorithmType::ECDSAWithSHA384,           COSEAlgorithmIdentifierType::AlgES384,  "ECDSA-SHA384", crypto.SHA384.New },
+        { SignatureAlgorithmType::ECDSAWithSHA512,           COSEAlgorithmIdentifierType::AlgES512,  "ECDSA-SHA512", crypto.SHA512.New },
+        { SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA,         "EdDSA", crypto.SHA512.New }
     };
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated
@@ -232,21 +208,19 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
 
         // Decode the results to int by default.
-        bool _struct;      // `cbor:",keyasint" json:"public_key"`
-
+        bool _struct;      // cbor:",keyasint"
         // The type of key created. Should be OKP, EC2, or RSA.
-        int64_t KeyType;   // `cbor:"1,keyasint" json:"kty"`
-
+        int64_t KeyType;   // cbor:"1,keyasint"
         // A COSEAlgorithmIdentifier for the algorithm used to derive the key signature.
-        int64_t Algorithm; // `cbor:"3,keyasint" json:"alg"`
+        int64_t Algorithm; // cbor:"3,keyasint"
     };
 
     inline void to_json(json& j, const PublicKeyDataType& publicKeyData) {
 
         j = json{
-            {"public_key", publicKeyData._struct},
-            {"kty", publicKeyData.KeyType},
-            {"alg", publicKeyData.Algorithm}
+            { "public_key", publicKeyData._struct },
+            { "kty",        publicKeyData.KeyType },
+            { "alg",      publicKeyData.Algorithm }
         };
     }
 
@@ -330,14 +304,49 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }*/
 
         // If the key type is EC2, the curve on which we derive the signature from.
-        std::optional<int64_t> Curve; // `cbor:"-1,keyasint,omitempty" json:"crv"`
-
+        std::optional<int64_t> Curve; // cbor:"-1,keyasint,omitempty"
         // A byte string 32 bytes in length that holds the x coordinate of the key.
-        std::optional<std::vector<uint8_t>> XCoord; // `cbor:"-2,keyasint,omitempty" json:"x"`
-
+        std::optional<std::vector<uint8_t>> XCoord; // cbor:"-2,keyasint,omitempty"
         // A byte string 32 bytes in length that holds the y coordinate of the key.
-        std::optional<std::vector<uint8_t>> YCoord; // `cbor:"-3,keyasint,omitempty" json:"y"`
+        std::optional<std::vector<uint8_t>> YCoord; // cbor:"-3,keyasint,omitempty"
     };
+
+    inline void to_json(json& j, const EC2PublicKeyDataType& ec2PublicKeyData) {
+
+        json _j;
+        to_json(_j, static_cast<const PublicKeyDataType&>(ec2PublicKeyData));
+
+        if (ec2PublicKeyData.Curve) {
+            _j["crv"] = ec2PublicKeyData.Curve;
+        }
+
+        if (ec2PublicKeyData.XCoord) {
+            _j["x"] = ec2PublicKeyData.XCoord;
+        }
+
+        if (ec2PublicKeyData.YCoord) {
+            _j["y"] = ec2PublicKeyData.YCoord;
+        }
+
+        j = _j;
+    }
+
+    inline void from_json(const json& j, EC2PublicKeyDataType& ec2PublicKeyData) {
+
+        from_json(j, static_cast<PublicKeyDataType&>(ec2PublicKeyData));
+
+        if (j.find("crv") != j.end()) {
+            ec2PublicKeyData.Curve.emplace(j["crv"].get<int64_t>());
+        }
+
+        if (j.find("x") != j.end()) {
+            ec2PublicKeyData.XCoord.emplace(j["x"].get<std::vector<uint8_t>>());
+        }
+
+        if (j.find("y") != j.end()) {
+            ec2PublicKeyData.YCoord.emplace(j["y"].get<std::vector<uint8_t>>());
+        }
+    }
 
     struct RSAPublicKeyDataType : public PublicKeyDataType {
 
@@ -395,11 +404,39 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
 
         // Represents the modulus parameter for the RSA algorithm.
-        std::optional<std::vector<uint8_t>> Modulus; // `cbor:"-1,keyasint,omitempty" json:"n"`
-
+        std::optional<std::vector<uint8_t>> Modulus; // cbor:"-1,keyasint,omitempty"
         // Represents the exponent parameter for the RSA algorithm.
-        std::optional<std::vector<uint8_t>> Exponent; // `cbor:"-2,keyasint,omitempty" json:"e"`
+        std::optional<std::vector<uint8_t>> Exponent; // cbor:"-2,keyasint,omitempty"
     };
+
+    inline void to_json(json& j, const RSAPublicKeyDataType& rsaPublicKeyData) {
+
+        json _j;
+        to_json(_j, static_cast<const PublicKeyDataType&>(rsaPublicKeyData));
+
+        if (rsaPublicKeyData.Modulus) {
+            _j["n"] = rsaPublicKeyData.Modulus;
+        }
+
+        if (rsaPublicKeyData.Exponent) {
+            _j["e"] = rsaPublicKeyData.Exponent;
+        }
+
+        j = _j;
+    }
+
+    inline void from_json(const json& j, RSAPublicKeyDataType& rsaPublicKeyData) {
+
+        from_json(j, static_cast<PublicKeyDataType&>(rsaPublicKeyData));
+
+        if (j.find("n") != j.end()) {
+            rsaPublicKeyData.Modulus.emplace(j["n"].get<std::vector<uint8_t>>());
+        }
+
+        if (j.find("e") != j.end()) {
+            rsaPublicKeyData.Exponent.emplace(j["e"].get<std::vector<uint8_t>>());
+        }
+    }
 
     struct OKPPublicKeyDataType : public PublicKeyDataType {
 
@@ -422,10 +459,30 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
 
         int64_t Curve;
-
         // A byte string that holds the x coordinate of the key.
-        std::optional<std::vector<uint8_t>> XCoord; // `cbor:"-2,keyasint,omitempty" json:"x"`
+        std::optional<std::vector<uint8_t>> XCoord; // cbor:"-2,keyasint,omitempty"
     };
+
+    inline void to_json(json& j, const OKPPublicKeyDataType& okpPublicKeyData) {
+
+        json _j;
+        to_json(_j, static_cast<const PublicKeyDataType&>(okpPublicKeyData));
+
+        if (okpPublicKeyData.XCoord) {
+            _j["x"] = okpPublicKeyData.XCoord;
+        }
+
+        j = _j;
+    }
+
+    inline void from_json(const json& j, OKPPublicKeyDataType& okpPublicKeyData) {
+
+        from_json(j, static_cast<PublicKeyDataType&>(okpPublicKeyData));
+
+        if (j.find("x") != j.end()) {
+            okpPublicKeyData.XCoord.emplace(j["x"].get<std::vector<uint8_t>>());
+        }
+    }
 
     // SigAlgFromCOSEAlg return which signature algorithm is being used from the COSE Key.
     inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {

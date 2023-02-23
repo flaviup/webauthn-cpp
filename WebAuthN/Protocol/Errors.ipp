@@ -55,10 +55,8 @@ namespace WebAuthN::Protocol {
 
         // Short name for the type of error that has occurred.
         std::string Type;
-
         // Additional details about the error.
         std::string Details;
-
         // Information to help debug the error.
         std::string DevInfo;
     };
