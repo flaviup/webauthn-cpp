@@ -237,7 +237,7 @@ namespace WebAuthN::Metadata {
         WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
         WebAuthNCOSE::COSEEllipticCurveType Curve;
 
-        inline bool operator==(const algKeyCose& other) const noexcept {
+        inline bool operator ==(const algKeyCose& other) const noexcept {
 
             return KeyType == other.KeyType && Algorithm == other.Algorithm && Curve == other.Curve;
         }

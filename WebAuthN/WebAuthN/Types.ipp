@@ -171,6 +171,14 @@ namespace WebAuthN::WebAuthN {
     // registration operations.
     struct IUser {
 
+        IUser() noexcept = default;
+        IUser(const IUser& user) noexcept = default;
+        IUser(IUser&& user) noexcept = default;
+        virtual ~IUser() noexcept = default;
+
+        IUser& operator =(const IUser& other) noexcept = default;
+        IUser& operator =(IUser&& other) noexcept = default;
+
         // GetWebAuthNID provides the user handle of the user account. A user handle is an opaque byte sequence with a maximum
         // size of 64 bytes, and is not meant to be displayed to the user.
         //
