@@ -11,9 +11,6 @@
 
 #define JSON_DISABLE_ENUM_SERIALIZATION 1
 
-#include <string>
-#include <vector>
-#include <optional>
 #include "Errors.ipp"
 
 #pragma GCC visibility push(default)

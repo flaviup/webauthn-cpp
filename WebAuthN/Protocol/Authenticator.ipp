@@ -11,11 +11,6 @@
 
 #include <cstddef>
 #include <fmt/format.h>
-#include <string>
-#include <vector>
-#include <optional>
-#include <nlohmann/json.hpp>
-#include "Base64.ipp"
 #include "Core.ipp"
 
 #pragma GCC visibility push(default)
@@ -478,9 +473,19 @@ namespace WebAuthN::Protocol {
         return static_cast<enum AuthenticatorFlagsType>(static_cast<uint8_t>(selfValue) | static_cast<uint8_t>(inValue));
     }
 
+    inline constexpr enum AuthenticatorFlagsType operator &(const enum AuthenticatorFlagsType selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
+
+        return static_cast<enum AuthenticatorFlagsType>(static_cast<uint8_t>(selfValue) & static_cast<uint8_t>(inValue));
+    }
+
     inline constexpr enum AuthenticatorFlagsType& operator |=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
 
         return reinterpret_cast<enum AuthenticatorFlagsType&>(reinterpret_cast<uint8_t&>(selfValue) |= static_cast<uint8_t>(inValue));
+    }
+
+    inline constexpr enum AuthenticatorFlagsType& operator &=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
+
+        return reinterpret_cast<enum AuthenticatorFlagsType&>(reinterpret_cast<uint8_t&>(selfValue) &= static_cast<uint8_t>(inValue));
     }
 
     inline void from_json(const json& j, AuthenticatorFlagsType& authenticatorFlags) {
@@ -526,6 +531,46 @@ namespace WebAuthN::Protocol {
         j = json{
             static_cast<uint8_t>(authenticatorFlags)
         };
+    }
+
+    inline bool HasUserPrensent(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::UserPresent) != 0;
+    }
+
+    inline bool HasRFU1(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::RFU1) != 0;
+    }
+
+    inline bool HasUserVerified(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::UserVerified) != 0;
+    }
+
+    inline bool HasBackupEligible(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::BackupEligible) != 0;
+    }
+
+    inline bool HasBackupState(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::BackupState) != 0;
+    }
+
+    inline bool HasRFU2(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::RFU2) != 0;
+    }
+
+    inline bool HasAttestedCredentialData(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::AttestedCredentialData) != 0;
+    }
+
+    inline bool HasExtensions(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+
+        return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::HasExtensions) != 0;
     }
 } // namespace WebAuthN::Protocol
 

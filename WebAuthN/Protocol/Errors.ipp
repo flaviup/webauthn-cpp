@@ -9,7 +9,6 @@
 #ifndef WEBAUTHN_PROTOCOL_ERRORS_IPP
 #define WEBAUTHN_PROTOCOL_ERRORS_IPP
 
-#include <string>
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>

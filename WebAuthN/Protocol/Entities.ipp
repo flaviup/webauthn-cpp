@@ -9,10 +9,10 @@
 #ifndef WEBAUTHN_PROTOCOL_ENTITIES_IPP
 #define WEBAUTHN_PROTOCOL_ENTITIES_IPP
 
-#include <string>
 #include <optional>
 #include <nlohmann/json.hpp>
 #include "Base64.ipp"
+#include "Core.ipp"
 
 #pragma GCC visibility push(default)
 

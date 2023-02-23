@@ -9,15 +9,6 @@
 #ifndef WEBAUTHN_PROTOCOL_OPTIONS_IPP
 #define WEBAUTHN_PROTOCOL_OPTIONS_IPP
 
-#include <any>
-#include <string>
-#include <vector>
-#include <map>
-#include <optional>
-#include <nlohmann/json.hpp>
-#include "Base64.ipp"
-#include "Core.ipp"
-#include "Extensions.ipp"
 #include "Entities.ipp"
 #include "Authenticator.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"

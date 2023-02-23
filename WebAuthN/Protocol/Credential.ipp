@@ -9,13 +9,7 @@
 #ifndef WEBAUTHN_PROTOCOL_CREDENTIAL_IPP
 #define WEBAUTHN_PROTOCOL_CREDENTIAL_IPP
 
-#include <string>
-#include <vector>
-#include <optional>
-#include <nlohmann/json.hpp>
-#include "Base64.ipp"
 #include "Core.ipp"
-#include "Extensions.ipp"
 
 #pragma GCC visibility push(default)
 
