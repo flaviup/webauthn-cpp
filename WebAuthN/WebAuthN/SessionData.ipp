@@ -22,11 +22,27 @@ namespace WebAuthN::WebAuthN {
     struct SessionDataType {
 
         SessionDataType() noexcept = default;
+        SessionDataType(const std::string& challenge,
+            const std::vector<uint8_t>& userID,
+            const std::string& userDisplayName,
+            int64_t expires,
+            Protocol::UserVerificationRequirementType userVerification,
+            const std::optional<std::vector<std::vector<uint8_t>>>& allowedCredentialIDs = std::nullopt,
+            const std::optional<Protocol::AuthenticationExtensionsType>& extensions = std::nullopt
+        ) noexcept : 
+            Challenge(challenge), 
+            UserID(userID),
+            UserDisplayName(userDisplayName),
+            AllowedCredentialIDs(allowedCredentialIDs),
+            Expires(expires),
+            UserVerification(userVerification),
+            Extensions(extensions) {
+        };
         SessionDataType(const json& j) :
             Challenge(j["challenge"].get<std::string>()),
             UserID(j["user_id"].get<std::vector<uint8_t>>()),
             UserDisplayName(j["user_display_name"].get<std::string>()),
-            Expires(j["expires"].get<uint64_t>()),
+            Expires(j["expires"].get<int64_t>()),
             UserVerification(j["userVerification"].get<Protocol::UserVerificationRequirementType>()) {
 
             if (j.find("allowed_credentials") != j.end()) {
@@ -42,7 +58,7 @@ namespace WebAuthN::WebAuthN {
         std::vector<uint8_t> UserID;
         std::string UserDisplayName;
         std::optional<std::vector<std::vector<uint8_t>>> AllowedCredentialIDs;
-        uint64_t Expires;
+        int64_t Expires;
         Protocol::UserVerificationRequirementType UserVerification;
         std::optional<Protocol::AuthenticationExtensionsType> Extensions;
     };

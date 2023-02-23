@@ -62,12 +62,103 @@ namespace WebAuthN::WebAuthN {
 
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
         Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-        BeginRegistration(const IUser& user, int optsCount, RegistrationOptionHandlerType opts...) noexcept;
+        BeginRegistration(const IUser& user, int optsCount, const RegistrationOptionHandlerType& opts...) noexcept;
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
         // credentials and session data.
         Protocol::expected<CredentialType>
         FinishRegistration(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept;
+
+        // WithAuthenticatorSelection adjusts the non-default parameters regarding the authenticator to select during
+        // registration.
+        inline static RegistrationOptionHandlerType WithAuthenticatorSelection(const Protocol::AuthenticatorSelectionType& authenticatorSelection) noexcept {
+
+            return [&authenticatorSelection](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+
+                cco.AuthenticatorSelection = authenticatorSelection;
+            };
+        }
+
+        // WithExclusions adjusts the non-default parameters regarding credentials to exclude from registration.
+        inline static RegistrationOptionHandlerType WithExclusions(const std::vector<Protocol::CredentialDescriptorType>& excludeList) noexcept {
+
+            return [&excludeList](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+                cco.CredentialExcludeList = excludeList;
+            };
+        }
+
+        // WithConveyancePreference adjusts the non-default parameters regarding whether the authenticator should attest to the
+        // credential.
+        inline static RegistrationOptionHandlerType WithConveyancePreference(Protocol::ConveyancePreferenceType preference) noexcept {
+
+            return [&preference](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+                cco.Attestation = preference;
+            };
+        }
+
+        // WithExtensions adjusts the extension parameter in the registration options.
+        inline static RegistrationOptionHandlerType WithExtensions(const Protocol::AuthenticationExtensionsType& extensions) noexcept {
+
+            return [&extensions](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+                cco.Extensions = extensions;
+            };
+        }
+
+        // WithCredentialParameters adjusts the credential parameters in the registration options.
+        inline static RegistrationOptionHandlerType WithCredentialParameters(const std::vector<Protocol::CredentialParameterType>& credentialParams) noexcept {
+
+            return [&credentialParams](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+                cco.Parameters = credentialParams;
+            };
+        }
+
+        // WithAppIdExcludeExtension automatically includes the specified appid if the CredentialExcludeList contains a credential
+        // with the type `fido-u2f`.
+        inline static RegistrationOptionHandlerType WithAppIdExcludeExtension(const std::string& appid) noexcept {
+
+            return [&appid](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+                if (!cco.CredentialExcludeList) return;
+
+                for (const auto& credential : cco.CredentialExcludeList.value()) {
+
+                    if (credential.AttestationType == Protocol::CREDENTIAL_TYPE_FIDO_U2F) {
+                        
+                        if (!cco.Extensions) {
+                            cco.Extensions = Protocol::AuthenticationExtensionsType{};
+                        }
+                        cco.Extensions.value()[Protocol::EXTENSION_APPID_EXCLUDE] = appid;
+                    }
+                }
+            };
+        }
+
+        // WithResidentKeyRequirement sets both the resident key and require resident key protocol options.
+        inline static RegistrationOptionHandlerType WithResidentKeyRequirement(Protocol::ResidentKeyRequirementType requirement) noexcept {
+
+            return [&requirement](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+                if (!cco.AuthenticatorSelection) {
+                    cco.AuthenticatorSelection = Protocol::AuthenticatorSelectionType{};
+                }
+                cco.AuthenticatorSelection.value().ResidentKey = requirement;
+
+                switch (requirement) {
+                    case Protocol::ResidentKeyRequirementType::Required:
+                        cco.AuthenticatorSelection.value().RequireResidentKey = Protocol::ResidentKeyRequired();
+                        break;
+
+                    default:
+                        cco.AuthenticatorSelection.value().RequireResidentKey = Protocol::ResidentKeyNotRequired();
+                        break;
+                }
+            };
+        }
 
     private:
 

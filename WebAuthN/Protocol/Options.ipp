@@ -315,6 +315,25 @@ namespace WebAuthN::Protocol {
     struct PublicKeyCredentialCreationOptionsType {
 
         PublicKeyCredentialCreationOptionsType() noexcept = default;
+        PublicKeyCredentialCreationOptionsType(const RelyingPartyEntityType& relyingParty,
+            const UserEntityType& user,
+            const URLEncodedBase64Type& challenge,
+            const std::optional<std::vector<CredentialParameterType>>& parameters = std::nullopt,
+            const std::optional<int64_t>& timeout = std::nullopt,
+            const std::optional<std::vector<CredentialDescriptorType>>& credentialExcludeList = std::nullopt,
+            const std::optional<AuthenticatorSelectionType>& authenticatorSelection = std::nullopt,
+            const std::optional<ConveyancePreferenceType>& attestation = std::nullopt,
+            const std::optional<AuthenticationExtensionsType>& extensions = std::nullopt) noexcept :
+            RelyingParty(relyingParty),
+            User(user),
+            Challenge(challenge),
+            Parameters(parameters),
+            Timeout(timeout),
+            CredentialExcludeList(credentialExcludeList),
+            AuthenticatorSelection(authenticatorSelection),
+            Attestation(attestation),
+            Extensions(extensions) {
+        };
         PublicKeyCredentialCreationOptionsType(const json& j) :
             RelyingParty(j["rp"].get<RelyingPartyEntityType>()),
             User(j["user"].get<UserEntityType>()),
@@ -325,7 +344,7 @@ namespace WebAuthN::Protocol {
             }
 
             if (j.find("timeout") != j.end()) {
-                Timeout.emplace(j["timeout"].get<int>());
+                Timeout.emplace(j["timeout"].get<int64_t>());
             }
 
             if (j.find("excludeCredentials") != j.end()) {
@@ -349,7 +368,7 @@ namespace WebAuthN::Protocol {
         UserEntityType User;
         URLEncodedBase64Type Challenge;
         std::optional<std::vector<CredentialParameterType>> Parameters;
-        std::optional<int> Timeout;
+        std::optional<int64_t> Timeout;
         std::optional<std::vector<CredentialDescriptorType>> CredentialExcludeList;
         std::optional<AuthenticatorSelectionType> AuthenticatorSelection;
         std::optional<ConveyancePreferenceType> Attestation;
@@ -400,7 +419,7 @@ namespace WebAuthN::Protocol {
         }
 
         if (j.find("timeout") != j.end()) {
-            publicKeyCredentialCreationOptions.Timeout.emplace(j["timeout"].get<int>());
+            publicKeyCredentialCreationOptions.Timeout.emplace(j["timeout"].get<int64_t>());
         }
 
         if (j.find("excludeCredentials") != j.end()) {
@@ -534,6 +553,9 @@ namespace WebAuthN::Protocol {
     struct CredentialCreationType {
 
         CredentialCreationType() noexcept = default;
+        CredentialCreationType(const PublicKeyCredentialCreationOptionsType& response) noexcept :
+            Response(response) {
+        };
         CredentialCreationType(const json& j) :
             Response(j["publicKey"].get<PublicKeyCredentialCreationOptionsType>()) {
         }
