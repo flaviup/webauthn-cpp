@@ -13,59 +13,90 @@
 
 namespace WebAuthN::WebAuthN {
 
-    inline void _GetDefaultRegistrationCredentialParameters(std::vector<Protocol::CredentialParameterType>& credentialParameters) noexcept {
-        
-        namespace WebAuthNCOSE = Protocol::WebAuthNCOSE;
+#pragma GCC visibility push(hidden)
 
-        credentialParameters = {
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES384
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES512
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS256
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS384
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS512
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS384
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS512
-            },
-            {
-                Protocol::CredentialTypeType::PublicKey,
-                WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA
+    namespace {
+
+        inline void _GetDefaultRegistrationCredentialParameters(std::vector<Protocol::CredentialParameterType>& credentialParameters) noexcept {
+            
+            namespace WebAuthNCOSE = Protocol::WebAuthNCOSE;
+
+            credentialParameters = {
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES384
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES512
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS256
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS384
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS512
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS384
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS512
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA
+                }
+            };
+        }
+
+        // CreateCredential verifies a parsed response against the user's credentials and session data.
+        Protocol::expected<CredentialType>
+        WebAuthNType::_CreateCredential(const IUser& user, const SessionDataType& sessionData, 
+                                        Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
+            
+            if (user.GetWebAuthNID() != sessionData.UserID) {
+                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
-        };
-    }
+
+            if (sessionData.Expires != 0ULL && !(sessionData.Expires > time.Now()))) {
+                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
+            }
+
+            auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
+            auto verificationResult = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
+
+            if (verificationResult) {
+                return Protocol::unexpected(verificationResult.value());
+            }
+
+            return MakeNewCredential(parsedResponse);
+        }
+    } // namespace
+
+#pragma GCC visibility pop
 
     // BEGIN REGISTRATION
     // These objects help us create the CredentialCreationOptionsType
     // that will be passed to the authenticator via the user client.
 
-    Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>> WebAuthNType::BeginRegistration(const IUser& user, int optsCount, WebAuthNType::RegistrationOptionHandlerType opts...) noexcept {
+    Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
+    WebAuthNType::BeginRegistration(const IUser& user, int optsCount, WebAuthNType::RegistrationOptionHandlerType opts...) noexcept {
         
         auto validationResult = _config.Validate();
 
@@ -218,7 +249,8 @@ namespace WebAuthN::WebAuthN {
         }
     }
 
-    Protocol::expected<CredentialType> WebAuthNType::FinishRegistration(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept {
+    Protocol::expected<CredentialType>
+    WebAuthNType::FinishRegistration(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept {
         
         auto parsedResponse = Protocol::ParseCredentialCreationResponse(response);
 
@@ -226,26 +258,6 @@ namespace WebAuthN::WebAuthN {
             return Protocol::unexpected(parsedResponse.error());
         }
 
-        return CreateCredential(user, sessionData, parsedResponse);
-    }
-
-    // CreateCredential verifies a parsed response against the user's credentials and session data.
-    Protocol::expected<CredentialType> CreateCredential(const IUser& user, const SessionDataType& sessionData, Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
-        if !bytes.Equal(user.WebAuthnID(), sessionData.UserID) {
-            return nil, Protocol::ErrBadRequest.WithDetails("ID mismatch for User and Session")
-        }
-
-        if !sessionData.Expires.IsZero() && sessionData.Expires.Before(time.Now()) {
-            return nil, Protocol::ErrBadRequest.WithDetails("Session has Expired")
-        }
-
-        shouldVerifyUser := session.UserVerification == Protocol::VerificationRequired
-
-        invalidErr := parsedResponse.Verify(session.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins)
-        if invalidErr != nil {
-            return nil, invalidErr
-        }
-
-        return MakeNewCredential(parsedResponse)
+        return _CreateCredential(user, sessionData, parsedResponse);
     }
 } // namespace WebAuthN::WebAuthN
