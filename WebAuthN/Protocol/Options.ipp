@@ -94,6 +94,16 @@ namespace WebAuthN::Protocol {
     struct CredentialDescriptorType {
 
         CredentialDescriptorType() noexcept = default;
+        CredentialDescriptorType(const CredentialType& type,
+            const URLEncodedBase64Type& credentialID,
+            const std::optional<std::vector<AuthenticatorTransportType>>& transports,
+            const std::string& attestationType
+            ) noexcept : 
+            Type(type), 
+            CredentialID(credentialID),
+            Transports(transports),
+            AttestationType(attestationType) {
+        }
         CredentialDescriptorType(const json& j) :
             Type(j["type"].get<CredentialType>()),
             CredentialID(j["id"].get<URLEncodedBase64Type>()) {

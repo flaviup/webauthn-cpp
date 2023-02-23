@@ -2,7 +2,7 @@
 //  UrlParse.ipp
 //  webauthn-cpp
 //
-//  Created by Flaviu Pasca on 02/20/23.
+//  Created by Flaviu Pasca on 02/23/23.
 //  flaviup on gmail com
 //
 
@@ -56,7 +56,7 @@ namespace WebAuthN::Util::Url {
 
         return false;*/
     }
-} // namespace WebAuthN::Util
+} // namespace WebAuthN::Util::Url
 
 #pragma GCC visibility pop
 

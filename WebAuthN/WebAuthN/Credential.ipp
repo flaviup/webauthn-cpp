@@ -43,13 +43,12 @@ namespace WebAuthN::WebAuthN {
             credentialID.reserve(this->ID.size());
             for (int value : this->ID) credentialID += std::to_string(value);
 
-            Protocol::CredentialDescriptorType cdt;
-            cdt.Type = Protocol::PublicKeyCredentialType();
-            cdt.CredentialID = credentialID;
-            cdt.Transports = this->Transports;
-            cdt.AttestationType = this->AttestationType;
-
-            return cdt;
+            return Protocol::CredentialDescriptorType{
+                Protocol::PublicKeyCredentialType(),
+                credentialID,
+                this->Transports,
+                this->AttestationType,
+            };
         }
     
         // A probabilistically-unique byte sequence identifying a public key credential source and its authentication assertions.
