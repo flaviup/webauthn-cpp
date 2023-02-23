@@ -27,6 +27,10 @@ namespace WebAuthN::Protocol {
     struct CredentialEntityType {
 
         CredentialEntityType() noexcept = default;
+        CredentialEntityType(const std::string& name, const std::optional<std::string>& icon = std::nullopt) noexcept : 
+            Name(name), 
+            Icon(icon) {
+        }
         CredentialEntityType(const json& j) :
             Name(j["name"].get<std::string>()) {
 
@@ -83,6 +87,12 @@ namespace WebAuthN::Protocol {
     struct RelyingPartyEntityType : public CredentialEntityType {
 
         RelyingPartyEntityType() noexcept = default;
+        RelyingPartyEntityType(const std::string& id, 
+            const std::string& name,
+            const std::optional<std::string>& icon = std::nullopt) noexcept : 
+            CredentialEntityType(name, icon),
+            ID(id) {
+        }
         RelyingPartyEntityType(const json& j) :
             CredentialEntityType(j),
             ID(j["id"].get<std::string>()) {
@@ -113,6 +123,14 @@ namespace WebAuthN::Protocol {
     struct UserEntityType : public CredentialEntityType {
 
         UserEntityType() noexcept = default;
+        UserEntityType(const URLEncodedBase64Type& id, 
+            const std::string& name, 
+            const std::optional<std::string>& displayName = std::nullopt, 
+            const std::optional<std::string>& icon = std::nullopt) noexcept : 
+            CredentialEntityType(name, icon),
+            ID(id), 
+            DisplayName(displayName) {
+        }
         UserEntityType(const json& j) :
             CredentialEntityType(j),
             ID(j["id"].get<URLEncodedBase64Type>()) {

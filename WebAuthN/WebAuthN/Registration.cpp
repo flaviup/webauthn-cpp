@@ -89,20 +89,16 @@ namespace WebAuthN::WebAuthN {
         }
 
         auto entityUser = Protocol::UserEntityType{
-            .ID =         entityUserID,
-            .DisplayName = user.GetWebAuthNDisplayName(),
-            .CredentialEntity = Protocol::CredentialEntityType{
-                .Name = user.GetWebAuthNName(),
-                .Icon = user.GetWebAuthNIcon()
-            }
+            entityUserID,
+            user.GetWebAuthNName(),
+            user.GetWebAuthNDisplayName(),
+            user.GetWebAuthNIcon()
         };
 
         auto entityRelyingParty = Protocol::RelyingPartyEntityType{
-            ID: _config.RPID,
-            CredentialEntity: Protocol::CredentialEntityType{
-                Name: Config.RPDisplayName,
-                Icon: Config.RPIcon
-            }
+            _config.RPID,
+            _config.RPDisplayName,
+            _config.RPIcon
         };
 
         std::vector<Protocol::CredentialParameterType> credentialParams;
@@ -124,7 +120,7 @@ namespace WebAuthN::WebAuthN {
 
         for (int i = 0; i < optsCount; ++i) {
             auto opt = va_arg(args, RegistrationOptionHandlerType);
-            opt(creation.Response)
+            opt(creation.Response);
         }
 
         va_end(args);
@@ -143,7 +139,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         auto session = SessionDataType{
-            Challenge:        challenge.String(),
+            Challenge:        challenge.value(),
             UserID:           user.GetWebAuthNID(),
             UserVerification: creation.Response.AuthenticatorSelection.UserVerification,
         };

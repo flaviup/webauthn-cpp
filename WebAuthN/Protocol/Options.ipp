@@ -346,7 +346,7 @@ namespace WebAuthN::Protocol {
         }
 
         RelyingPartyEntityType RelyingParty;
-        UserEntityType  User;
+        UserEntityType User;
         URLEncodedBase64Type Challenge;
         std::optional<std::vector<CredentialParameterType>> Parameters;
         std::optional<int> Timeout;
