@@ -533,7 +533,7 @@ namespace WebAuthN::Protocol {
         };
     }
 
-    inline bool HasUserPrensent(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasUserPresent(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::UserPresent) != 0;
     }
