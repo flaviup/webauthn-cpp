@@ -11,11 +11,14 @@
 
 #define JSON_DISABLE_ENUM_SERIALIZATION 1
 
+#include <algorithm>
 #include <any>
 #include <string>
 #include <vector>
 #include <map>
+#include <iterator>
 #include <optional>
+#include <functional>
 #include <nlohmann/json.hpp>
 #include "../Protocol/Core.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
@@ -123,6 +126,21 @@ namespace WebAuthN::Metadata {
         { AuthenticatorStatusType::FidoCertifiedL3plus,              "FIDO_CERTIFIED_L3plus" }
     })
 
+    // UNDESIRED_AUTHENTICATOR_STATUS is an array of undesirable authenticator statuses
+    inline constexpr const AuthenticatorStatusType UNDESIRED_AUTHENTICATOR_STATUS[] = {
+        AuthenticatorStatusType::UserVerificationBypass,
+        AuthenticatorStatusType::AttestationKeyCompromise,
+        AuthenticatorStatusType::UserKeyRemoteCompromise,
+        AuthenticatorStatusType::UserKeyPhysicalCompromise,
+        AuthenticatorStatusType::Revoked
+    };
+
+    // IsUndesiredAuthenticatorStatus returns whether the supplied authenticator status is desirable or not
+    inline bool IsUndesiredAuthenticatorStatus(AuthenticatorStatusType status) noexcept {
+
+        return std::find(std::cbegin(UNDESIRED_AUTHENTICATOR_STATUS), std::cend(UNDESIRED_AUTHENTICATOR_STATUS), status) != std::cend(UNDESIRED_AUTHENTICATOR_STATUS);
+    }
+
     enum class PublicKeyAlgAndEncodingType {
 
         // Raw ANSI X9.62 formatted Elliptic Curve public key.
@@ -211,6 +229,70 @@ namespace WebAuthN::Metadata {
         { AuthenticationAlgorithmType::ALG_SIGN_ED448_EDDSA_SHA512_RAW,         "ed448_eddsa_sha512_raw" }
     })
 
+    namespace WebAuthNCOSE = WebAuthN::Protocol::WebAuthNCOSE;
+    // TODO: this goes away after WebAuthNCOSE::CredentialPublicKey gets implemented
+    struct algKeyCose {
+        
+        WebAuthNCOSE::COSEKeyType KeyType;
+        WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
+        WebAuthNCOSE::COSEEllipticCurveType Curve;
+
+        inline bool operator==(const algKeyCose& other) const noexcept {
+
+            return KeyType == other.KeyType && Algorithm == other.Algorithm && Curve == other.Curve;
+        }
+    };
+
+    inline std::function<algKeyCose(AuthenticationAlgorithmType)> algKeyCoseDictionary() noexcept {
+
+        static const auto MAPPING = std::map<AuthenticationAlgorithmType, algKeyCose>{
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_DER, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_DER,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey, Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K, Curve: WebAuthNCOSE::COSEEllipticCurveType::Secp256k1 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256K1_ECDSA_SHA256_DER, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey, Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K, Curve: WebAuthNCOSE::COSEEllipticCurveType::Secp256k1 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA384_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS384 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA512_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS512 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW,  { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW,  { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS384 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW,  { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS512 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW,    { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,         Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS1 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES384,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P384 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES512,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P521 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_ED25519_EDDSA_SHA512_RAW,   { KeyType: WebAuthNCOSE::COSEKeyType::OctetKey,     Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,   Curve: WebAuthNCOSE::COSEEllipticCurveType::Ed25519 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_ED448_EDDSA_SHA512_RAW,     { KeyType: WebAuthNCOSE::COSEKeyType::OctetKey,     Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,     Curve: WebAuthNCOSE::COSEEllipticCurveType::Ed448 } }
+        };
+        algKeyCose mappingFunction(AuthenticationAlgorithmType authAlgorithm) {
+
+            return MAPPING[authAlgorithm];
+        };
+
+        return mappingFunction;
+    }
+
+    // usage:
+    // algKeyCose key = ...;
+    // AuthenticationAlgorithmType a[] = {
+    //     AuthenticationAlgorithmType::ALG_SIGN_ED25519_EDDSA_SHA512_RAW,
+    //     AuthenticationAlgorithmType::ALG_SIGN_RSA_EMSA_PKCS1_SHA256_DER,
+    //     ........
+    // };
+    // AlgKeyMatch(key, a);
+    template<size_t N>
+    inline bool AlgKeyMatch(const algKeyCose& key, AuthenticationAlgorithmType (&algs)[N]) noexcept {
+
+        for (auto it = std::cbegin(algs); it != std::cend(algs); ++it) {
+
+            if (algKeyCoseDictionary()(*it) == key) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // Structs
 
     struct PublicKeyCredentialParametersType {
@@ -218,11 +300,11 @@ namespace WebAuthN::Metadata {
         PublicKeyCredentialParametersType() noexcept = default;
         PublicKeyCredentialParametersType(const json& j) :
             Type(j["type"].get<std::string>()),
-            Alg(j["alg"].get<WebAuthN::Protocol::WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
+            Alg(j["alg"].get<WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
         }
 
 	    std::string Type;
-	    WebAuthN::Protocol::WebAuthNCOSE::COSEAlgorithmIdentifierType Alg;
+	    WebAuthNCOSE::COSEAlgorithmIdentifierType Alg;
     };
 
     inline void to_json(json& j, const PublicKeyCredentialParametersType& publicKeyCredentialParameters) {
@@ -1801,22 +1883,61 @@ namespace WebAuthN::Metadata {
         }
     }
 
-    // Metadata is a map of authenticator AAGUIDs to corresponding metadata statements
-    std::map<uuid.UUID, MetadataBLOBPayloadEntryType> Metadata{};
+    // METADATA is a map of authenticator AAGUIDs to corresponding metadata statements
+    inline std::map<uuid.UUID, MetadataBLOBPayloadEntryType> METADATA{};
 
     // MDSGetEndpointsRequestType is the request sent to the conformance metadata getEndpoints endpoint.
     struct MDSGetEndpointsRequestType {
+
+        MDSGetEndpointsRequestType() noexcept = default;
+        MDSGetEndpointsRequestType(const json& j) :
+            Endpoint(j["endpoint"].get<std::string>()) {
+        }
+
         // The URL of the local server endpoint, e.g. https://webauthn.io/
-        std::string Endpoint;// `json:"endpoint"`
+        std::string Endpoint;
     };
+
+    inline void to_json(json& j, const MDSGetEndpointsRequestType& mdsGetEndpointsRequest) {
+
+        j = json{
+            { "endpoint", mdsGetEndpointsRequest.Endpoint },
+        };
+    }
+
+    inline void from_json(const json& j, MDSGetEndpointsRequestType& mdsGetEndpointsRequest) {
+
+        j.at("endpoint").get_to(mdsGetEndpointsRequest.Endpoint);
+    }
 
     // MDSGetEndpointsResponseType is the response received from a conformance metadata getEndpoints request.
     struct MDSGetEndpointsResponseType {
+
+        MDSGetEndpointsResponseType() noexcept = default;
+        MDSGetEndpointsResponseType(const json& j) :
+            Status(j["status"].get<std::string>()),
+            Result(j["result"].get<std::vector<std::string>>()) {
+        }
+
         // The status of the response.
-        std::string Status;// `json:"status"`
+        std::string Status;
         // An array of urls, each pointing to a MetadataTOCPayload.
-        std::vector<std::string> Result;// `json:"result"`
+        std::vector<std::string> Result;
     };
+
+    inline void to_json(json& j, const MDSGetEndpointsResponseType& mdsGetEndpointsResponse) {
+
+        j = json{
+            { "status", mdsGetEndpointsResponse.Status },
+            { "result", mdsGetEndpointsResponse.Result }
+        };
+    }
+
+    inline void from_json(const json& j, MDSGetEndpointsResponseType& mdsGetEndpointsResponse) {
+
+        j.at("status").get_to(mdsGetEndpointsResponse.Status);
+        j.at("result").get_to(mdsGetEndpointsResponse.Result);
+    }
 
     // Metadata Errors
 

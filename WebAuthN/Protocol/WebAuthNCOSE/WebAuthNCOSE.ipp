@@ -628,24 +628,27 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }*/
     }
 
-    class ErrUnsupportedKey : public ErrorType {
-		ErrUnsupportedKey() :
+    struct ErrUnsupportedKey : public ErrorType {
+
+		ErrUnsupportedKey() noexcept :
 		ErrorType(
 			"invalid_key_type",
 			"Unsupported Public Key Type") {
 		}
 	};
 	
-	class ErrUnsupportedAlgorithm : public ErrorType {
-		ErrUnsupportedAlgorithm() :
+	struct ErrUnsupportedAlgorithm : public ErrorType {
+
+		ErrUnsupportedAlgorithm() noexcept :
 		ErrorType(
 			"unsupported_key_algorithm",
 			"Unsupported public key algorithm") {
 		}
 	};
 	
-	class ErrSigNotProvidedOrInvalid : public ErrorType {
-		ErrSigNotProvidedOrInvalid() :
+	struct ErrSigNotProvidedOrInvalid : public ErrorType {
+
+		ErrSigNotProvidedOrInvalid() noexcept :
 		ErrorType(
 			"signature_not_provided_or_invalid",
 			"Signature invalid or not provided") {
