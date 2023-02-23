@@ -13,12 +13,12 @@
 
 #include <algorithm>
 #include <any>
+#include <compare>
 #include <string>
 #include <vector>
 #include <map>
 #include <iterator>
 #include <optional>
-#include <functional>
 #include <nlohmann/json.hpp>
 #include "../Protocol/Core.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
@@ -230,22 +230,119 @@ namespace WebAuthN::Metadata {
     })
 
     namespace WebAuthNCOSE = WebAuthN::Protocol::WebAuthNCOSE;
+
     // TODO: this goes away after WebAuthNCOSE::CredentialPublicKey gets implemented
-    struct algKeyCose {
+    struct AlgKeyCose {
         
         WebAuthNCOSE::COSEKeyType KeyType;
         WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
         WebAuthNCOSE::COSEEllipticCurveType Curve;
 
-        inline bool operator ==(const algKeyCose& other) const noexcept {
+        constexpr auto operator <=>(const AlgKeyCose&) const noexcept = default;
 
-            return KeyType == other.KeyType && Algorithm == other.Algorithm && Curve == other.Curve;
-        }
+        /*friend constexpr bool operator ==(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept;
+        friend constexpr bool operator !=(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept;
+        friend constexpr bool operator <(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept;
+        friend constexpr bool operator <=(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept;
+        friend constexpr bool operator >(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept;
+        friend constexpr bool operator >=(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept;*/
     };
 
-    inline std::function<algKeyCose(AuthenticationAlgorithmType)> algKeyCoseDictionary() noexcept {
+    /*inline constexpr bool operator ==(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept {
 
-        static const auto MAPPING = std::map<AuthenticationAlgorithmType, algKeyCose>{
+        return selfValue.KeyType == inValue.KeyType && selfValue.Algorithm == inValue.Algorithm && selfValue.Curve == inValue.Curve;
+    }
+
+    inline constexpr bool operator !=(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept {
+
+        return selfValue.KeyType != inValue.KeyType || selfValue.Algorithm != inValue.Algorithm || selfValue.Curve != inValue.Curve;
+    }
+
+    inline constexpr bool operator <(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept {
+
+        if (selfValue.KeyType != inValue.KeyType) {
+
+            return selfValue.KeyType < inValue.KeyType;
+        }
+
+        if (selfValue.Algorithm != inValue.Algorithm) {
+
+            return selfValue.Algorithm < inValue.Algorithm;
+        }
+
+        if (selfValue.Curve != inValue.Curve) {
+
+            return selfValue.Curve < inValue.Curve;
+        }
+
+        return false;
+    }
+
+    inline constexpr bool operator <=(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept {
+
+        if (selfValue.KeyType != inValue.KeyType) {
+
+            return selfValue.KeyType < inValue.KeyType;
+        }
+
+        if (selfValue.Algorithm != inValue.Algorithm) {
+
+            return selfValue.Algorithm < inValue.Algorithm;
+        }
+
+        if (selfValue.Curve != inValue.Curve) {
+
+            return selfValue.Curve < inValue.Curve;
+        }
+
+        return true;
+    }
+
+    inline constexpr bool operator >(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept {
+
+        if (selfValue.KeyType != inValue.KeyType) {
+
+            return selfValue.KeyType > inValue.KeyType;
+        }
+
+        if (selfValue.Algorithm != inValue.Algorithm) {
+
+            return selfValue.Algorithm > inValue.Algorithm;
+        }
+
+        if (selfValue.Curve != inValue.Curve) {
+
+            return selfValue.Curve > inValue.Curve;
+        }
+
+        return false;
+    }
+
+    inline constexpr bool operator >=(const AlgKeyCose& selfValue, const AlgKeyCose& inValue) noexcept {
+
+        if (selfValue.KeyType != inValue.KeyType) {
+
+            return selfValue.KeyType > inValue.KeyType;
+        }
+
+        if (selfValue.Algorithm != inValue.Algorithm) {
+
+            return selfValue.Algorithm > inValue.Algorithm;
+        }
+
+        if (selfValue.Curve != inValue.Curve) {
+
+            return selfValue.Curve > inValue.Curve;
+        }
+
+        return true;
+    }*/
+
+#pragma GCC visibility push(hidden)
+
+    namespace {
+
+        inline const auto _MAPPING = std::map<AuthenticationAlgorithmType, AlgKeyCose>{
             { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P256 } },
             { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_DER, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P256 } },
             { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
@@ -263,13 +360,14 @@ namespace WebAuthN::Metadata {
             { AuthenticationAlgorithmType::ALG_SIGN_ED25519_EDDSA_SHA512_RAW,   { KeyType: WebAuthNCOSE::COSEKeyType::OctetKey,     Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,   Curve: WebAuthNCOSE::COSEEllipticCurveType::Ed25519 } },
             { AuthenticationAlgorithmType::ALG_SIGN_ED448_EDDSA_SHA512_RAW,     { KeyType: WebAuthNCOSE::COSEKeyType::OctetKey,     Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,     Curve: WebAuthNCOSE::COSEEllipticCurveType::Ed448 } }
         };
-        algKeyCose mappingFunction(AuthenticationAlgorithmType authAlgorithm) {
 
-            return MAPPING[authAlgorithm];
+        inline const AlgKeyCose& _AlgKeyCoseMappingFunction(AuthenticationAlgorithmType authAlgorithm) noexcept {
+
+            return _MAPPING[authAlgorithm];
         };
+    } // namespace
 
-        return mappingFunction;
-    }
+#pragma GCC visibility pop
 
     // usage:
     // algKeyCose key = ...;
@@ -280,11 +378,11 @@ namespace WebAuthN::Metadata {
     // };
     // AlgKeyMatch(key, a);
     template<size_t N>
-    inline bool AlgKeyMatch(const algKeyCose& key, AuthenticationAlgorithmType (&algs)[N]) noexcept {
+    inline bool AlgKeyMatch(const AlgKeyCose& key, AuthenticationAlgorithmType (&algs)[N]) noexcept {
 
         for (auto it = std::cbegin(algs); it != std::cend(algs); ++it) {
 
-            if (algKeyCoseDictionary()(*it) == key) {
+            if (_AlgKeyCoseMappingFunction(*it) == key) {
 
                 return true;
             }

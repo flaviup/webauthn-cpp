@@ -57,6 +57,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         AlgES256K = -47
     };
 
+    inline constexpr bool operator <(const enum COSEAlgorithmIdentifierType selfValue, const enum COSEAlgorithmIdentifierType inValue) noexcept {
+
+        return static_cast<int>(selfValue) < static_cast<int>(inValue);
+    }
+
+    inline constexpr bool operator >(const enum COSEAlgorithmIdentifierType selfValue, const enum COSEAlgorithmIdentifierType inValue) noexcept {
+
+        return static_cast<int>(selfValue) > static_cast<int>(inValue);
+    }
+
     inline void from_json(const json& j, COSEAlgorithmIdentifierType& coseAlgorithmIdentifier) {
 
         auto value = j.get<int>();
@@ -86,6 +96,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         // HSSLMS is the public key for HSS/LMS hash-based digital signature.
         HSSLMS
     };
+
+    inline constexpr bool operator <(const enum COSEKeyType selfValue, const enum COSEKeyType inValue) noexcept {
+
+        return static_cast<int>(selfValue) < static_cast<int>(inValue);
+    }
+
+    inline constexpr bool operator >(const enum COSEKeyType selfValue, const enum COSEKeyType inValue) noexcept {
+
+        return static_cast<int>(selfValue) > static_cast<int>(inValue);
+    }
 
     inline void from_json(const json& j, COSEKeyType& coseKey) {
 
@@ -124,6 +144,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         // Secp256k1 is the SECG secp256k1 curve.
         Secp256k1
     };
+
+    inline constexpr bool operator <(const enum COSEEllipticCurveType selfValue, const enum COSEEllipticCurveType inValue) noexcept {
+
+        return static_cast<int>(selfValue) < static_cast<int>(inValue);
+    }
+
+    inline constexpr bool operator >(const enum COSEEllipticCurveType selfValue, const enum COSEEllipticCurveType inValue) noexcept {
+
+        return static_cast<int>(selfValue) > static_cast<int>(inValue);
+    }
 
     inline void from_json(const json& j, COSEEllipticCurveType& coseEllipticCurve) {
 
