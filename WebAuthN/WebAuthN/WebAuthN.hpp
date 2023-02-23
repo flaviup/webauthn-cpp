@@ -19,6 +19,7 @@ namespace WebAuthN::WebAuthN {
 
     // WebAuthNType is the primary interface and contains the request handlers that should be called.
     class WebAuthNType final {
+
     private:
         
         WebAuthNType() noexcept = default;
@@ -27,6 +28,7 @@ namespace WebAuthN::WebAuthN {
         WebAuthNType& operator =(const WebAuthNType&) noexcept = default;
 
     public:
+
         WebAuthNType(WebAuthNType&&) noexcept = default;
         ~WebAuthNType() noexcept = default;
 

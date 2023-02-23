@@ -147,6 +147,16 @@ namespace WebAuthN::Protocol {
     struct AuthenticatorSelectionType {
         
         AuthenticatorSelectionType() noexcept = default;
+        AuthenticatorSelectionType(const std::optional<AuthenticatorAttachmentType>& authenticatorAttachment,
+            const std::optional<bool>& requireResidentKey,
+            const std::optional<ResidentKeyRequirementType>& residentKey,
+            const std::optional<UserVerificationRequirementType>& userVerification
+            ) noexcept : 
+            AuthenticatorAttachment(authenticatorAttachment),
+            RequireResidentKey(requireResidentKey),
+            ResidentKey(residentKey),
+            UserVerification(userVerification) {
+        }
         AuthenticatorSelectionType(const json& j) {
 
             if (j.find("authenticatorAttachment") != j.end()) {
