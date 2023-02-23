@@ -163,7 +163,6 @@ namespace WebAuthN::Protocol {
     }
 
     using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::any>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
-
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
 
     // RegisterAttestationFormat is a method to register attestation formats with the library. Generally using one of the

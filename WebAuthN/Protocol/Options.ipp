@@ -61,6 +61,11 @@ namespace WebAuthN::Protocol {
             Algorithm(j["alg"].get<WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
         }
 
+        CredentialParameterType(CredentialTypeType type, WebAuthNCOSE::COSEAlgorithmIdentifierType algorithm) noexcept :
+            Type(type),
+            Algorithm(algorithm) {
+        }
+
         CredentialTypeType Type;
         WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
     };
