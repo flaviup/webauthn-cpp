@@ -23,6 +23,18 @@ namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
 
+    // ResidentKeyRequired - Require that the key be private key resident to the client device.
+    inline bool ResidentKeyRequired() noexcept {
+
+        return true;
+    }
+
+    // ResidentKeyNotRequired - Do not require that the private key be resident to the client device.
+    inline bool ResidentKeyNotRequired() noexcept {
+
+        return false;
+    }
+
     // AuthenticatorResponseType represents the IDL with the same name.
     //
     // Authenticators respond to Relying Party requests by returning an object derived from the AuthenticatorResponse

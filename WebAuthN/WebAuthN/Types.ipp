@@ -19,6 +19,13 @@ namespace WebAuthN::WebAuthN {
 
     using json = nlohmann::json;
 
+	inline constexpr const auto ERR_FMT_FIELD_EMPTY         = "the field '%s' must be configured but it is empty";
+	inline constexpr const auto ERR_FMT_FIELD_NOT_VALID_URI = "field '%s' is not a valid URI: %w";
+	inline constexpr const auto ERR_FMT_CONFIG_VALIDATE     = "error occurred validating the configuration: %w";
+
+	inline constexpr const auto DEFAULT_TIMEOUT_UVD = std::chrono::milliseconds(120'000ULL);
+	inline constexpr const auto DEFAULT_TIMEOUT     = std::chrono::milliseconds(300'000ULL);
+
     // TimeoutConfigType represents the WebAuthN timeouts configuration for either registration or login..
     struct TimeoutConfigType {
 
@@ -56,59 +63,55 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (RPDisplayName.empty()) {
-                return fmt.Errorf(errFmtFieldEmpty, "RPDisplayName");
+                return fmt::format_error(ERR_FMT_FIELD_EMPTY, "RPDisplayName");
             }
 
             if (RPID.empty()) {
-                return fmt.Errorf(errFmtFieldEmpty, "RPID");
+                return fmt::format_error(ERR_FMT_FIELD_EMPTY, "RPID");
             }
 
             Protocol::ErrorType err{};
 
-            if _, err = url.Parse(RPID); err != nil {
-                return fmt.Errorf(errFmtFieldNotValidURI, "RPID", err)
+            if (!url.Parse(RPID)) {
+                return fmt::format_error(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", err);
             }
 
-            if (RPIcon && !RPIcon.empty()) {
-                if _, err = url.Parse(RPIcon); err != nil {
-                    return fmt.Errorf(errFmtFieldNotValidURI, "RPIcon", err)
+            if (!RPIcon.empty()) {
+
+                if (!url.Parse(RPIcon)) {
+                    return fmt::format_error(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", err);
                 }
             }
 
-            defaultTimeoutConfig = defaultTimeout;
-            defaultTimeoutUVDConfig = defaultTimeoutUVD;
+            auto defaultTimeoutConfig = DEFAULT_TIMEOUT;
+            auto defaultTimeoutUVDConfig = DEFAULT_TIMEOUT_UVD;
 
-            if (Timeout != 0) {
-                defaultTimeoutConfig = time.Millisecond * time.Duration(Timeout);
-                defaultTimeoutUVDConfig = defaultTimeoutConfig;
-            }
-
-            if (Timeouts.Login.Timeout.Milliseconds() == 0) {
+            if (Timeouts.Login.Timeout.count() == 0LL) {
                 Timeouts.Login.Timeout = defaultTimeoutConfig;
             }
 
-            if (Timeouts.Login.TimeoutUVD.Milliseconds() == 0) {
+            if (Timeouts.Login.TimeoutUVD.count() == 0LL) {
                 Timeouts.Login.TimeoutUVD = defaultTimeoutUVDConfig;
             }
 
-            if (Timeouts.Registration.Timeout.Milliseconds() == 0) {
+            if (Timeouts.Registration.Timeout.count() == 0LL) {
                 Timeouts.Registration.Timeout = defaultTimeoutConfig;
             }
 
-            if (Timeouts.Registration.TimeoutUVD.Milliseconds() == 0) {
+            if (Timeouts.Registration.TimeoutUVD.count() == 0LL) {
                 Timeouts.Registration.TimeoutUVD = defaultTimeoutUVDConfig;
             }
 
             if (RPOrigins.empty()) {
-                return fmt.Errorf("must provide at least one value to the 'RPOrigins' field");
+                return fmt::format_error("must provide at least one value to the 'RPOrigins' field");
             }
 
-            if (AuthenticatorSelection.RequireResidentKey == nil) {
-                AuthenticatorSelection.RequireResidentKey = Protocol::ResidentKeyNotRequiredType();
+            if (!AuthenticatorSelection.RequireResidentKey.has_value()) {
+                AuthenticatorSelection.RequireResidentKey = Protocol::ResidentKeyNotRequired();
             }
 
-            if (AuthenticatorSelection.UserVerification == "") {
-                AuthenticatorSelection.UserVerification = Protocol::VerificationPreferred;
+            if (!AuthenticatorSelection.UserVerification.has_value()) {
+                AuthenticatorSelection.UserVerification = Protocol::UserVerificationRequirementType::Preferred;
             }
 
             Validated = true;
@@ -134,7 +137,7 @@ namespace WebAuthN::WebAuthN {
         // decode the URL Safe Base64 data.
         bool EncodeUserIDAsString;
         // Timeouts configures various timeouts.
-        TimeoutsConfigType Timeouts;
+        mutable TimeoutsConfigType Timeouts;
         mutable bool Validated;
         // RPIcon sets the icon URL for the Relying Party Server.
         //
