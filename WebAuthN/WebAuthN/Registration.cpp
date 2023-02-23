@@ -184,69 +184,93 @@ namespace WebAuthN::WebAuthN {
 
     // WithAuthenticatorSelection adjusts the non-default parameters regarding the authenticator to select during
     // registration.
-    RegistrationOptionHandlerType WithAuthenticatorSelection(authenticatorSelection Protocol::AuthenticatorSelection) {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            cco.AuthenticatorSelection = authenticatorSelection
-        }
+    inline WebAuthNType::RegistrationOptionHandlerType WithAuthenticatorSelection(const Protocol::AuthenticatorSelectionType& authenticatorSelection) noexcept {
+
+        return [&authenticatorSelection](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+
+            cco.AuthenticatorSelection = authenticatorSelection;
+        };
     }
 
     // WithExclusions adjusts the non-default parameters regarding credentials to exclude from registration.
-    func WithExclusions(excludeList []Protocol::CredentialDescriptor) RegistrationOption {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            cco.CredentialExcludeList = excludeList
-        }
+    inline WebAuthNType::RegistrationOptionHandlerType WithExclusions(const std::vector<Protocol::CredentialDescriptorType>& excludeList) noexcept {
+
+        return [&excludeList](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+            cco.CredentialExcludeList = excludeList;
+        };
     }
 
     // WithConveyancePreference adjusts the non-default parameters regarding whether the authenticator should attest to the
     // credential.
-    func WithConveyancePreference(preference Protocol::ConveyancePreference) RegistrationOption {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            cco.Attestation = preference
-        }
+    inline WebAuthNType::RegistrationOptionHandlerType WithConveyancePreference(Protocol::ConveyancePreferenceType preference) noexcept {
+
+        return [&preference](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+            cco.Attestation = preference;
+        };
     }
 
     // WithExtensions adjusts the extension parameter in the registration options.
-    func WithExtensions(extension Protocol::AuthenticationExtensions) RegistrationOption {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            cco.Extensions = extension
-        }
+    inline WebAuthNType::RegistrationOptionHandlerType WithExtensions(const Protocol::AuthenticationExtensionsType& extensions) noexcept {
+
+        return [&extensions](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+            cco.Extensions = extensions;
+        };
     }
 
     // WithCredentialParameters adjusts the credential parameters in the registration options.
-    func WithCredentialParameters(credentialParams []Protocol::CredentialParameter) RegistrationOption {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            cco.Parameters = credentialParams
-        }
+    inline WebAuthNType::RegistrationOptionHandlerType WithCredentialParameters(const std::vector<Protocol::CredentialParameterType>& credentialParams) noexcept {
+
+        return [&credentialParams](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+            cco.Parameters = credentialParams;
+        };
     }
 
     // WithAppIdExcludeExtension automatically includes the specified appid if the CredentialExcludeList contains a credential
     // with the type `fido-u2f`.
-    func WithAppIdExcludeExtension(appid string) RegistrationOption {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            for _, credential := range cco.CredentialExcludeList {
-                if credential.AttestationType == Protocol::CredentialTypeFIDOU2F {
-                    if cco.Extensions == nil {
-                        cco.Extensions = map[string]interface{}{}
-                    }
+    inline WebAuthNType::RegistrationOptionHandlerType WithAppIdExcludeExtension(const std::string& appid) noexcept {
 
-                    cco.Extensions[Protocol::ExtensionAppIDExclude] = appid
+        return [&appid](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+            if (!cco.CredentialExcludeList) return;
+
+            for (const auto& credential : cco.CredentialExcludeList.value()) {
+
+                if (credential.AttestationType == Protocol::CREDENTIAL_TYPE_FIDO_U2F) {
+                    
+                    if (!cco.Extensions) {
+                        cco.Extensions = Protocol::AuthenticationExtensionsType{};
+                    }
+                    cco.Extensions.value()[Protocol::EXTENSION_APPID_EXCLUDE] = appid;
                 }
             }
-        }
+        };
     }
 
     // WithResidentKeyRequirement sets both the resident key and require resident key protocol options.
-    func WithResidentKeyRequirement(requirement Protocol::ResidentKeyRequirement) RegistrationOption {
-        return func(cco *Protocol::PublicKeyCredentialCreationOptions) {
-            cco.AuthenticatorSelection.ResidentKey = requirement
+    inline WebAuthNType::RegistrationOptionHandlerType WithResidentKeyRequirement(Protocol::ResidentKeyRequirementType requirement) noexcept {
 
-            switch requirement {
-            case Protocol::ResidentKeyRequirementRequired:
-                cco.AuthenticatorSelection.RequireResidentKey = Protocol::ResidentKeyRequired()
-            default:
-                cco.AuthenticatorSelection.RequireResidentKey = Protocol::ResidentKeyNotRequired()
+        return [&requirement](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+
+            if (!cco.AuthenticatorSelection) {
+                cco.AuthenticatorSelection = Protocol::AuthenticatorSelectionType{};
             }
-        }
+            cco.AuthenticatorSelection.value().ResidentKey = requirement;
+
+            switch (requirement) {
+                case Protocol::ResidentKeyRequirementType::Required:
+                    cco.AuthenticatorSelection.value().RequireResidentKey = Protocol::ResidentKeyRequired();
+                    break;
+
+                default:
+                    cco.AuthenticatorSelection.value().RequireResidentKey = Protocol::ResidentKeyNotRequired();
+                    break;
+            }
+        };
     }
 
     Protocol::expected<CredentialType>

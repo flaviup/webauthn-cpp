@@ -9,6 +9,7 @@
 #ifndef WEBAUTHN_WEBAUTHN_WEBAUTHN_HPP
 #define WEBAUTHN_WEBAUTHN_WEBAUTHN_HPP
 
+#include <functional>
 #include "IUser.ipp"
 #include "Config.ipp"
 #include "SessionData.ipp"
@@ -54,7 +55,8 @@ namespace WebAuthN::WebAuthN {
 
         // RegistrationOptionHandlerType describes a function which modifies the registration Protocol::PublicKeyCredentialCreationOptionsType
         // values.
-        using RegistrationOptionHandlerType = void (*)(Protocol::PublicKeyCredentialCreationOptionsType&);
+        //using RegistrationOptionHandlerType = void (*)(Protocol::PublicKeyCredentialCreationOptionsType&);
+        using RegistrationOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialCreationOptionsType&)>;
 
         // Registration
 
