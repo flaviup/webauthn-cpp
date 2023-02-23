@@ -16,8 +16,6 @@
 
 namespace WebAuthN::WebAuthN {
 
-    using json = nlohmann::json;
-
     struct CredentialFlagsType {
 
         CredentialFlagsType() noexcept = default;
