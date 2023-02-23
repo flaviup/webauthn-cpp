@@ -11,6 +11,7 @@
 
 #define JSON_DISABLE_ENUM_SERIALIZATION 1
 
+#include "../Util/expected.hh"
 #include "Errors.ipp"
 
 #pragma GCC visibility push(default)

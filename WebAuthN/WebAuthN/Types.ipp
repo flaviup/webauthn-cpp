@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 #include "Consts.ipp"
 #include "Credential.ipp"
+#include "../Util/UrlParse.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -63,13 +64,13 @@ namespace WebAuthN::WebAuthN {
                 return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPID"));
             }
 
-            if (!url.Parse(RPID)) {
+            if (!Util::Url::Parse(RPID)) {
                 return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", RPID));
             }
 
             if (!RPIcon.empty()) {
 
-                if (!url.Parse(RPIcon)) {
+                if (!Util::Url::Parse(RPIcon)) {
                     return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon));
                 }
             }

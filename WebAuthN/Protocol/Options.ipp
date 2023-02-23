@@ -23,9 +23,8 @@ namespace WebAuthN::Protocol {
     // parameters requesting additional processing by the client and authenticator.
     //
     // Specification: §5.7.1. Authentication Extensions Client Inputs (https://www.w3.org/TR/webauthn/#iface-authentication-extensions-client-inputs)
-    using AuthenticationExtensionsType = std::map<std::string, std::any>;
-
-    using Extensions = std::any;
+    using ExtensionsType = std::string;
+    using AuthenticationExtensionsType = std::map<std::string, ExtensionsType>;
 
     // CredentialTypeType represents the PublicKeyCredentialType IDL and is used with the CredentialDescriptorType IDL.
     //
