@@ -171,7 +171,7 @@ namespace WebAuthN::WebAuthN {
     // registration operations.
     struct IUser {
 
-        // WebAuthNID provides the user handle of the user account. A user handle is an opaque byte sequence with a maximum
+        // GetWebAuthNID provides the user handle of the user account. A user handle is an opaque byte sequence with a maximum
         // size of 64 bytes, and is not meant to be displayed to the user.
         //
         // To ensure secure operation, authentication and authorization decisions MUST be made on the basis of this id
@@ -182,24 +182,24 @@ namespace WebAuthN::WebAuthN {
         // Specification: §5.4.3. User Account Parameters for Credential Generation (https://w3c.github.io/webauthn/#dom-publickeycredentialuserentity-id)
         virtual std::vector<uint8_t> GetWebAuthNID() const = 0;
 
-        // WebAuthNName provides the name attribute of the user account during registration and is a human-palatable name for the user
+        // GetWebAuthNName provides the name attribute of the user account during registration and is a human-palatable name for the user
         // account, intended only for display. For example, "Alex Müller" or "田中倫". The Relying Party SHOULD let the user
         // choose this, and SHOULD NOT restrict the choice more than necessary.
         //
         // Specification: §5.4.3. User Account Parameters for Credential Generation (https://w3c.github.io/webauthn/#dictdef-publickeycredentialuserentity)
         virtual std::string GetWebAuthNName() const = 0;
 
-        // WebAuthNDisplayName provides the name attribute of the user account during registration and is a human-palatable
+        // GetWebAuthNDisplayName provides the name attribute of the user account during registration and is a human-palatable
         // name for the user account, intended only for display. For example, "Alex Müller" or "田中倫". The Relying Party
         // SHOULD let the user choose this, and SHOULD NOT restrict the choice more than necessary.
         //
         // Specification: §5.4.3. User Account Parameters for Credential Generation (https://www.w3.org/TR/webauthn/#dom-publickeycredentialuserentity-displayname)
         virtual std::string GetWebAuthNDisplayName() const = 0;
 
-        // WebAuthNCredentials provides the list of Credential objects owned by the user.
+        // GetWebAuthNCredentials provides the list of Credential objects owned by the user.
         virtual std::vector<CredentialType> GetWebAuthNCredentials() const = 0;
 
-        // WebAuthNIcon is a deprecated option.
+        // GetWebAuthNIcon is a deprecated option.
         // Deprecated: this has been removed from the specification recommendation. Suggest a blank string.
         virtual std::string GetWebAuthNIcon() const = 0;
     };
