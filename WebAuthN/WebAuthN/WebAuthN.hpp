@@ -61,8 +61,9 @@ namespace WebAuthN::WebAuthN {
         // Registration
 
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
+        template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-        BeginRegistration(const IUser& user, int optsCount, const RegistrationOptionHandlerType& opts...) noexcept;
+        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = RegistrationOptionHandlerType[]{}) noexcept;
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
         // credentials and session data.
@@ -163,7 +164,7 @@ namespace WebAuthN::WebAuthN {
     private:
 
         Protocol::expected<CredentialType>
-        _CreateCredential(const IUser& user, const SessionDataType& sessionData, Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept;
+        _CreateCredential(const IUser& user, const SessionDataType& sessionData, const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept;
 
         ConfigType _config;
     };

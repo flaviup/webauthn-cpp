@@ -11,6 +11,7 @@
 
 #include <string>
 #include "../../cpp-base64/base64.h"
+#include "Core.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -18,14 +19,29 @@ namespace WebAuthN::Protocol {
 
     using URLEncodedBase64Type = std::string;
 
-    inline URLEncodedBase64Type JsonToURLEncodedBase64(const std::string& json) {
+    inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const char* str) noexcept {
 
-        return base64_encode(json, true);
+        return URLEncodedBase64_Encode(std::string(str));
     }
 
-    inline std::string URLEncodedBase64ToJson(const URLEncodedBase64Type& encoded) {
+    inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const std::string& str) noexcept {
 
-        return base64_decode(encoded);
+        try {
+
+            return base64_encode(str, true);
+        } catch (const std::exception& e) {
+            return unexpected(ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding."));
+        }
+    }
+
+    inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded) noexcept {
+
+        try {
+
+            return base64_decode(encoded, true);
+        } catch (const std::exception& e) {
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+        }
     }
 
 } // namespace WebAuthN::Protocol

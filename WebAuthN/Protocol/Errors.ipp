@@ -12,7 +12,6 @@
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
-#include "Base64.ipp"
 #include "Extensions.ipp"
 
 #pragma GCC visibility push(default)

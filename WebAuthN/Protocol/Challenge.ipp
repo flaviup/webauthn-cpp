@@ -26,10 +26,10 @@ namespace WebAuthN::Protocol {
     // using at least 16 bytes with 100 bits of entropy. We use 32 bytes.
     inline expected<URLEncodedBase64Type> CreateChallenge() noexcept {
         
-        char challenge[CHALLENGE_LENGTH];
+        char challenge[CHALLENGE_LENGTH + 1]{0};
         randombytes_buf(challenge, CHALLENGE_LENGTH);
 
-        return JsonToURLEncodedBase64(std::string(challenge));
+        return URLEncodedBase64_Encode(challenge);
     }
 } // namespace WebAuthN::Protocol
 

@@ -10,6 +10,9 @@
 #define WEBAUTHN_PROTOCOL_CREDENTIAL_IPP
 
 #include "Core.ipp"
+#include "Attestation.ipp"
+#include "Client.ipp"
+#include "../Util/Crypto.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -61,6 +64,11 @@ namespace WebAuthN::Protocol {
     struct ParsedCredentialType {
 
         ParsedCredentialType() noexcept = default;
+        ParsedCredentialType(const std::string& id,
+            const std::string& type) noexcept : 
+            ID(id), 
+            Type(type) {
+        };
         ParsedCredentialType(const json& j) :
             ID(j["id"].get<std::string>()),
             Type(j["type"].get<std::string>()) {
@@ -141,6 +149,15 @@ namespace WebAuthN::Protocol {
     struct ParsedPublicKeyCredentialType : public ParsedCredentialType {
 
         ParsedPublicKeyCredentialType() noexcept = default;
+        ParsedPublicKeyCredentialType(const ParsedCredentialType& pc,
+            const std::vector<uint8_t>& rawID,
+            const std::optional<AuthenticationExtensionsClientOutputsType>& clientExtensionResults = std::nullopt,
+            const std::optional<AuthenticatorAttachmentType>& authenticatorAttachment = std::nullopt) noexcept :
+            ParsedCredentialType(pc),
+            RawID(rawID),
+            ClientExtensionResults(clientExtensionResults), 
+            AuthenticatorAttachment(authenticatorAttachment) {
+        };
         ParsedPublicKeyCredentialType(const json& j) :
             ParsedCredentialType(j),
             RawID(j["rawId"].get<std::vector<uint8_t>>()) {
@@ -158,7 +175,7 @@ namespace WebAuthN::Protocol {
             ParsedPublicKeyCredentialType(json::from_cbor(cbor)) {
         }
 
-        // GetAppID takes a AuthenticationExtensions object or nil. It then performs the following checks in order:
+        // GetAppID takes a AuthenticationExtensions object. It then performs the following checks in order:
         //
         // 1. Check that the Session Data's AuthenticationExtensions has been provided and if it hasn't return an error.
         // 2. Check that the AuthenticationExtensionsClientOutputs contains the extensions output and return an empty string if it doesn't.
@@ -169,10 +186,45 @@ namespace WebAuthN::Protocol {
         // 7. Check that the Session Data has an appid extension defined and if it doesn't return an error.
         // 8. Check that the appid extension in Session Data is a string and if it isn't return an error.
         // 9. Return the appid extension value from the Session data.
-        inline expected<std::string> GetAppID(const AuthenticationExtensionsType& authExt, 
-            const std::string& credentialAttestationType) const {
+        inline expected<std::string>
+        GetAppID(const AuthenticationExtensionsType& authExt, const std::string& credentialAttestationType) const noexcept {
 
-            return std::string("");
+            bool enableAppID = false;
+
+            if (authExt.empty() || !ClientExtensionResults || ClientExtensionResults.value().empty()) {
+                return "";
+            }
+
+            // If the credential does not have the correct attestation type it is assumed to NOT be a fido-u2f credential.
+            // https://www.w3.org/TR/webauthn/#sctn-fido-u2f-attestation
+            if (credentialAttestationType != CREDENTIAL_TYPE_FIDO_U2F) {
+                return "";
+            }
+            auto itCer = ClientExtensionResults.value().find(EXTENSION_APPID);
+
+            if (itCer == ClientExtensionResults.value().end()) {
+                return "";
+            }
+            
+            try {
+                enableAppID = std::any_cast<bool>(itCer->second);
+            } catch(const std::exception& e) {
+                return unexpected(ErrBadRequest().WithDetails("Client Output appid did not have the expected type"));
+            }
+
+            if (!enableAppID) {
+                return "";
+            }
+            auto it = authExt.find(EXTENSION_APPID);
+
+            if (it == authExt.end() || it->second.empty()) {
+                return unexpected(ErrBadRequest().WithDetails("Session Data does not have an appid but Client Output indicates it should be set"));
+            }
+            return it->second;
+
+            /*if appID, ok = value.(string); !ok {
+                return "", ErrBadRequest.WithDetails("Session Data appid did not have the expected type")
+            }*/
         }
 
         std::vector<uint8_t> RawID;
@@ -251,18 +303,142 @@ namespace WebAuthN::Protocol {
     struct ParsedCredentialCreationDataType : ParsedPublicKeyCredentialType {
 
         ParsedCredentialCreationDataType() noexcept = default;
+        ParsedCredentialCreationDataType(const ParsedPublicKeyCredentialType& ppkc,
+            const ParsedAttestationResponseType& response,
+            const CredentialCreationResponseType& raw) noexcept : 
+            ParsedPublicKeyCredentialType(ppkc),
+            Response(response),
+            Raw(raw) {
+
+        };
         ParsedCredentialCreationDataType(const json& j) :
             ParsedPublicKeyCredentialType(j) {
+        }
+
+        // Parse validates and parses the CredentialCreationResponseType into a ParsedCredentialCreationDataType.
+        inline static expected<ParsedCredentialCreationDataType> Parse(const CredentialCreationResponseType& credentialCreationResponse) noexcept {
+
+            if (credentialCreationResponse.ID.empty()) {
+                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing ID"));
+            }
+
+            auto testB64Result = URLEncodedBase64_Decode(credentialCreationResponse.ID);
+
+            if (!testB64Result || testB64Result.value().empty()) {
+                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("ID not base64 URL Encoded"));
+            }
+
+            if (credentialCreationResponse.Type.empty()) {
+                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing type"));
+            }
+
+            if (json(credentialCreationResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
+                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(fmt::format("Type not {}", json(CredentialTypeType::PublicKey))));
+            }
+
+            auto responseParseResult = credentialCreationResponse.AttestationResponse.Parse();
+            
+            if (!responseParseResult) {
+                return unexpected(ErrParsingData().WithDetails("Error parsing attestation response"));
+            }
+            auto response = responseParseResult.value();
+
+            // TODO: Remove this as it's a backwards compatibility layer.
+            if (response.Transports.empty() && credentialCreationResponse.Transports && !credentialCreationResponse.Transports.value().empty()) {
+
+                for (const auto& t : credentialCreationResponse.Transports.value()) {
+
+                    auto authT = json(t).get<AuthenticatorTransportType>();
+
+                    if (authT == AuthenticatorTransportType::Invalid) {
+                        return unexpected(ErrParsingData().WithDetails("Error parsing authenticator transport type " + t));
+                    }
+                    response.Transports.push_back(authT);
+                }
+            }
+            AuthenticatorAttachmentType attachment = json(credentialCreationResponse.AuthenticatorAttachment.value()).get<AuthenticatorAttachmentType>();
+
+            return ParsedCredentialCreationDataType{
+                ParsedPublicKeyCredentialType{
+                    ParsedCredentialType{
+                        credentialCreationResponse.ID, 
+                        credentialCreationResponse.Type
+                    },
+                    credentialCreationResponse.RawID,
+                    credentialCreationResponse.ClientExtensionResults,
+                    std::optional<AuthenticatorAttachmentType>(attachment)
+                },
+                response,
+                credentialCreationResponse
+            };
         }
 
         // Verify the Client and Attestation data.
         //
         // Specification: §7.1. Registering a New Credential (https://www.w3.org/TR/webauthn/#sctn-registering-a-new-credential)
-        inline std::optional<ErrorType> Verify(const std::string& storedChallenge, 
-            bool verifyUser, 
-            const std::string& relyingPartyID, 
-            const std::vector<std::string>& relyingPartyOrigins) const {
+        inline std::optional<ErrorType>
+        Verify(const std::string& storedChallenge, bool verifyUser, const std::string& relyingPartyID, 
+               const std::vector<std::string>& relyingPartyOrigins) const noexcept {
 
+            // Handles steps 3 through 6 - Verifying the Client Data against the Relying Party's stored data
+            auto verificationResult = Response.CollectedClientData.Verify(storedChallenge, CeremonyType::Create, relyingPartyOrigins);
+
+            if (verificationResult) {
+                return verificationResult;
+            }
+
+            // Step 7. Compute the hash of response.clientDataJSON using SHA-256.
+            auto clientDataHash = Util::Crypto::SHA256(Raw.AttestationResponse.ClientDataJSON);
+
+            // Step 8. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse
+            // structure to obtain the attestation statement format fmt, the authenticator data authData, and the
+            // attestation statement attStmt.
+
+            // We do the above step while parsing and decoding the CredentialCreationResponse
+            // Handle steps 9 through 14 - This verifies the attestation object.
+            verificationResult = Response.AttestationObject.Verify(relyingPartyID, clientDataHash, verifyUser);
+
+            if (verificationResult) {
+                return verificationResult;
+            }
+
+            // Step 15. If validation is successful, obtain a list of acceptable trust anchors (attestation root
+            // certificates or ECDAA-Issuer public keys) for that attestation type and attestation statement
+            // format fmt, from a trusted source or from policy. For example, the FIDO Metadata Service provides
+            // one way to obtain such information, using the AAGUID in the attestedCredentialData in authData.
+            // [https://fidoalliance.org/specs/fido-v2.0-id-20180227/fido-metadata-service-v2.0-id-20180227.html]
+
+            // TODO: There are no valid AAGUIDs yet or trust sources supported. We could implement policy for the RP in
+            // the future, however.
+
+            // Step 16. Assess the attestation trustworthiness using outputs of the verification procedure in step 14, as follows:
+            // - If self attestation was used, check if self attestation is acceptable under Relying Party policy.
+            // - If ECDAA was used, verify that the identifier of the ECDAA-Issuer public key used is included in
+            //   the set of acceptable trust anchors obtained in step 15.
+            // - Otherwise, use the X.509 certificates returned by the verification procedure to verify that the
+            //   attestation public key correctly chains up to an acceptable root certificate.
+
+            // TODO: We're not supporting trust anchors, self-attestation policy, or acceptable root certs yet.
+
+            // Step 17. Check that the credentialId is not yet registered to any other user. If registration is
+            // requested for a credential that is already registered to a different user, the Relying Party SHOULD
+            // fail this registration ceremony, or it MAY decide to accept the registration, e.g. while deleting
+            // the older registration.
+
+            // TODO: We can't support this in the code's current form, the Relying Party would need to check for this
+            // against their database.
+
+            // Step 18 If the attestation statement attStmt verified successfully and is found to be trustworthy, then
+            // register the new credential with the account that was denoted in the options.user passed to create(), by
+            // associating it with the credentialId and credentialPublicKey in the attestedCredentialData in authData, as
+            // appropriate for the Relying Party's system.
+
+            // Step 19. If the attestation statement attStmt successfully verified but is not trustworthy per step 16 above,
+            // the Relying Party SHOULD fail the registration ceremony.
+
+            // TODO: Not implemented for the reasons mentioned under Step 16
+
+            return std::nullopt;
         }
 
         ParsedAttestationResponseType Response;
@@ -277,6 +453,21 @@ namespace WebAuthN::Protocol {
     inline void from_json(const json& j, ParsedCredentialCreationDataType& parsedCredentialCreationData) {
 
         from_json(j, static_cast<ParsedPublicKeyCredentialType&>(parsedCredentialCreationData));
+    }
+
+    inline expected<ParsedCredentialCreationDataType> ParseCredentialCreationResponse(const std::string& response) noexcept {
+
+        if (response.empty()) {
+            return unexpected(ErrBadRequest().WithDetails("No response given"));
+        }
+
+        try {
+
+            auto credentialCreationResponse = json(response).get<CredentialCreationResponseType>();
+            return ParsedCredentialCreationDataType::Parse(credentialCreationResponse);
+        } catch(const std::exception& e) {
+            return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(e.what()));
+        }
     }
 } // namespace WebAuthN::Protocol
 

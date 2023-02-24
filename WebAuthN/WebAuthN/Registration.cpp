@@ -81,8 +81,9 @@ namespace WebAuthN::WebAuthN {
 
         // CreateCredential verifies a parsed response against the user's credentials and session data.
         Protocol::expected<CredentialType>
-        WebAuthNType::_CreateCredential(const IUser& user, const SessionDataType& sessionData, 
-                                        Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
+        WebAuthNType::_CreateCredential(const IUser& user,
+                                        const SessionDataType& sessionData, 
+                                        const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
             
             if (user.GetWebAuthNID() != sessionData.UserID) {
                 return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
@@ -109,8 +110,9 @@ namespace WebAuthN::WebAuthN {
     // These objects help us create the CredentialCreationOptionsType
     // that will be passed to the authenticator via the user client.
 
+    template<size_t N>
     Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-    WebAuthNType::BeginRegistration(const IUser& user, int optsCount, const WebAuthNType::RegistrationOptionHandlerType& opts...) noexcept {
+    WebAuthNType::BeginRegistration(const IUser& user, const WebAuthNType::RegistrationOptionHandlerType (&opts)[N] = RegistrationOptionHandlerType[]{}) noexcept {
         
         auto validationResult = _config.Validate();
 
@@ -162,15 +164,9 @@ namespace WebAuthN::WebAuthN {
             }
         };
 
-        va_list args;
-        va_start(args, opts);
-
-        for (int i = 0; i < optsCount; ++i) {
-            auto opt = va_arg(args, RegistrationOptionHandlerType);
-            opt(creation.Response);
+        for (int i = 0; i < N; ++i) {
+            opts[i](creation.Response);
         }
-
-        va_end(args);
 
         if (creation.Response.Timeout == 0) {
 
@@ -205,6 +201,6 @@ namespace WebAuthN::WebAuthN {
             return Protocol::unexpected(parsedResponse.error());
         }
 
-        return _CreateCredential(user, sessionData, parsedResponse);
+        return _CreateCredential(user, sessionData, parsedResponse.value());
     }
 } // namespace WebAuthN::WebAuthN

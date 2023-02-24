@@ -126,7 +126,7 @@ namespace WebAuthN::Protocol {
         // and https://www.w3.org/TR/webauthn/#verifying-assertion
         inline  std::optional<ErrorType> Verify(const std::string& storedChallenge, 
             CeremonyType ceremony, 
-            const std::vector<std::string>& rpOrigins) noexcept {
+            const std::vector<std::string>& rpOrigins) const noexcept {
 
             // Registration Step 3. Verify that the value of C.type is webauthn.create.
 
