@@ -11,6 +11,7 @@
 
 #include "Authenticator.ipp"
 #include "../Protocol/Credential.ipp"
+#include "../Util/Convert.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -39,9 +40,8 @@ namespace WebAuthN::WebAuthN {
         // Descriptor converts the CredentialType into a Protocol::CredentialDescriptorType.
         inline Protocol::CredentialDescriptorType ToDescriptorType() const noexcept {
 
-            Protocol::URLEncodedBase64Type credentialID{};
-            credentialID.reserve(this->ID.size());
-            for (int value : this->ID) credentialID += std::to_string(value);
+            std::string credentialID;
+            Util::Convert::ToString(this->ID, credentialID);
 
             return Protocol::CredentialDescriptorType{
                 Protocol::PublicKeyCredentialType(),
