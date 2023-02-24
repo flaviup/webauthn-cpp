@@ -2,11 +2,10 @@
 //  Registration.cpp
 //  webauthn-cpp
 //
-//  Created by Flaviu Pasca on 02/20/23.
+//  Created by Flaviu Pasca on 02/23/23.
 //  flaviup on gmail com
 //
 
-#include <cstdarg>
 #include "WebAuthN.hpp"
 #include "../Protocol/Challenge.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
@@ -112,7 +111,7 @@ namespace WebAuthN::WebAuthN {
 
     template<size_t N>
     Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-    WebAuthNType::BeginRegistration(const IUser& user, const WebAuthNType::RegistrationOptionHandlerType (&opts)[N] = RegistrationOptionHandlerType[]{}) noexcept {
+    WebAuthNType::BeginRegistration(const IUser& user, const WebAuthNType::RegistrationOptionHandlerType (&opts)[N] = WebAuthNType::RegistrationOptionHandlerType[]{}) noexcept {
         
         auto validationResult = _config.Validate();
 
