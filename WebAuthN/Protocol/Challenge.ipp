@@ -24,12 +24,12 @@ namespace WebAuthN::Protocol {
 
     // CreateChallenge creates a new challenge that should be signed and returned by the authenticator. The spec recommends
     // using at least 16 bytes with 100 bits of entropy. We use 32 bytes.
-    inline expected<URLEncodedBase64Type> CreateChallenge() noexcept {
+    inline std::optional<ErrorType> CreateChallenge(URLEncodedBase64Type& encodedChallenge) noexcept {
         
-        char challenge[CHALLENGE_LENGTH + 1]{0};
+        unsigned char challenge[CHALLENGE_LENGTH]{0};
         randombytes_buf(challenge, CHALLENGE_LENGTH);
 
-        return URLEncodedBase64_Encode(challenge);
+        return URLEncodedBase64_Encode(challenge, CHALLENGE_LENGTH, encodedChallenge);
     }
 } // namespace WebAuthN::Protocol
 

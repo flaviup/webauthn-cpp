@@ -321,10 +321,10 @@ namespace WebAuthN::Protocol {
             if (credentialCreationResponse.ID.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing ID"));
             }
+            std::string decodedID;
+            auto testB64Error = URLEncodedBase64_Decode(credentialCreationResponse.ID, decodedID);
 
-            auto testB64Result = URLEncodedBase64_Decode(credentialCreationResponse.ID);
-
-            if (!testB64Result || testB64Result.value().empty()) {
+            if (testB64Error || decodedID.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("ID not base64 URL Encoded"));
             }
 
@@ -364,7 +364,7 @@ namespace WebAuthN::Protocol {
                         credentialCreationResponse.ID, 
                         credentialCreationResponse.Type
                     },
-                    credentialCreationResponse.RawID,
+                    std::vector<uint8_t>(credentialCreationResponse.RawID.begin(), credentialCreationResponse.RawID.end()),
                     credentialCreationResponse.ClientExtensionResults,
                     std::optional<AuthenticatorAttachmentType>(attachment)
                 },

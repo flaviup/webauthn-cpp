@@ -21,7 +21,7 @@ namespace WebAuthN::Util::Crypto {
     std::vector<uint8_t> SHA256(const std::string& str) {
 
         unsigned char out[crypto_hash_sha256_BYTES];
-        crypto_hash_sha256(out, reinterpret_cast<const unsigned char*>(str.c_str()), str.size());
+        crypto_hash_sha256(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
 
         return std::vector<uint8_t>(out, out + crypto_hash_sha256_BYTES);
     }

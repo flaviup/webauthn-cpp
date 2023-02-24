@@ -94,10 +94,10 @@ namespace WebAuthN::WebAuthN {
             }
 
             auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
-            auto verificationResult = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
+            auto verificationResultError = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
 
-            if (verificationResult) {
-                return Protocol::unexpected(verificationResult.value());
+            if (verificationResultError) {
+                return Protocol::unexpected(verificationResultError.value());
             }
 
             return MakeNewCredential(parsedResponse);
@@ -120,11 +120,11 @@ namespace WebAuthN::WebAuthN {
 
             return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
         }
+        URLEncodedBase64Type challenge;
+        auto challengeCreationError = Protocol::CreateChallenge(challenge);
 
-        auto challenge = Protocol::CreateChallenge();
-
-        if (!challenge) {
-            return Protocol::unexpected(challenge.error());
+        if (challengeCreationError) {
+            return Protocol::unexpected(challengeCreationError.value());
         }
 
         Protocol::URLEncodedBase64Type entityUserID{};
@@ -155,7 +155,7 @@ namespace WebAuthN::WebAuthN {
             Protocol::PublicKeyCredentialCreationOptionsType{
                 entityRelyingParty,
                 entityUser,
-                challenge.value(),
+                challenge,
                 credentialParams,
                 std::nullopt,
                 std::nullopt,
@@ -182,7 +182,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         auto session = SessionDataType{
-            challenge.value(),
+            challenge,
             user.GetWebAuthNID(),
             "",
             _config.Timeouts.Registration.Enforce ? _Timestamp() + creation.Response.Timeout.value() : 0,
