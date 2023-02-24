@@ -13,6 +13,7 @@
 #include "IUser.ipp"
 #include "Config.ipp"
 #include "SessionData.ipp"
+#include "Credential.ipp"
 #include "../Protocol/Assertion.ipp"
 
 #pragma GCC visibility push(default)
@@ -180,27 +181,37 @@ namespace WebAuthN::WebAuthN {
         //
         // Specification: §5.5. Options for Assertion Generation (https://www.w3.org/TR/webauthn/#dictionary-assertion-options)
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginLogin(const IUser& user, const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
+        std::optional<Protocol::ErrorType>
+        BeginLogin(const IUser& user, 
+                   std::pair<Protocol::CredentialAssertionType, SessionDataType>& login, 
+                   const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
+        std::optional<Protocol::ErrorType>
+        BeginDiscoverableLogin(std::pair<Protocol::CredentialAssertionType, SessionDataType>& login,
+                               const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
 
         // FinishLogin takes the response from the client and validate it against the user credentials and stored session data.
-        Protocol::expected<CredentialType>
-        FinishLogin(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept;
+        std::optional<Protocol::ErrorType>
+        FinishLogin(const IUser& user, 
+                    const SessionDataType& sessionData, 
+                    const std::string& response, 
+                    CredentialType& credential) noexcept;
 
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.
-        Protocol::expected<CredentialType>
-        ValidateLogin(const IUser& user, const SessionDataType& sessionData, const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept;
+        std::optional<Protocol::ErrorType>
+        ValidateLogin(const IUser& user, 
+                      const SessionDataType& sessionData, 
+                      const Protocol::ParsedCredentialAssertionDataType& parsedResponse, 
+                      CredentialType& credential) noexcept;
 
         // ValidateDiscoverableLogin is an overloaded version of ValidateLogin that allows for discoverable credentials.
-        Protocol::expected<CredentialType>
+        std::optional<Protocol::ErrorType>
         ValidateDiscoverableLogin(WebAuthNType::DiscoverableUserHandlerType handler, 
                                   const SessionDataType& sessionData, 
-                                  const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept;
+                                  const Protocol::ParsedCredentialAssertionDataType& parsedResponse,
+                                  CredentialType& credential) noexcept;
 
         // WithAllowedCredentials adjusts the allowed credential list with Credential Descriptors, discussed in the included
         // specification sections with user-supplied values.
@@ -265,15 +276,17 @@ namespace WebAuthN::WebAuthN {
                           const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept;
 
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        std::optional<Protocol::ErrorType>
         _BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
-                    const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials, 
+                    const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
+                    std::pair<Protocol::CredentialAssertionType, SessionDataType>& login,
                     const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.
-        Protocol::expected<CredentialType>
+        std::optional<Protocol::ErrorType>
         _ValidateLogin(const IUser& user, 
                        const SessionDataType& sessionData, 
-                       const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept;
+                       const Protocol::ParsedCredentialAssertionDataType& parsedResponse,
+                       CredentialType& credential) noexcept;
 
         ConfigType _config;
     };

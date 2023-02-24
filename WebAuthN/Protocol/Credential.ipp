@@ -187,11 +187,11 @@ namespace WebAuthN::Protocol {
         // 8. Check that the appid extension in Session Data is a string and if it isn't return an error.
         // 9. Return the appid extension value from the Session data.
         inline expected<std::string>
-        GetAppID(const AuthenticationExtensionsType& authExt, const std::string& credentialAttestationType) const noexcept {
+        GetAppID(const std::optional<AuthenticationExtensionsType>& authExt, const std::string& credentialAttestationType) const noexcept {
 
             bool enableAppID = false;
 
-            if (authExt.empty() || !ClientExtensionResults || ClientExtensionResults.value().empty()) {
+            if (!authExt || authExt.value().empty() || !ClientExtensionResults || ClientExtensionResults.value().empty()) {
                 return "";
             }
 
@@ -215,9 +215,9 @@ namespace WebAuthN::Protocol {
             if (!enableAppID) {
                 return "";
             }
-            auto it = authExt.find(EXTENSION_APPID);
+            auto it = authExt.value().find(EXTENSION_APPID);
 
-            if (it == authExt.end() || it->second.empty()) {
+            if (it == authExt.value().end() || it->second.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Session Data does not have an appid but Client Output indicates it should be set"));
             }
             return it->second;

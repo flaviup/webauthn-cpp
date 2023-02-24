@@ -9,6 +9,7 @@
 #include "WebAuthN.hpp"
 #include "../Protocol/Challenge.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
+#include "../Util/Time.ipp"
 
 namespace WebAuthN::WebAuthN {
 
@@ -64,20 +65,6 @@ namespace WebAuthN::WebAuthN {
             };
         }
 
-        int64_t _Timestamp() noexcept
-        {
-            const auto now = std::chrono::system_clock::now();
-
-            // transform the time into a duration since the epoch
-            const auto epoch = now.time_since_epoch();
-
-            // cast the duration into milliseconds
-            const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
-
-            // return the number of milliseconds
-            return millis.count();
-        }
-
         // CreateCredential verifies a parsed response against the user's credentials and session data.
         Protocol::expected<CredentialType>
         WebAuthNType::_CreateCredential(const IUser& user,
@@ -88,7 +75,7 @@ namespace WebAuthN::WebAuthN {
                 return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
 
-            if (sessionData.Expires != 0LL && sessionData.Expires <= _Timestamp()) {
+            if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
                 return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
             }
 
@@ -119,7 +106,7 @@ namespace WebAuthN::WebAuthN {
 
             return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
         }
-        URLEncodedBase64Type challenge;
+        Protocol::URLEncodedBase64Type challenge;
         auto challengeCreationError = Protocol::CreateChallenge(challenge);
 
         if (challengeCreationError) {
