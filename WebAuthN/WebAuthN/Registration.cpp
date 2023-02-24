@@ -132,7 +132,11 @@ namespace WebAuthN::WebAuthN {
         if (_config.EncodeUserIDAsString) {
             entityUserID = std::string(user.GetWebAuthNID());
         } else {
-            entityUserID = Protocol::URLEncodedBase64Type(user.GetWebAuthNID());
+            auto idEncodingError = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID(), entityUserID);
+
+            if (idEncodingError) {
+                return Protocol::unexpected(idEncodingError.value());
+            }
         }
 
         auto entityUser = Protocol::UserEntityType{
