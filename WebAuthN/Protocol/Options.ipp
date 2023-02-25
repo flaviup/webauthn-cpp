@@ -46,9 +46,9 @@ namespace WebAuthN::Protocol {
 
     // map CredentialTypeType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(CredentialTypeType, {
-        {CredentialTypeType::Invalid, nullptr},
-        {CredentialTypeType::Invalid, ""},
-        {CredentialTypeType::PublicKey, "public-key"}
+        { CredentialTypeType::Invalid,        nullptr },
+        { CredentialTypeType::Invalid,             "" },
+        { CredentialTypeType::PublicKey, "public-key" }
     })
 
     // CredentialParameterType is the credential type and algorithm
@@ -60,11 +60,16 @@ namespace WebAuthN::Protocol {
             Type(j["type"].get<CredentialTypeType>()),
             Algorithm(j["alg"].get<WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
         }
-
         CredentialParameterType(CredentialTypeType type, WebAuthNCOSE::COSEAlgorithmIdentifierType algorithm) noexcept :
             Type(type),
             Algorithm(algorithm) {
         }
+        CredentialParameterType(const CredentialParameterType& credentialParameter) noexcept = default;
+        CredentialParameterType(CredentialParameterType&& credentialParameter) noexcept = default;
+        ~CredentialParameterType() noexcept = default;
+
+        CredentialParameterType& operator =(const CredentialParameterType& other) noexcept = default;
+        CredentialParameterType& operator =(CredentialParameterType&& other) noexcept = default;
 
         CredentialTypeType Type;
         WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
@@ -73,8 +78,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialParameterType& credentialParameter) {
 
         j = json{
-            {"type", credentialParameter.Type},
-            {"alg", credentialParameter.Algorithm}
+            { "type",     credentialParameter.Type },
+            { "alg", credentialParameter.Algorithm }
         };
     }
 
@@ -129,8 +134,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialDescriptorType& credentialDescriptor) {
 
         j = json{
-            {"type", credentialDescriptor.Type},
-            {"id", credentialDescriptor.CredentialID}
+            { "type",       credentialDescriptor.Type },
+            { "id", credentialDescriptor.CredentialID }
         };
 
         if (credentialDescriptor.Transports) {
@@ -306,12 +311,12 @@ namespace WebAuthN::Protocol {
 
     // map ConveyancePreferenceType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(ConveyancePreferenceType, {
-        {ConveyancePreferenceType::Invalid, nullptr},
-        {ConveyancePreferenceType::Invalid, ""},
-        {ConveyancePreferenceType::NoAttestation, "none"},
-        {ConveyancePreferenceType::IndirectAttestation, "indirect"},
-        {ConveyancePreferenceType::DirectAttestation, "direct"},
-        {ConveyancePreferenceType::EnterpriseAttestation, "enterprise"}
+        { ConveyancePreferenceType::Invalid,                    nullptr },
+        { ConveyancePreferenceType::Invalid,                         "" },
+        { ConveyancePreferenceType::NoAttestation,               "none" },
+        { ConveyancePreferenceType::IndirectAttestation,     "indirect" },
+        { ConveyancePreferenceType::DirectAttestation,         "direct" },
+        { ConveyancePreferenceType::EnterpriseAttestation, "enterprise" }
     })
 
     // PublicKeyCredentialCreationOptionsType represents the IDL of the same name.
@@ -388,9 +393,9 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const PublicKeyCredentialCreationOptionsType& publicKeyCredentialCreationOptions) {
 
         j = json{
-            {"rp", publicKeyCredentialCreationOptions.RelyingParty},
-            {"user", publicKeyCredentialCreationOptions.User},
-            {"challenge", publicKeyCredentialCreationOptions.Challenge}
+            { "rp",     publicKeyCredentialCreationOptions.RelyingParty },
+            { "user",           publicKeyCredentialCreationOptions.User },
+            { "challenge", publicKeyCredentialCreationOptions.Challenge }
         };
 
         if (publicKeyCredentialCreationOptions.Parameters) {
@@ -498,7 +503,6 @@ namespace WebAuthN::Protocol {
             return std::vector<URLEncodedBase64Type>(0);
         }
 
-
         URLEncodedBase64Type Challenge;
         std::optional<int> Timeout;
         std::optional<std::string> RelyingPartyID;
@@ -510,7 +514,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const PublicKeyCredentialRequestOptionsType& publicKeyCredentialRequestOptions) {
 
         j = json{
-            {"challenge", publicKeyCredentialRequestOptions.Challenge}
+            { "challenge", publicKeyCredentialRequestOptions.Challenge }
         };
 
         if (publicKeyCredentialRequestOptions.Timeout) {
@@ -576,7 +580,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialCreationType& credentialCreation) {
 
         j = json{
-            {"publicKey", credentialCreation.Response}
+            { "publicKey", credentialCreation.Response }
         };
     }
 
@@ -598,7 +602,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialAssertionType& credentialAssertion) {
 
         j = json{
-            {"publicKey", credentialAssertion.Response}
+            { "publicKey", credentialAssertion.Response }
         };
     }
 
@@ -616,10 +620,10 @@ namespace WebAuthN::Protocol {
 
     // map ServerResponseStatusType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(ServerResponseStatusType, {
-        {ServerResponseStatusType::Invalid, nullptr},
-        {ServerResponseStatusType::Invalid, ""},
-        {ServerResponseStatusType::Ok, "ok"},
-        {ServerResponseStatusType::Failed, "failed"}
+        { ServerResponseStatusType::Invalid, nullptr },
+        { ServerResponseStatusType::Invalid,      "" },
+        { ServerResponseStatusType::Ok,         "ok" },
+        { ServerResponseStatusType::Failed, "failed" }
     })
 
     struct ServerResponseType {
@@ -637,8 +641,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const ServerResponseType& serverResponse) {
 
         j = json{
-            {"status", serverResponse.Status},
-            {"errorMessage", serverResponse.Message}
+            { "status",        serverResponse.Status },
+            { "errorMessage", serverResponse.Message }
         };
     }
 

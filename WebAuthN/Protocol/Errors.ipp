@@ -32,6 +32,12 @@ namespace WebAuthN::Protocol {
             Details(j["error"].get<std::string>()),
             DevInfo(j["debug"].get<std::string>()) {
         }
+		ErrorType(const ErrorType& error) noexcept = default;
+        ErrorType(ErrorType&& error) noexcept = default;
+        virtual ~ErrorType() noexcept = default;
+
+        ErrorType& operator =(const ErrorType& other) noexcept = default;
+        ErrorType& operator =(ErrorType&& other) noexcept = default;
 
         explicit inline operator std::string() const noexcept {
 
@@ -61,9 +67,9 @@ namespace WebAuthN::Protocol {
     void to_json(json& j, const ErrorType& error) {
 
         j = json{
-            {"type", error.Type}, 
-            {"error", error.Details}, 
-            {"debug", error.DevInfo}
+            { "type",     error.Type }, 
+            { "error", error.Details }, 
+            { "debug", error.DevInfo }
         };
     }
 
@@ -91,7 +97,7 @@ namespace WebAuthN::Protocol {
 			"Stored challenge and received challenge do not match") {
 		}
 	};
-	
+
 	struct ErrParsingData : public ErrorType {
 
 		ErrParsingData() noexcept :
@@ -100,7 +106,7 @@ namespace WebAuthN::Protocol {
 			"Error parsing the authenticator response") {
 		}
 	};
-	
+
 	struct ErrAuthData : public ErrorType {
 
 		ErrAuthData() noexcept :
@@ -109,7 +115,7 @@ namespace WebAuthN::Protocol {
 			"Error verifying the authenticator data") {
 		}
 	};
-	
+
 	struct ErrVerification : public ErrorType {
 
 		ErrVerification() noexcept :
@@ -118,7 +124,7 @@ namespace WebAuthN::Protocol {
 			"Error validating the authenticator response") {
 		}
 	};
-	
+
 	struct ErrAttestation : public ErrorType {
 
 		ErrAttestation() noexcept :
@@ -127,7 +133,7 @@ namespace WebAuthN::Protocol {
 			"Error validating the attestation data provided") {
 		}
 	};
-	
+
 	struct ErrInvalidAttestation : public ErrorType {
 
 		ErrInvalidAttestation() noexcept :
@@ -136,7 +142,7 @@ namespace WebAuthN::Protocol {
 			"Invalid attestation data") {
 		}
 	};
-	
+
 	struct ErrAttestationFormat : public ErrorType {
 
 		ErrAttestationFormat() noexcept :
@@ -145,7 +151,7 @@ namespace WebAuthN::Protocol {
 			"Invalid attestation format") {
 		}
 	};
-	
+
 	struct ErrAttestationCertificate : public ErrorType {
 
 		ErrAttestationCertificate() noexcept :
@@ -154,7 +160,7 @@ namespace WebAuthN::Protocol {
 			"Invalid attestation certificate") {
 		}
 	};
-	
+
 	struct ErrAssertionSignature : public ErrorType {
 
 		ErrAssertionSignature() noexcept :
@@ -163,7 +169,7 @@ namespace WebAuthN::Protocol {
 			"Assertion Signature against auth data and client hash is not valid") {
 		}
 	};
-	
+
 	struct ErrUnsupportedKey : public ErrorType {
 
 		ErrUnsupportedKey() noexcept :
@@ -172,7 +178,7 @@ namespace WebAuthN::Protocol {
 			"Unsupported Public Key Type") {
 		}
 	};
-	
+
 	struct ErrUnsupportedAlgorithm : public ErrorType {
 
 		ErrUnsupportedAlgorithm() noexcept :
@@ -190,7 +196,7 @@ namespace WebAuthN::Protocol {
 			"This field is not yet supported by the WebAuthn spec") {
 		}
 	};
-	
+
 	struct ErrNotImplemented : public ErrorType {
 
 		ErrNotImplemented() noexcept :

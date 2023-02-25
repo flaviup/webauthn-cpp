@@ -19,8 +19,6 @@ namespace WebAuthN::WebAuthN {
 
     struct CredentialFlagsType {
 
-        CredentialFlagsType() noexcept = default;
-
         // Flag UP indicates the users presence.
         bool UserPresent;
         // Flag UV indicates the user performed verification.
@@ -35,19 +33,36 @@ namespace WebAuthN::WebAuthN {
     // CredentialType contains all needed information about a WebAuthn credential for storage.
     struct CredentialType {
 
-        CredentialType() noexcept = default;
-
-        // Descriptor converts the CredentialType into a Protocol::CredentialDescriptorType.
-        inline Protocol::CredentialDescriptorType ToDescriptorType() const noexcept {
-
-            std::string credentialID;
-            Util::Convert::ToString(this->ID, credentialID);
+        // ToDescriptorType converts the CredentialType into a Protocol::CredentialDescriptorType.
+        inline Protocol::CredentialDescriptorType ToDescriptorType() noexcept {
 
             return Protocol::CredentialDescriptorType{
                 Protocol::PublicKeyCredentialType(),
-                credentialID,
+                Util::Convert::ToString(this->ID),
                 this->Transports,
-                this->AttestationType,
+                this->AttestationType
+            };
+        }
+
+        // Create will return a credential on successful validation of a registration response.
+        inline static CredentialType Create(const Protocol::ParsedCredentialCreationDataType& c) noexcept {
+
+            return CredentialType{
+                ID:              c.Response.AttestationObject.AuthData.AttData.CredentialID,
+                PublicKey:       c.Response.AttestationObject.AuthData.AttData.CredentialPublicKey,
+                AttestationType: c.Response.AttestationObject.Format,
+                Transports:      c.Response.Transports,
+                Flags: CredentialFlagsType{
+                    UserPresent:    Protocol::HasUserPresent(c.Response.AttestationObject.AuthData.Flags),
+                    UserVerified:   Protocol::HasUserVerified(c.Response.AttestationObject.AuthData.Flags),
+                    BackupEligible: Protocol::HasBackupEligible(c.Response.AttestationObject.AuthData.Flags),
+                    BackupState:    Protocol::HasBackupState(c.Response.AttestationObject.AuthData.Flags)
+                },
+                Authenticator: AuthenticatorType{
+                    AAGUID:     c.Response.AttestationObject.AuthData.AttData.AAGUID,
+                    SignCount:  c.Response.AttestationObject.AuthData.Counter,
+                    Attachment: c.AuthenticatorAttachment
+                }
             };
         }
 
@@ -67,30 +82,6 @@ namespace WebAuthN::WebAuthN {
         // The Authenticator information for a given certificate.
         AuthenticatorType Authenticator;
     };
-
-    // MakeNewCredential will return a credential pointer on successful validation of a registration response.
-    inline Protocol::expected<CredentialType> MakeNewCredential(const Protocol::ParsedCredentialCreationDataType& c) noexcept {
-
-        auto newCredential = CredentialType{
-            ID:              c.Response.AttestationObject.AuthData.AttData.CredentialID,
-            PublicKey:       c.Response.AttestationObject.AuthData.AttData.CredentialPublicKey,
-            AttestationType: c.Response.AttestationObject.Format,
-            Transports:      c.Response.Transports,
-            Flags: CredentialFlagsType{
-                UserPresent:    Protocol::HasUserPresent(c.Response.AttestationObject.AuthData.Flags),
-                UserVerified:   Protocol::HasUserVerified(c.Response.AttestationObject.AuthData.Flags),
-                BackupEligible: Protocol::HasBackupEligible(c.Response.AttestationObject.AuthData.Flags),
-                BackupState:    Protocol::HasBackupState(c.Response.AttestationObject.AuthData.Flags)
-            },
-            Authenticator: AuthenticatorType{
-                AAGUID:     c.Response.AttestationObject.AuthData.AttData.AAGUID,
-                SignCount:  c.Response.AttestationObject.AuthData.Counter,
-                Attachment: c.AuthenticatorAttachment
-            }
-        };
-
-        return newCredential;
-    }
 } // namespace WebAuthN::WebAuthN
 
 #pragma GCC visibility pop

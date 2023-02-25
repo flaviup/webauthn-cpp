@@ -17,11 +17,11 @@ namespace WebAuthN::WebAuthN {
 
     namespace {
 
-        inline void _GetDefaultRegistrationCredentialParameters(std::vector<Protocol::CredentialParameterType>& credentialParameters) noexcept {
+        inline std::vector<Protocol::CredentialParameterType> _GetDefaultRegistrationCredentialParameters() noexcept {
             
             namespace WebAuthNCOSE = Protocol::WebAuthNCOSE;
 
-            credentialParameters = {
+            return std::vector<Protocol::CredentialParameterType>{
                 {
                     Protocol::CredentialTypeType::PublicKey,
                     WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256
@@ -86,7 +86,7 @@ namespace WebAuthN::WebAuthN {
                 return Protocol::unexpected(verificationResultError.value());
             }
 
-            return MakeNewCredential(parsedResponse);
+            return CredentialType::Create(parsedResponse);
         }
     } // namespace
 
@@ -138,8 +138,7 @@ namespace WebAuthN::WebAuthN {
             _config.RPIcon
         };
 
-        std::vector<Protocol::CredentialParameterType> credentialParams;
-        _GetDefaultRegistrationCredentialParameters(credentialParams);
+        std::vector<Protocol::CredentialParameterType> credentialParams = _GetDefaultRegistrationCredentialParameters();
 
         auto creation = Protocol::CredentialCreationType{
             Protocol::PublicKeyCredentialCreationOptionsType{

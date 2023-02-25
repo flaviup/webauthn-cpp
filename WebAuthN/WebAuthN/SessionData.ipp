@@ -46,11 +46,11 @@ namespace WebAuthN::WebAuthN {
             UserVerification(j["userVerification"].get<Protocol::UserVerificationRequirementType>()) {
 
             if (j.find("allowed_credentials") != j.end()) {
-                AllowedCredentialIDs.emplace(j["allowed_credentials"].get<std::vector<std::vector<uint8_t>>>();
+                AllowedCredentialIDs.emplace(j["allowed_credentials"].get<std::vector<std::vector<uint8_t>>>());
             }
 
             if (j.find("extensions") != j.end()) {
-                Extensions.emplace(j["extensions"].get<Protocol::AuthenticationExtensionsType>();
+                Extensions.emplace(j["extensions"].get<Protocol::AuthenticationExtensionsType>());
             }
         }
 
@@ -92,11 +92,11 @@ namespace WebAuthN::WebAuthN {
         j.at("userVerification").get_to(sessionData.UserVerification);
 
         if (j.find("allowed_credentials") != j.end()) {
-            sessionData.AllowedCredentialIDs.emplace(j["allowed_credentials"].get<std::vector<std::vector<uint8_t>>>();
+            sessionData.AllowedCredentialIDs.emplace(j["allowed_credentials"].get<std::vector<std::vector<uint8_t>>>());
         }
 
         if (j.find("extensions") != j.end()) {
-            sessionData.Extensions.emplace(j["extensions"].get<Protocol::AuthenticationExtensionsType>();
+            sessionData.Extensions.emplace(j["extensions"].get<Protocol::AuthenticationExtensionsType>());
         }
     }
 } // namespace WebAuthN::WebAuthN

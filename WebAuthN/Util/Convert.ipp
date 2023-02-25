@@ -16,13 +16,13 @@
 
 namespace WebAuthN::Util::Convert {
 
-    inline void ToString(const std::vector<uint8_t>& data, std::string& str) {
+    inline std::string ToString(const std::vector<uint8_t>& data) {
 
-        std::string s{};
-        s.reserve(data.size());
-        for (int value : data) s += std::to_string(value);
+        std::string str{};
+        str.reserve(data.size());
+        for (int value : data) str += std::to_string(value);
 
-        str = s;
+        return str;
     }
 } // namespace WebAuthN::Util::Convert
 

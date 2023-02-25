@@ -21,8 +21,6 @@ namespace WebAuthN::WebAuthN {
     // TimeoutConfigType represents the WebAuthN timeouts configuration for either registration or login.
     struct TimeoutConfigType {
 
-        TimeoutConfigType() noexcept = default;
-
         // Enforce the timeouts at the Relying Party / Server. This means if enabled and the user takes too long that even
         // if the browser does not enforce the timeout the Relying Party / Server will.
         bool Enforce;
@@ -36,16 +34,12 @@ namespace WebAuthN::WebAuthN {
     // TimeoutsConfig represents the WebAuthN timeouts configuration.
     struct TimeoutsConfigType  {
 
-        TimeoutsConfigType() noexcept = default;
-
         TimeoutConfigType Login;
         TimeoutConfigType Registration;
     };
 
     // ConfigType represents the WebAuthN configuration.
     struct ConfigType {
-
-        ConfigType() noexcept = default;
 
         // Validate that the config flags in Config are properly set
         inline std::optional<Protocol::ErrorType> Validate() const noexcept {

@@ -19,8 +19,6 @@ namespace WebAuthN::WebAuthN {
 
     struct AuthenticatorType {
 
-        AuthenticatorType() noexcept = default;
-
         // UpdateCounter updates the authenticator and either sets the clone warning value or the sign count.
         //
         // Step 17 of §7.2. about verifying attestation. If the signature counter value authData.signCount
