@@ -410,14 +410,16 @@ namespace WebAuthN::Protocol {
         //
         // Specification: §7.1. Registering a New Credential (https://www.w3.org/TR/webauthn/#sctn-registering-a-new-credential)
         inline std::optional<ErrorType>
-        Verify(const std::string& storedChallenge, bool verifyUser, const std::string& relyingPartyID, 
+        Verify(const std::string& storedChallenge,
+               bool verifyUser,
+               const std::string& relyingPartyID,
                const std::vector<std::string>& relyingPartyOrigins) const noexcept {
 
             // Handles steps 3 through 6 - Verifying the Client Data against the Relying Party's stored data
-            auto verificationResult = Response.CollectedClientData.Verify(storedChallenge, CeremonyType::Create, relyingPartyOrigins);
+            auto err = Response.CollectedClientData.Verify(storedChallenge, CeremonyType::Create, relyingPartyOrigins);
 
-            if (verificationResult) {
-                return verificationResult;
+            if (err) {
+                return err;
             }
 
             // Step 7. Compute the hash of response.clientDataJSON using SHA-256.
@@ -429,10 +431,10 @@ namespace WebAuthN::Protocol {
 
             // We do the above step while parsing and decoding the CredentialCreationResponse
             // Handle steps 9 through 14 - This verifies the attestation object.
-            verificationResult = Response.AttestationObject.Verify(relyingPartyID, clientDataHash, verifyUser);
+            err = Response.AttestationObject.Verify(relyingPartyID, clientDataHash, verifyUser);
 
-            if (verificationResult) {
-                return verificationResult;
+            if (err) {
+                return err;
             }
 
             // Step 15. If validation is successful, obtain a list of acceptable trust anchors (attestation root

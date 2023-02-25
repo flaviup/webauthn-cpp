@@ -160,7 +160,7 @@ namespace WebAuthN::Protocol {
         // and Steps 11 through 14 for Assertion.
         inline std::optional<ErrorType> Verify(const std::vector<uint8_t>& rpIdHash, 
             const std::vector<uint8_t>& appIDHash, 
-            bool userVerificationRequired) noexcept {
+            bool userVerificationRequired) const noexcept {
 
             // Registration Step 9 & Assertion Step 11
             // Verify that the RP ID hash in authData is indeed the SHA-256

@@ -9,12 +9,11 @@
 #ifndef WEBAUTHN_PROTOCOL_ASSERTION_IPP
 #define WEBAUTHN_PROTOCOL_ASSERTION_IPP
 
-#include <string>
-#include <vector>
-#include <optional>
-#include <nlohmann/json.hpp>
+#include <algorithm>
+#include <fmt/format.h>
 #include "Client.ipp"
 #include "Credential.ipp"
+#include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -218,7 +217,70 @@ namespace WebAuthN::Protocol {
             const std::vector<std::string>& relyingPartyOrigins, 
             const std::string& appID,
             bool verifyUser, 
-            const std::vector<uint8_t>& credentialBytes) const {
+            const std::vector<uint8_t>& credentialBytes) const noexcept {
+
+            // Steps 4 through 6 in verifying the assertion data (https://www.w3.org/TR/webauthn/#verifying-assertion) are
+            // "assertive" steps, i.e "Let JSONtext be the result of running UTF-8 decode on the value of cData."
+            // We handle these steps in part as we verify but also beforehand
+
+            // Handle steps 7 through 10 of assertion by verifying stored data against the Collected Client Data
+            // returned by the authenticator
+            auto err = Response.CollectedClientData.Verify(storedChallenge, CeremonyType::Assert, relyingPartyOrigins);
+
+            if (err) {
+                return err;
+            }
+
+            // Begin Step 11. Verify that the rpIdHash in authData is the SHA-256 hash of the RP ID expected by the RP.
+            auto rpIDHash = Util::Crypto::SHA256(relyingPartyID);
+            std::vector<uint8_t> appIDHash{0};
+
+            if (!appID.empty()) {
+                appIDHash = Util::Crypto::SHA256(appID);
+            }
+
+            // Handle steps 11 through 14, verifying the authenticator data.
+            err = Response.AuthenticatorData.Verify(rpIDHash, appIDHash, verifyUser);
+
+            if (err) {
+                return err;
+            }
+
+            // Step 15. Let hash be the result of computing a hash over the cData using SHA-256.
+            auto clientDataHash = Util::Crypto::SHA256(Raw.AssertionResponse.ClientDataJSON);
+
+            // Step 16. Using the credential public key looked up in step 3, verify that sig is
+            // a valid signature over the binary concatenation of authData and hash.
+
+            std::vector<uint8_t> sigData{};
+            std::copy(Raw.AssertionResponse.AuthenticatorData.begin(), Raw.AssertionResponse.AuthenticatorData.end(), std::back_inserter(sigData));
+            std::copy(clientDataHash.begin(), clientDataHash.end(), std::back_inserter(sigData));
+
+            // If the Session Data does not contain the appID extension or it wasn't reported as used by the Client/RP then we
+            // use the standard CTAP2 public key parser.
+            expected<> result;
+
+            if (appID.empty()) {
+                result = WebAuthNCOSE::ParsePublicKey(credentialBytes);
+            } else {
+                result = WebAuthNCOSE::ParseFIDOPublicKey(credentialBytes);
+            }
+
+            if (!result) {
+                err = result.error();
+            }
+
+            if (err) {
+                return ErrAssertionSignature().WithDetails(fmt::format("Error parsing the assertion public key: {}", err.value()));
+            }
+
+            err = WebAuthNCOSE::VerifySignature(result.value(), sigData, Response.Signature);
+
+            if (err) {
+                return ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", err.value()));
+            }
+
+            return std::nullopt;
         }
 
         ParsedAssertionResponseType Response;
