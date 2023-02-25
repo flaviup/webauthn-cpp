@@ -40,15 +40,15 @@ namespace WebAuthN::Protocol {
     enum class TokenBindingStatusType {
 
         // Indicates token binding was used when communicating with the
-	    // Relying Party. In this case, the id member MUST be present.
+        // Relying Party. In this case, the id member MUST be present.
         Present,
 
-	    // Indicates token binding was used when communicating with the
-	    // negotiated when communicating with the Relying Party.
+        // Indicates token binding was used when communicating with the
+        // negotiated when communicating with the Relying Party.
         Supported,
 
         // Indicates token binding not supported
-	    // when communicating with the Relying Party.
+        // when communicating with the Relying Party.
         NotSupported,
 
         // Invalid value

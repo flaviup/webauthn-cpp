@@ -99,7 +99,7 @@ namespace WebAuthN::Protocol {
     // ParsedAssertionResponseType.
     struct AuthenticatorAssertionResponseType : public AuthenticatorResponseType {
 
-	    AuthenticatorAssertionResponseType() noexcept = default;
+        AuthenticatorAssertionResponseType() noexcept = default;
         AuthenticatorAssertionResponseType(const json& j) :
             AuthenticatorResponseType(j),
             AuthenticatorData(j["authenticatorData"].get<URLEncodedBase64Type>()),
@@ -116,9 +116,9 @@ namespace WebAuthN::Protocol {
         AuthenticatorAssertionResponseType& operator =(const AuthenticatorAssertionResponseType& other) noexcept = default;
         AuthenticatorAssertionResponseType& operator =(AuthenticatorAssertionResponseType&& other) noexcept = default;
 
-	    URLEncodedBase64Type AuthenticatorData;
-	    URLEncodedBase64Type Signature;
-	    std::optional<URLEncodedBase64Type> UserHandle; 
+        URLEncodedBase64Type AuthenticatorData;
+        URLEncodedBase64Type Signature;
+        std::optional<URLEncodedBase64Type> UserHandle; 
     };
 
     inline void to_json(json& j, const AuthenticatorAssertionResponseType& authenticatorAssertionResponse) {
@@ -146,7 +146,7 @@ namespace WebAuthN::Protocol {
 
     // ParsedAssertionResponseType is the parsed form of AuthenticatorAssertionResponseType.
     struct ParsedAssertionResponseType {
-	    
+        
         ParsedAssertionResponseType() noexcept = default;
         ParsedAssertionResponseType(const ParsedAssertionResponseType& parsedAssertionResponse) noexcept = default;
         ParsedAssertionResponseType(ParsedAssertionResponseType&& parsedAssertionResponse) noexcept = default;
@@ -156,9 +156,9 @@ namespace WebAuthN::Protocol {
         ParsedAssertionResponseType& operator =(ParsedAssertionResponseType&& other) noexcept = default;
 
         CollectedClientDataType CollectedClientData;
-	    AuthenticatorDataType AuthenticatorData;
-	    std::vector<uint8_t> Signature;
-	    std::vector<uint8_t> UserHandle;
+        AuthenticatorDataType AuthenticatorData;
+        std::vector<uint8_t> Signature;
+        std::vector<uint8_t> UserHandle;
     };
 
 } // namespace WebAuthN::Protocol

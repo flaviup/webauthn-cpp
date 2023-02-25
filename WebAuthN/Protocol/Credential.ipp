@@ -41,13 +41,13 @@ namespace WebAuthN::Protocol {
         CredentialType& operator =(CredentialType&& other) noexcept = default;
 
         // ID is The credential’s identifier. The requirements for the
-	    // identifier are distinct for each type of credential. It might
-	    // represent a username for username/password tuples, for example.
+        // identifier are distinct for each type of credential. It might
+        // represent a username for username/password tuples, for example.
         std::string ID;
 
         // Type is the value of the object’s interface object's [[type]] slot,
-	    // which specifies the credential type represented by this object.
-	    // This should be type "public-key" for Webauthn credentials.
+        // which specifies the credential type represented by this object.
+        // This should be type "public-key" for Webauthn credentials.
         std::string Type;
     };
 

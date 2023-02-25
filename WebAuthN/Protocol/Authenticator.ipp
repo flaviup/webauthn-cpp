@@ -18,8 +18,8 @@
 namespace WebAuthN::Protocol {
 
     inline constexpr const size_t MIN_AUTH_DATA_LENGTH = 37;
-	inline constexpr const size_t MIN_ATTESTED_AUTH_LENGTH = 55;
-	inline constexpr const size_t MAX_CREDENTIAL_ID_LENGTH = 1023;
+    inline constexpr const size_t MIN_ATTESTED_AUTH_LENGTH = 55;
+    inline constexpr const size_t MAX_CREDENTIAL_ID_LENGTH = 1023;
 
     using json = nlohmann::json;
 

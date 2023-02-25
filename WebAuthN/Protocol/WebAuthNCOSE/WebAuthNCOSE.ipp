@@ -609,7 +609,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }
 
     /*inline expected<std::vector<uint8_t>> MarshalEd25519PublicKey(const ed25519.PublicKey& pub) {
-	    
+        
         return x509.MarshalPKIXPublicKey(pub);
     }
 
@@ -741,30 +741,30 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     struct ErrUnsupportedKey : public ErrorType {
 
-		ErrUnsupportedKey() noexcept :
-		    ErrorType(
-			    "invalid_key_type",
-			    "Unsupported Public Key Type") {
-		}
-	};
-	
-	struct ErrUnsupportedAlgorithm : public ErrorType {
+        ErrUnsupportedKey() noexcept :
+            ErrorType(
+                "invalid_key_type",
+                "Unsupported Public Key Type") {
+        }
+    };
+    
+    struct ErrUnsupportedAlgorithm : public ErrorType {
 
-		ErrUnsupportedAlgorithm() noexcept :
-		    ErrorType(
-			    "unsupported_key_algorithm",
-			    "Unsupported public key algorithm") {
-		}
-	};
-	
-	struct ErrSigNotProvidedOrInvalid : public ErrorType {
+        ErrUnsupportedAlgorithm() noexcept :
+            ErrorType(
+                "unsupported_key_algorithm",
+                "Unsupported public key algorithm") {
+        }
+    };
+    
+    struct ErrSigNotProvidedOrInvalid : public ErrorType {
 
-		ErrSigNotProvidedOrInvalid() noexcept :
-		    ErrorType(
-			    "signature_not_provided_or_invalid",
-			    "Signature invalid or not provided") {
-		}
-	};
+        ErrSigNotProvidedOrInvalid() noexcept :
+            ErrorType(
+                "signature_not_provided_or_invalid",
+                "Signature invalid or not provided") {
+        }
+    };
 } // namespace WebAuthN::Protocol::WebAuthNCOSE
 
 #pragma GCC visibility pop

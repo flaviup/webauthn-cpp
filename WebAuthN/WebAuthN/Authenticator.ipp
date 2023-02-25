@@ -25,14 +25,14 @@ namespace WebAuthN::WebAuthN {
         // is nonzero or the value stored in conjunction with credential’s id attribute is nonzero, then
         // run the following sub-step:
         //
-        //	If the signature counter value authData.signCount is
+        // If the signature counter value authData.signCount is
         //
-        //	→ Greater than the signature counter value stored in conjunction with credential’s id attribute.
-        //	Update the stored signature counter value, associated with credential’s id attribute, to be the value of
-        //	authData.signCount.
+        // Greater than the signature counter value stored in conjunction with credential’s id attribute.
+        // Update the stored signature counter value, associated with credential’s id attribute, to be the value of
+        // authData.signCount.
         //
-        //	→ Less than or equal to the signature counter value stored in conjunction with credential’s id attribute.
-        //	This is a signal that the authenticator may be cloned, see CloneWarning above for more information.
+        // Less than or equal to the signature counter value stored in conjunction with credential’s id attribute.
+        // This is a signal that the authenticator may be cloned, see CloneWarning above for more information.
         inline void UpdateCounter(uint32_t authDataCount) noexcept {
 
             if ((!(authDataCount > SignCount)) && (authDataCount != 0 || SignCount != 0)) {

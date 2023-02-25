@@ -45,7 +45,7 @@ namespace WebAuthN::Protocol {
         }
 
         inline ErrorType& WithDetails(const std::string& details) noexcept {
-            
+
             Details = details;
             return *this;
         }
@@ -67,8 +67,8 @@ namespace WebAuthN::Protocol {
     void to_json(json& j, const ErrorType& error) {
 
         j = json{
-            { "type",     error.Type }, 
-            { "error", error.Details }, 
+            { "type",     error.Type },
+            { "error", error.Details },
             { "debug", error.DevInfo }
         };
     }
@@ -82,129 +82,129 @@ namespace WebAuthN::Protocol {
 
     struct ErrBadRequest : public ErrorType {
 
-		ErrBadRequest() noexcept :
-		ErrorType(
-			"invalid_request",
-			"Error reading the request data") {
-		}
-	};
+        ErrBadRequest() noexcept :
+            ErrorType(
+                "invalid_request",
+                "Error reading the request data") {
+            }
+    };
 
-	struct ErrChallengeMismatch : public ErrorType {
+    struct ErrChallengeMismatch : public ErrorType {
 
-		ErrChallengeMismatch() noexcept :
-		ErrorType(
-			"challenge_mismatch",
-			"Stored challenge and received challenge do not match") {
-		}
-	};
+        ErrChallengeMismatch() noexcept :
+        ErrorType(
+            "challenge_mismatch",
+            "Stored challenge and received challenge do not match") {
+        }
+    };
 
-	struct ErrParsingData : public ErrorType {
+    struct ErrParsingData : public ErrorType {
 
-		ErrParsingData() noexcept :
-		ErrorType(
-			"parse_error",
-			"Error parsing the authenticator response") {
-		}
-	};
+        ErrParsingData() noexcept :
+        ErrorType(
+            "parse_error",
+            "Error parsing the authenticator response") {
+        }
+    };
 
-	struct ErrAuthData : public ErrorType {
+    struct ErrAuthData : public ErrorType {
 
-		ErrAuthData() noexcept :
-		ErrorType(
-			"auth_data",
-			"Error verifying the authenticator data") {
-		}
-	};
+        ErrAuthData() noexcept :
+        ErrorType(
+            "auth_data",
+            "Error verifying the authenticator data") {
+        }
+    };
 
-	struct ErrVerification : public ErrorType {
+    struct ErrVerification : public ErrorType {
 
-		ErrVerification() noexcept :
-		ErrorType(
-			"verification_error",
-			"Error validating the authenticator response") {
-		}
-	};
+        ErrVerification() noexcept :
+        ErrorType(
+            "verification_error",
+            "Error validating the authenticator response") {
+        }
+    };
 
-	struct ErrAttestation : public ErrorType {
+    struct ErrAttestation : public ErrorType {
 
-		ErrAttestation() noexcept :
-		ErrorType(
-			"attestation_error",
-			"Error validating the attestation data provided") {
-		}
-	};
+        ErrAttestation() noexcept :
+        ErrorType(
+            "attestation_error",
+            "Error validating the attestation data provided") {
+        }
+    };
 
-	struct ErrInvalidAttestation : public ErrorType {
+    struct ErrInvalidAttestation : public ErrorType {
 
-		ErrInvalidAttestation() noexcept :
-		ErrorType(
-			"invalid_attestation",
-			"Invalid attestation data") {
-		}
-	};
+        ErrInvalidAttestation() noexcept :
+        ErrorType(
+            "invalid_attestation",
+            "Invalid attestation data") {
+        }
+    };
 
-	struct ErrAttestationFormat : public ErrorType {
+    struct ErrAttestationFormat : public ErrorType {
 
-		ErrAttestationFormat() noexcept :
-		ErrorType(
-			"invalid_attestation",
-			"Invalid attestation format") {
-		}
-	};
+        ErrAttestationFormat() noexcept :
+        ErrorType(
+            "invalid_attestation",
+            "Invalid attestation format") {
+        }
+    };
 
-	struct ErrAttestationCertificate : public ErrorType {
+    struct ErrAttestationCertificate : public ErrorType {
 
-		ErrAttestationCertificate() noexcept :
-		ErrorType(
-			"invalid_certificate",
-			"Invalid attestation certificate") {
-		}
-	};
+        ErrAttestationCertificate() noexcept :
+        ErrorType(
+            "invalid_certificate",
+            "Invalid attestation certificate") {
+        }
+    };
 
-	struct ErrAssertionSignature : public ErrorType {
+    struct ErrAssertionSignature : public ErrorType {
 
-		ErrAssertionSignature() noexcept :
-		ErrorType(
-			"invalid_signature",
-			"Assertion Signature against auth data and client hash is not valid") {
-		}
-	};
+        ErrAssertionSignature() noexcept :
+        ErrorType(
+            "invalid_signature",
+            "Assertion Signature against auth data and client hash is not valid") {
+        }
+    };
 
-	struct ErrUnsupportedKey : public ErrorType {
+    struct ErrUnsupportedKey : public ErrorType {
 
-		ErrUnsupportedKey() noexcept :
-		ErrorType(
-			"invalid_key_type",
-			"Unsupported Public Key Type") {
-		}
-	};
+        ErrUnsupportedKey() noexcept :
+        ErrorType(
+            "invalid_key_type",
+            "Unsupported Public Key Type") {
+        }
+    };
 
-	struct ErrUnsupportedAlgorithm : public ErrorType {
+    struct ErrUnsupportedAlgorithm : public ErrorType {
 
-		ErrUnsupportedAlgorithm() noexcept :
-		ErrorType(
-			"unsupported_key_algorithm",
-			"Unsupported public key algorithm") {
-		}
-	};
+        ErrUnsupportedAlgorithm() noexcept :
+        ErrorType(
+            "unsupported_key_algorithm",
+            "Unsupported public key algorithm") {
+        }
+    };
 
-	struct ErrNotSpecImplemented : public ErrorType {
+    struct ErrNotSpecImplemented : public ErrorType {
 
-		ErrNotSpecImplemented() noexcept :
-		ErrorType(
-			"spec_unimplemented",
-			"This field is not yet supported by the WebAuthn spec") {
-		}
-	};
+        ErrNotSpecImplemented() noexcept :
+        ErrorType(
+            "spec_unimplemented",
+            "This field is not yet supported by the WebAuthn spec") {
+        }
+    };
 
-	struct ErrNotImplemented : public ErrorType {
+    struct ErrNotImplemented : public ErrorType {
 
-		ErrNotImplemented() noexcept :
-		ErrorType(
-			"not_implemented",
-			"This field is not yet supported by this library") {
-		}
-	};
+        ErrNotImplemented() noexcept :
+        ErrorType(
+            "not_implemented",
+            "This field is not yet supported by this library") {
+        }
+    };
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop

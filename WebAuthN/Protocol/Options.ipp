@@ -676,8 +676,8 @@ namespace WebAuthN::Protocol {
         ServerResponseType& operator =(const ServerResponseType& other) noexcept = default;
         ServerResponseType& operator =(ServerResponseType&& other) noexcept = default;
 
-	    ServerResponseStatusType Status;
-	    std::string Message;
+        ServerResponseStatusType Status;
+        std::string Message;
     };
 
     inline void to_json(json& j, const ServerResponseType& serverResponse) {

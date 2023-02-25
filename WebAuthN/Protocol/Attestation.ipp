@@ -186,7 +186,7 @@ namespace WebAuthN::Protocol {
     // locally registered attestation formats is sufficient.
     inline void RegisterAttestationFormat(const std::string& format, AttestationFormatValidationHandlerType handler) {
 
-	    ATTESTATION_REGISTRY[format] = handler;
+        ATTESTATION_REGISTRY[format] = handler;
     }
 } // namespace WebAuthN::Protocol
 
