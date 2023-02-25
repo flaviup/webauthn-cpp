@@ -338,7 +338,6 @@ namespace WebAuthN::Protocol {
             ParsedPublicKeyCredentialType(ppkc),
             Response(response),
             Raw(raw) {
-
         };
         ParsedCredentialCreationDataType(const json& j) :
             ParsedPublicKeyCredentialType(j) {
@@ -390,7 +389,7 @@ namespace WebAuthN::Protocol {
                     response.Transports.push_back(authT);
                 }
             }
-            AuthenticatorAttachmentType attachment = json(credentialCreationResponse.AuthenticatorAttachment.value()).get<AuthenticatorAttachmentType>();
+            auto attachment = json(credentialCreationResponse.AuthenticatorAttachment.value()).get<AuthenticatorAttachmentType>();
 
             return ParsedCredentialCreationDataType{
                 ParsedPublicKeyCredentialType{
