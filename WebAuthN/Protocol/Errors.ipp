@@ -32,9 +32,9 @@ namespace WebAuthN::Protocol {
             Details(j["error"].get<std::string>()),
             DevInfo(j["debug"].get<std::string>()) {
         }
-		ErrorType(const ErrorType& error) noexcept = default;
-		ErrorType(ErrorType&& error) noexcept = default;
-		virtual ~ErrorType() noexcept = default;
+        ErrorType(const ErrorType& error) noexcept = default;
+        ErrorType(ErrorType&& error) noexcept = default;
+        virtual ~ErrorType() noexcept = default;
 
         ErrorType& operator =(const ErrorType& other) noexcept = default;
         ErrorType& operator =(ErrorType&& other) noexcept = default;
