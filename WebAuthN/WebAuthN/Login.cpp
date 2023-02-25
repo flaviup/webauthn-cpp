@@ -18,15 +18,14 @@ namespace WebAuthN::WebAuthN {
     // that will be passed to the authenticator via the user client.
 
     template<size_t N>
-    std::optional<Protocol::ErrorType>
+    Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
     WebAuthNType::BeginLogin(const IUser& user,
-                             std::pair<Protocol::CredentialAssertionType, SessionDataType>& login,
                              const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
 
         auto credentials = user.GetWebAuthNCredentials();
 
         if (credentials.empty()) { // If the user does not have any credentials, we cannot perform an assertion.
-            return Protocol::ErrBadRequest().WithDetails("Found no credentials for user");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Found no credentials for user"));
         }
 
         std::vector<Protocol::CredentialDescriptorType> allowedCredentials(credentials.size());
@@ -35,36 +34,34 @@ namespace WebAuthN::WebAuthN {
             allowedCredentials.push_back(credential.Descriptor());
         }
 
-        return _BeginLogin(user.GetWebAuthNID(), allowedCredentials, login, opts);
+        return _BeginLogin(user.GetWebAuthNID(), allowedCredentials, opts);
     }
 
     template<size_t N>
-    std::optional<Protocol::ErrorType>
-    WebAuthNType::BeginDiscoverableLogin(std::pair<Protocol::CredentialAssertionType, SessionDataType>& login,
-                                         const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
+    Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+    WebAuthNType::BeginDiscoverableLogin(const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
 
-        return _BeginLogin(std::nullopt, std::nullopt, login, opts);
+        return _BeginLogin(std::nullopt, std::nullopt, opts);
     }
 
     template<size_t N>
-    std::optional<Protocol::ErrorType>
-    WebAuthNType::_BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
-                              const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials, 
-                              std::pair<Protocol::CredentialAssertionType, SessionDataType>& login,
+    Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+    WebAuthNType::_BeginLogin(const std::optional<std::vector<uint8_t>>& userID,
+                              const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
                               const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
 
         auto validationResult = _config.Validate();
 
         if (validationResult) {
 
-            return fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value());
+            return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
         }
 
         Protocol::URLEncodedBase64Type challenge;
         auto challengeCreationError = Protocol::CreateChallenge(challenge);
 
         if (challengeCreationError) {
-            return challengeCreationError.value();
+            return Protocol::unexpected(challengeCreationError.value());
         }
 
         auto assertion = Protocol::CredentialAssertionType{
@@ -103,16 +100,13 @@ namespace WebAuthN::WebAuthN {
             assertion.Response.Extensions.value()
         };
 
-        login = std::make_pair(assertion, session);
-
-        return std::nullopt;
+        return std::make_pair(assertion, session);
     }
 
-    std::optional<Protocol::ErrorType>
+    Protocol::expected<CredentialType>
     WebAuthNType::FinishLogin(const IUser& user, 
                               const SessionDataType& sessionData, 
-                              const std::string& response, 
-                              CredentialType& credential) noexcept {
+                              const std::string& response) noexcept {
 
         auto parsedResponse = Protocol::ParseCredentialRequestResponse(response);   
 
@@ -120,53 +114,50 @@ namespace WebAuthN::WebAuthN {
             return parsedResponse;
         }
 
-        return ValidateLogin(user, sessionData, parsedResponse.value(), credential);
+        return ValidateLogin(user, sessionData, parsedResponse.value());
     }
 
-    std::optional<Protocol::ErrorType>
+    Protocol::expected<CredentialType>
     WebAuthNType::ValidateLogin(const IUser& user, 
                                 const SessionDataType& sessionData, 
-                                const Protocol::ParsedCredentialAssertionDataType& parsedResponse,
-                                CredentialType& credential) noexcept {
+                                const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
         
         if (user.GetWebAuthNID() != sessionData.UserID) {
-            return Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
         }
 
         if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
-            return Protocol::ErrBadRequest().WithDetails("Session has Expired");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
         }
 
-        return _ValidateLogin(user, sessionData, parsedResponse, credential);
+        return _ValidateLogin(user, sessionData, parsedResponse);
     }
 
-    std::optional<Protocol::ErrorType>
+    Protocol::expected<CredentialType>
     WebAuthNType::ValidateDiscoverableLogin(WebAuthNType::DiscoverableUserHandlerType handler, 
                                             const SessionDataType& sessionData, 
-                                            const Protocol::ParsedCredentialAssertionDataType& parsedResponse,
-                                            CredentialType& credential) noexcept {
+                                            const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
         if (!sessionData.UserID.empty()) {
-            return Protocol::ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login"));
         }
 
         if (parsedResponse.Response.UserHandle.empty()) {
-            return Protocol::ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle"));
         }
 
         auto handlerResult = handler(parsedResponse.RawID, parsedResponse.Response.UserHandle);
 
         if (!handlerResult) {
-            return Protocol::ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
         }
 
-        return _ValidateLogin(handlerResult.value(), sessionData, parsedResponse, credential);
+        return _ValidateLogin(handlerResult.value(), sessionData, parsedResponse);
     }
 
-    std::optional<Protocol::ErrorType>
+    Protocol::expected<CredentialType>
     WebAuthNType::_ValidateLogin(const IUser& user, 
                                  const SessionDataType& sessionData, 
-                                 const Protocol::ParsedCredentialAssertionDataType& parsedResponse,
-                                 CredentialType& credential) noexcept {
+                                 const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
         // Step 1. If the allowCredentials option was given when this authentication ceremony was initiated,
         // verify that credential.id identifies one of the public key credentials that were listed in
@@ -195,7 +186,7 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (!credentialsOwned) {
-                return Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList");
+                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
             }
 
             for (const auto& allowedCredentialID : sessionData.AllowedCredentialIDs.value()) {
@@ -208,7 +199,7 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (!credentialFound) {
-                return Protocol::ErrBadRequest().WithDetails("User does not own the credential returned");
+                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own the credential returned"));
             }
         }
 
@@ -220,11 +211,12 @@ namespace WebAuthN::WebAuthN {
         auto userHandle = parsedResponse.Response.UserHandle;
         
         if (!userHandle.empty() && userHandle != user.GetWebAuthNID()) {
-            return Protocol::ErrBadRequest().WithDetails("userHandle and User ID do not match");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("userHandle and User ID do not match"));
         }
 
         // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
         // for your use case), look up the corresponding credential public key.
+        CredentialType credential{};
 
         for (const auto& cred : userCredentials) {
 
@@ -239,7 +231,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         if (!credentialFound) {
-            return Protocol::ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID");
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));
         }
 
         auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
@@ -250,7 +242,7 @@ namespace WebAuthN::WebAuthN {
         auto appIDResult = parsedResponse.GetAppID(sessionData.Extensions, credential.AttestationType);
 
         if (!appIDResult) {
-            return appIDResult.error();
+            return Protocol::unexpected(appIDResult.error());
         }
         auto appID = appIDResult.value();
 
@@ -258,7 +250,7 @@ namespace WebAuthN::WebAuthN {
         auto validError = parsedResponse.Verify(sessionData.Challenge, rpID, rpOrigins, appID, shouldVerifyUser, credential.PublicKey);
 
         if (validError) {
-            return validError;
+            return Protocol::unexpected(validError.value());
         }
 
         // Handle step 17.
@@ -271,6 +263,6 @@ namespace WebAuthN::WebAuthN {
         credential.Flags.BackupEligible = Protocol::HasBackupEligible(parsedResponse.Response.AuthenticatorData.Flags);
         credential.Flags.BackupState = Protocol::HasBackupState(parsedResponse.Response.AuthenticatorData.Flags);
 
-        return std::nullopt;
+        return credential;
     }
 } // namespace WebAuthN::WebAuthN
