@@ -9,6 +9,7 @@
 #ifndef WEBAUTHN_PROTOCOL_OPTIONS_IPP
 #define WEBAUTHN_PROTOCOL_OPTIONS_IPP
 
+#include "Extensions.ipp"
 #include "Entities.ipp"
 #include "Authenticator.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
@@ -18,15 +19,6 @@
 namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
-
-    // Type Aliases
-
-    // AuthenticationExtensionsType represents the AuthenticationExtensionsClientInputsType IDL. This member contains additional
-    // parameters requesting additional processing by the client and authenticator.
-    //
-    // Specification: §5.7.1. Authentication Extensions Client Inputs (https://www.w3.org/TR/webauthn/#iface-authentication-extensions-client-inputs)
-    using ExtensionsType = std::string;
-    using AuthenticationExtensionsType = std::map<std::string, ExtensionsType>;
 
     // Enums
 

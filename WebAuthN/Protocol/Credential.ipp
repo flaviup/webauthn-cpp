@@ -232,9 +232,9 @@ namespace WebAuthN::Protocol {
             if (itCer == ClientExtensionResults.value().end()) {
                 return "";
             }
-            
+
             try {
-                enableAppID = std::any_cast<bool>(itCer->second);
+                enableAppID = (itCer->second).get<bool>();
             } catch(const std::exception& e) {
                 return unexpected(ErrBadRequest().WithDetails("Client Output appid did not have the expected type"));
             }
@@ -247,11 +247,12 @@ namespace WebAuthN::Protocol {
             if (it == authExt.value().end() || it->second.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Session Data does not have an appid but Client Output indicates it should be set"));
             }
-            return it->second;
 
-            /*if appID, ok = value.(string); !ok {
-                return "", ErrBadRequest.WithDetails("Session Data appid did not have the expected type")
-            }*/
+            try {
+                return (it->second).get<std::string>();
+            } catch(const std::exception& e) {
+                return unexpected(ErrBadRequest().WithDetails("Session Data appid did not have the expected type"));
+            }
         }
 
         std::vector<uint8_t> RawID;

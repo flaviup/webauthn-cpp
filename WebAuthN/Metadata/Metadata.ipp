@@ -12,7 +12,6 @@
 #define JSON_DISABLE_ENUM_SERIALIZATION 1
 
 #include <algorithm>
-#include <any>
 #include <compare>
 #include <string>
 #include <vector>
