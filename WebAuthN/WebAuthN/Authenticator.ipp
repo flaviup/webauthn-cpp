@@ -33,7 +33,7 @@ namespace WebAuthN::WebAuthN {
         //
         // Less than or equal to the signature counter value stored in conjunction with credential’s id attribute.
         // This is a signal that the authenticator may be cloned, see CloneWarning above for more information.
-        inline void UpdateCounter(uint32_t authDataCount) noexcept {
+        inline void UpdateCounter(const uint32_t authDataCount) noexcept {
 
             if ((!(authDataCount > SignCount)) && (authDataCount != 0 || SignCount != 0)) {
                 
@@ -63,7 +63,7 @@ namespace WebAuthN::WebAuthN {
     };
 
     // SelectAuthenticator allow for easy marshaling of authenticator options that are provided to the user.
-    inline Protocol::AuthenticatorSelectionType SelectAuthenticator(const std::string& att, bool rrk, const std::string& uv) {
+    inline Protocol::AuthenticatorSelectionType SelectAuthenticator(const std::string& att, const bool rrk, const std::string& uv) {
 
         return Protocol::AuthenticatorSelectionType{
             json(att).get<Protocol::AuthenticatorAttachmentType>(),

@@ -94,7 +94,7 @@ namespace WebAuthN::WebAuthN {
 
         // WithConveyancePreference adjusts the non-default parameters regarding whether the authenticator should attest to the
         // credential.
-        inline static RegistrationOptionHandlerType WithConveyancePreference(Protocol::ConveyancePreferenceType preference) noexcept {
+        inline static RegistrationOptionHandlerType WithConveyancePreference(const Protocol::ConveyancePreferenceType preference) noexcept {
 
             return [&preference](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
 
@@ -142,7 +142,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         // WithResidentKeyRequirement sets both the resident key and require resident key protocol options.
-        inline static RegistrationOptionHandlerType WithResidentKeyRequirement(Protocol::ResidentKeyRequirementType requirement) noexcept {
+        inline static RegistrationOptionHandlerType WithResidentKeyRequirement(const Protocol::ResidentKeyRequirementType requirement) noexcept {
 
             return [&requirement](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
 
@@ -204,7 +204,7 @@ namespace WebAuthN::WebAuthN {
 
         // ValidateDiscoverableLogin is an overloaded version of ValidateLogin that allows for discoverable credentials.
         Protocol::expected<CredentialType>
-        ValidateDiscoverableLogin(WebAuthNType::DiscoverableUserHandlerType handler, 
+        ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType handler, 
                                   const SessionDataType& sessionData, 
                                   const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept;
 

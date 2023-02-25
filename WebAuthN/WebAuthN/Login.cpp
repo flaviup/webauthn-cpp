@@ -134,7 +134,7 @@ namespace WebAuthN::WebAuthN {
     }
 
     Protocol::expected<CredentialType>
-    WebAuthNType::ValidateDiscoverableLogin(WebAuthNType::DiscoverableUserHandlerType handler, 
+    WebAuthNType::ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType handler, 
                                             const SessionDataType& sessionData, 
                                             const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
         if (!sessionData.UserID.empty()) {
@@ -169,9 +169,9 @@ namespace WebAuthN::WebAuthN {
 
         if (sessionData.AllowedCredentialIDs && !sessionData.AllowedCredentialIDs.value().empty()) {
 
-            auto credentialsOwned = false;
-
             for (const auto& allowedCredentialID : sessionData.AllowedCredentialIDs.value()) {
+
+                auto credentialsOwned = false;
 
                 for ( const auto& userCredential : userCredentials) {
 
@@ -180,13 +180,11 @@ namespace WebAuthN::WebAuthN {
                         credentialsOwned = true;
                         break;
                     }
-
-                    credentialsOwned = false;
                 }
-            }
 
-            if (!credentialsOwned) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
+                if (!credentialsOwned) {
+                    return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
+                }
             }
 
             for (const auto& allowedCredentialID : sessionData.AllowedCredentialIDs.value()) {
@@ -217,6 +215,7 @@ namespace WebAuthN::WebAuthN {
         // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
         // for your use case), look up the corresponding credential public key.
         CredentialType credential{};
+        credentialFound = false;
 
         for (const auto& cred : userCredentials) {
 
@@ -226,8 +225,6 @@ namespace WebAuthN::WebAuthN {
                 credentialFound = true;
                 break;
             }
-
-            credentialFound = false;
         }
 
         if (!credentialFound) {

@@ -25,8 +25,8 @@ namespace WebAuthN::WebAuthN {
         SessionDataType(const std::string& challenge,
             const std::vector<uint8_t>& userID,
             const std::string& userDisplayName,
-            int64_t expires,
-            Protocol::UserVerificationRequirementType userVerification,
+            const int64_t expires,
+            const Protocol::UserVerificationRequirementType userVerification,
             const std::optional<std::vector<std::vector<uint8_t>>>& allowedCredentialIDs = std::nullopt,
             const std::optional<Protocol::AuthenticationExtensionsType>& extensions = std::nullopt
         ) noexcept : 

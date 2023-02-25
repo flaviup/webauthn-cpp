@@ -11,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include "Credential.ipp"
 
 #pragma GCC visibility push(default)
 
