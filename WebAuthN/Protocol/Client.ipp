@@ -137,9 +137,10 @@ namespace WebAuthN::Protocol {
         // new credential and steps 7 through 10 of verifying an authentication assertion
         // See https://www.w3.org/TR/webauthn/#registering-a-new-credential
         // and https://www.w3.org/TR/webauthn/#verifying-assertion
-        inline  std::optional<ErrorType> Verify(const std::string& storedChallenge, 
-            CeremonyType ceremony, 
-            const std::vector<std::string>& rpOrigins) const noexcept {
+        inline  std::optional<ErrorType>
+        Verify(const std::string& storedChallenge, 
+               CeremonyType ceremony, 
+               const std::vector<std::string>& rpOrigins) const noexcept {
 
             // Registration Step 3. Verify that the value of C.type is webauthn.create.
 
