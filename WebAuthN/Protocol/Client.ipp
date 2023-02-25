@@ -71,6 +71,7 @@ namespace WebAuthN::Protocol {
     struct TokenBindingType {
 
         TokenBindingType() noexcept = default;
+
         TokenBindingType(const json& j) :
             Status(j["status"].get<TokenBindingStatusType>()) {
 
@@ -78,6 +79,7 @@ namespace WebAuthN::Protocol {
                 ID.emplace(j["id"].get<std::string>());
             }
         }
+
         TokenBindingType(const TokenBindingType& tokenBinding) noexcept = default;
         TokenBindingType(TokenBindingType&& tokenBinding) noexcept = default;
         ~TokenBindingType() noexcept = default;
@@ -117,6 +119,7 @@ namespace WebAuthN::Protocol {
     struct CollectedClientDataType {
 
         CollectedClientDataType() noexcept = default;
+
         CollectedClientDataType(const json& j) :
             Type(j["type"].get<CeremonyType>()),
             Challenge(j["challenge"].get<std::string>()),
@@ -130,6 +133,7 @@ namespace WebAuthN::Protocol {
                 Hint.emplace(j["hint"].get<std::string>());
             }
         }
+
         CollectedClientDataType(const CollectedClientDataType& collectedClientData) noexcept = default;
         CollectedClientDataType(CollectedClientDataType&& collectedClientData) noexcept = default;
         ~CollectedClientDataType() noexcept = default;

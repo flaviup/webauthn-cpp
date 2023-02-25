@@ -9,8 +9,6 @@
 #ifndef WEBAUTHN_METADATA_IPP
 #define WEBAUTHN_METADATA_IPP
 
-#define JSON_DISABLE_ENUM_SERIALIZATION 1
-
 #include <algorithm>
 #include <compare>
 #include <string>
@@ -384,7 +382,7 @@ namespace WebAuthN::Metadata {
         inline const AlgKeyCose& _AlgKeyCoseMappingFunction(AuthenticationAlgorithmType authAlgorithm) noexcept {
 
             return _MAPPING.find(authAlgorithm)->second;
-        };
+        }
     } // namespace
 
 #pragma GCC visibility pop
@@ -414,10 +412,12 @@ namespace WebAuthN::Metadata {
     struct PublicKeyCredentialParametersType {
 
         PublicKeyCredentialParametersType() noexcept = default;
+
         PublicKeyCredentialParametersType(const json& j) :
             Type(j["type"].get<std::string>()),
             Alg(j["alg"].get<WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
         }
+
         PublicKeyCredentialParametersType(const PublicKeyCredentialParametersType& publicKeyCredentialParameters) noexcept = default;
         PublicKeyCredentialParametersType(PublicKeyCredentialParametersType&& publicKeyCredentialParameters) noexcept = default;
         ~PublicKeyCredentialParametersType() noexcept = default;
@@ -446,6 +446,7 @@ namespace WebAuthN::Metadata {
     struct AuthenticatorGetInfoType {
 
         AuthenticatorGetInfoType() noexcept = default;
+
         AuthenticatorGetInfoType(const json& j) :
             Versions(j["versions"].get<std::vector<std::string>>()),
             AaGUID(j["aaguid"].get<std::string>()) {
@@ -526,6 +527,7 @@ namespace WebAuthN::Metadata {
                 VendorPrototypeConfigCommands.emplace(j["vendorPrototypeConfigCommands"].get<std::vector<uint32_t>>());
             }
         }
+
         AuthenticatorGetInfoType(const AuthenticatorGetInfoType& authenticatorGetInfo) noexcept = default;
         AuthenticatorGetInfoType(AuthenticatorGetInfoType&& authenticatorGetInfo) noexcept = default;
         ~AuthenticatorGetInfoType() noexcept = default;
@@ -748,10 +750,12 @@ namespace WebAuthN::Metadata {
     struct RogueListEntryType {
 
         RogueListEntryType() noexcept = default;
+
         RogueListEntryType(const json& j) :
             Sk(j["sk"].get<std::string>()),
             Date(j["date"].get<std::string>()) {
         }
+
         RogueListEntryType(const RogueListEntryType& rogueListEntry) noexcept = default;
         RogueListEntryType(RogueListEntryType&& rogueListEntry) noexcept = default;
         ~RogueListEntryType() noexcept = default;
@@ -783,6 +787,7 @@ namespace WebAuthN::Metadata {
     struct CodeAccuracyDescriptorType {
 
         CodeAccuracyDescriptorType() noexcept = default;
+
         CodeAccuracyDescriptorType(const json& j) :
             Base(j["base"].get<uint16_t>()),
             MinLength(j["minLength"].get<uint16_t>()) {
@@ -795,6 +800,7 @@ namespace WebAuthN::Metadata {
                 BlockSlowdown.emplace(j["blockSlowdown"].get<uint16_t>());
             }
         }
+
         CodeAccuracyDescriptorType(const CodeAccuracyDescriptorType& codeAccuracyDescriptor) noexcept = default;
         CodeAccuracyDescriptorType(CodeAccuracyDescriptorType&& codeAccuracyDescriptor) noexcept = default;
         ~CodeAccuracyDescriptorType() noexcept = default;
@@ -848,6 +854,7 @@ namespace WebAuthN::Metadata {
     struct BiometricAccuracyDescriptorType {
 
         BiometricAccuracyDescriptorType() noexcept = default;
+
         BiometricAccuracyDescriptorType(const json& j) {
 
             if (j.find("selfAttestedFRR") != j.end()) {
@@ -870,6 +877,7 @@ namespace WebAuthN::Metadata {
                 BlockSlowdown.emplace(j["blockSlowdown"].get<uint16_t>());
             }
         }
+
         BiometricAccuracyDescriptorType(const BiometricAccuracyDescriptorType& biometricAccuracyDescriptor) noexcept = default;
         BiometricAccuracyDescriptorType(BiometricAccuracyDescriptorType&& biometricAccuracyDescriptor) noexcept = default;
         ~BiometricAccuracyDescriptorType() noexcept = default;
@@ -943,6 +951,7 @@ namespace WebAuthN::Metadata {
     struct PatternAccuracyDescriptorType {
 
         PatternAccuracyDescriptorType() noexcept = default;
+
         PatternAccuracyDescriptorType(const json& j) :
             MinComplexity(j["minComplexity"].get<uint32_t>()) {
 
@@ -954,6 +963,7 @@ namespace WebAuthN::Metadata {
                 BlockSlowdown.emplace(j["blockSlowdown"].get<uint16_t>());
             }
         }
+
         PatternAccuracyDescriptorType(const PatternAccuracyDescriptorType& patternAccuracyDescriptor) noexcept = default;
         PatternAccuracyDescriptorType(PatternAccuracyDescriptorType&& patternAccuracyDescriptor) noexcept = default;
         ~PatternAccuracyDescriptorType() noexcept = default;
@@ -1003,6 +1013,7 @@ namespace WebAuthN::Metadata {
     struct VerificationMethodDescriptorType {
 
         VerificationMethodDescriptorType() noexcept = default;
+
         VerificationMethodDescriptorType(const json& j) {
 
             if (j.find("userVerificationMethod") != j.end()) {
@@ -1021,6 +1032,7 @@ namespace WebAuthN::Metadata {
                 PaDesc.emplace(j["paDesc"].get<PatternAccuracyDescriptorType>());
             }
         }
+
         VerificationMethodDescriptorType(const VerificationMethodDescriptorType& verificationMethodDescriptor) noexcept = default;
         VerificationMethodDescriptorType(VerificationMethodDescriptorType&& verificationMethodDescriptor) noexcept = default;
         ~VerificationMethodDescriptorType() noexcept = default;
@@ -1082,11 +1094,13 @@ namespace WebAuthN::Metadata {
     struct RGBPaletteEntryType {
 
         RGBPaletteEntryType() noexcept = default;
+
         RGBPaletteEntryType(const json& j) :
             R(j["r"].get<uint16_t>()),
             G(j["g"].get<uint16_t>()),
             B(j["b"].get<uint16_t>()) {
         }
+
         RGBPaletteEntryType(const RGBPaletteEntryType& rgbPaletteEntry) noexcept = default;
         RGBPaletteEntryType(RGBPaletteEntryType&& rgbPaletteEntry) noexcept = default;
         ~RGBPaletteEntryType() noexcept = default;
@@ -1122,6 +1136,7 @@ namespace WebAuthN::Metadata {
     struct DisplayPNGCharacteristicsDescriptorType {
 
         DisplayPNGCharacteristicsDescriptorType() noexcept = default;
+
         DisplayPNGCharacteristicsDescriptorType(const json& j) :
             Width(j["width"].get<uint32_t>()),
             Height(j["height"].get<uint32_t>()),
@@ -1135,6 +1150,7 @@ namespace WebAuthN::Metadata {
                 Plte.emplace(j["plte"].get<std::vector<RGBPaletteEntryType>>());
             }
         }
+
         DisplayPNGCharacteristicsDescriptorType(const DisplayPNGCharacteristicsDescriptorType& displayPNGCharacteristicsDescriptor) noexcept = default;
         DisplayPNGCharacteristicsDescriptorType(DisplayPNGCharacteristicsDescriptorType&& displayPNGCharacteristicsDescriptor) noexcept = default;
         ~DisplayPNGCharacteristicsDescriptorType() noexcept = default;
@@ -1196,6 +1212,7 @@ namespace WebAuthN::Metadata {
     struct EcdaaTrustAnchorType {
 
         EcdaaTrustAnchorType() noexcept = default;
+
         EcdaaTrustAnchorType(const json& j) :
             X(j["X"].get<std::string>()),
             Y(j["Y"].get<std::string>()),
@@ -1204,6 +1221,7 @@ namespace WebAuthN::Metadata {
             SY(j["sy"].get<std::string>()),
             G1Curve(j["G1Curve"].get<std::string>()) {
         }
+
         EcdaaTrustAnchorType(const EcdaaTrustAnchorType& ecdaaTrustAnchor) noexcept = default;
         EcdaaTrustAnchorType(EcdaaTrustAnchorType&& ecdaaTrustAnchor) noexcept = default;
         ~EcdaaTrustAnchorType() noexcept = default;
@@ -1251,6 +1269,7 @@ namespace WebAuthN::Metadata {
     struct ExtensionDescriptorType {
 
         ExtensionDescriptorType() noexcept = default;
+
         ExtensionDescriptorType(const json& j) :
             ID(j["id"].get<std::string>()),
             FailIfUnknown(j["fail_if_unknown"].get<bool>()) {
@@ -1263,6 +1282,7 @@ namespace WebAuthN::Metadata {
                 Data.emplace(j["data"].get<std::string>());
             }
         }
+
         ExtensionDescriptorType(const ExtensionDescriptorType& extensionDescriptor) noexcept = default;
         ExtensionDescriptorType(ExtensionDescriptorType&& extensionDescriptor) noexcept = default;
         ~ExtensionDescriptorType() noexcept = default;
@@ -1315,10 +1335,12 @@ namespace WebAuthN::Metadata {
     struct VersionType {
 
         VersionType() noexcept = default;
+
         VersionType(const json& j) :
             Major(j["major"].get<uint16_t>()),
             Minor(j["minor"].get<uint16_t>()) {
         }
+
         VersionType(const VersionType& version) noexcept = default;
         VersionType(VersionType&& version) noexcept = default;
         ~VersionType() noexcept = default;
@@ -1350,6 +1372,7 @@ namespace WebAuthN::Metadata {
     struct MetadataStatementType {
 
         MetadataStatementType() noexcept = default;
+
         MetadataStatementType(const json& j) :
             Description(j["description"].get<std::string>()),
             AuthenticatorVersion(j["authenticatorVersion"].get<uint32_t>()),
@@ -1425,6 +1448,7 @@ namespace WebAuthN::Metadata {
                 AuthenticatorGetInfo.emplace(j["authenticatorGetInfo"].get<AuthenticatorGetInfoType>());
             }
         }
+
         MetadataStatementType(const MetadataStatementType& metadataStatement) noexcept = default;
         MetadataStatementType(MetadataStatementType&& metadataStatement) noexcept = default;
         ~MetadataStatementType() noexcept = default;
@@ -1661,6 +1685,7 @@ namespace WebAuthN::Metadata {
     struct BiometricStatusReportType {
 
         BiometricStatusReportType() noexcept = default;
+
         BiometricStatusReportType(const json& j) :
             CertLevel(j["certLevel"].get<uint16_t>()),
             Modality(j["modality"].get<std::string>()) {
@@ -1685,6 +1710,7 @@ namespace WebAuthN::Metadata {
                 CertificationRequirementsVersion.emplace(j["certificationRequirementsVersion"].get<std::string>());
             }
         }
+
         BiometricStatusReportType(const BiometricStatusReportType& biometricStatusReport) noexcept = default;
         BiometricStatusReportType(BiometricStatusReportType&& biometricStatusReport) noexcept = default;
         ~BiometricStatusReportType() noexcept = default;
@@ -1767,6 +1793,7 @@ namespace WebAuthN::Metadata {
     struct StatusReportType {
 
         StatusReportType() noexcept = default;
+
         StatusReportType(const json& j) :
             Status(j["status"].get<AuthenticatorStatusType>()) {
 
@@ -1802,6 +1829,7 @@ namespace WebAuthN::Metadata {
                 CertificationRequirementsVersion.emplace(j["certificationRequirementsVersion"].get<std::string>());
             }
         }
+
         StatusReportType(const StatusReportType& statusReport) noexcept = default;
         StatusReportType(StatusReportType&& statusReport) noexcept = default;
         ~StatusReportType() noexcept = default;
@@ -1910,6 +1938,7 @@ namespace WebAuthN::Metadata {
     struct MetadataBLOBPayloadEntryType {
 
         MetadataBLOBPayloadEntryType() noexcept = default;
+
         MetadataBLOBPayloadEntryType(const json& j) :
             StatusReports(j["statusReports"].get<std::vector<StatusReportType>>()),
             TimeOfLastStatusChange(j["timeOfLastStatusChange"].get<std::string>()) {
@@ -1942,6 +1971,7 @@ namespace WebAuthN::Metadata {
                 RogueListHash.emplace(j["rogueListHash"].get<std::string>());
             }
         }
+
         MetadataBLOBPayloadEntryType(const MetadataBLOBPayloadEntryType& metadataBLOBPayloadEntry) noexcept = default;
         MetadataBLOBPayloadEntryType(MetadataBLOBPayloadEntryType&& metadataBLOBPayloadEntry) noexcept = default;
         ~MetadataBLOBPayloadEntryType() noexcept = default;
@@ -2051,6 +2081,7 @@ namespace WebAuthN::Metadata {
     struct MetadataBLOBPayloadType {
 
         MetadataBLOBPayloadType() noexcept = default;
+
         MetadataBLOBPayloadType(const json& j) :
             Number(j["no"].get<int64_t>()),
             NextUpdate(j["nextUpdate"].get<std::string>()),
@@ -2060,6 +2091,7 @@ namespace WebAuthN::Metadata {
                 LegalHeader.emplace(j["legalHeader"].get<std::string>());
             }
         }
+
         MetadataBLOBPayloadType(const MetadataBLOBPayloadType& metadataBLOBPayload) noexcept = default;
         MetadataBLOBPayloadType(MetadataBLOBPayloadType&& metadataBLOBPayload) noexcept = default;
         ~MetadataBLOBPayloadType() noexcept = default;
@@ -2108,9 +2140,11 @@ namespace WebAuthN::Metadata {
     struct MDSGetEndpointsRequestType {
 
         MDSGetEndpointsRequestType() noexcept = default;
+
         MDSGetEndpointsRequestType(const json& j) :
             Endpoint(j["endpoint"].get<std::string>()) {
         }
+
         MDSGetEndpointsRequestType(const MDSGetEndpointsRequestType& mdsGetEndpointsRequest) noexcept = default;
         MDSGetEndpointsRequestType(MDSGetEndpointsRequestType&& mdsGetEndpointsRequest) noexcept = default;
         ~MDSGetEndpointsRequestType() noexcept = default;
@@ -2138,10 +2172,12 @@ namespace WebAuthN::Metadata {
     struct MDSGetEndpointsResponseType {
 
         MDSGetEndpointsResponseType() noexcept = default;
+
         MDSGetEndpointsResponseType(const json& j) :
             Status(j["status"].get<std::string>()),
             Result(j["result"].get<std::vector<std::string>>()) {
         }
+
         MDSGetEndpointsResponseType(const MDSGetEndpointsResponseType& mdsGetEndpointsResponse) noexcept = default;
         MDSGetEndpointsResponseType(MDSGetEndpointsResponseType&& mdsGetEndpointsResponse) noexcept = default;
         ~MDSGetEndpointsResponseType() noexcept = default;
@@ -2176,6 +2212,7 @@ namespace WebAuthN::Metadata {
         MetadataError() noexcept :
             WebAuthN::Protocol::ErrorType() {
         }
+
         MetadataError(std::string&& type, std::string&& details) noexcept :
             WebAuthN::Protocol::ErrorType(
                 std::move(type),

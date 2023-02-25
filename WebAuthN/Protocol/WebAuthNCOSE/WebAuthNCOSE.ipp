@@ -231,11 +231,13 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     struct PublicKeyDataType {
 
         PublicKeyDataType() noexcept = default;
+
         PublicKeyDataType(const json& j) :
             _struct(j["public_key"].get<bool>()),
             KeyType(j["kty"].get<int64_t>()),
             Algorithm(j["alg"].get<int64_t>()) {
         }
+
         PublicKeyDataType(const PublicKeyDataType& publicKeyData) noexcept = default;
         PublicKeyDataType(PublicKeyDataType&& publicKeyData) noexcept = default;
         virtual ~PublicKeyDataType() noexcept = default;
@@ -270,6 +272,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     struct EC2PublicKeyDataType : public PublicKeyDataType {
 
         EC2PublicKeyDataType() noexcept = default;
+
         EC2PublicKeyDataType(const json& j) :
             PublicKeyDataType(j) {
             
@@ -285,6 +288,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 YCoord.emplace(j["y"].get<std::vector<uint8_t>>());
             }
         }
+
         EC2PublicKeyDataType(const EC2PublicKeyDataType& ec2PublicKeyData) noexcept = default;
         EC2PublicKeyDataType(EC2PublicKeyDataType&& ec2PublicKeyData) noexcept = default;
         ~EC2PublicKeyDataType() noexcept override = default;
@@ -393,6 +397,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     struct RSAPublicKeyDataType : public PublicKeyDataType {
 
         RSAPublicKeyDataType() noexcept = default;
+
         RSAPublicKeyDataType(const json& j) :
             PublicKeyDataType(j) {
 
@@ -404,6 +409,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 Exponent.emplace(j["e"].get<std::vector<uint8_t>>());
             }
         }
+
         RSAPublicKeyDataType(const RSAPublicKeyDataType& rsaPublicKeyData) noexcept = default;
         RSAPublicKeyDataType(RSAPublicKeyDataType&& rsaPublicKeyData) noexcept = default;
         ~RSAPublicKeyDataType() noexcept override = default;
@@ -489,6 +495,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     struct OKPPublicKeyDataType : public PublicKeyDataType {
 
         OKPPublicKeyDataType() noexcept = default;
+
         OKPPublicKeyDataType(const json& j) :
             PublicKeyDataType(j) {
 
@@ -496,6 +503,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 XCoord.emplace(j["x"].get<std::vector<uint8_t>>());
             }
         }
+
         OKPPublicKeyDataType(const OKPPublicKeyDataType& okpPublicKeyData) noexcept = default;
         OKPPublicKeyDataType(OKPPublicKeyDataType&& okpPublicKeyData) noexcept = default;
         ~OKPPublicKeyDataType() noexcept override = default;

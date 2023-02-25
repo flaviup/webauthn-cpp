@@ -138,14 +138,17 @@ namespace WebAuthN::Protocol {
     struct CredentialParameterType {
 
         CredentialParameterType() noexcept = default;
+
         CredentialParameterType(const json& j) :
             Type(j["type"].get<CredentialTypeType>()),
             Algorithm(j["alg"].get<WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
         }
+
         CredentialParameterType(CredentialTypeType type, WebAuthNCOSE::COSEAlgorithmIdentifierType algorithm) noexcept :
             Type(type),
             Algorithm(algorithm) {
         }
+
         CredentialParameterType(const CredentialParameterType& credentialParameter) noexcept = default;
         CredentialParameterType(CredentialParameterType&& credentialParameter) noexcept = default;
         ~CredentialParameterType() noexcept = default;
@@ -181,6 +184,7 @@ namespace WebAuthN::Protocol {
     struct CredentialDescriptorType {
 
         CredentialDescriptorType() noexcept = default;
+
         CredentialDescriptorType(const CredentialType& type,
             const URLEncodedBase64Type& credentialID,
             const std::optional<std::vector<AuthenticatorTransportType>>& transports,
@@ -191,6 +195,7 @@ namespace WebAuthN::Protocol {
             Transports(transports),
             AttestationType(attestationType) {
         }
+
         CredentialDescriptorType(const json& j) :
             Type(j["type"].get<CredentialType>()),
             CredentialID(j["id"].get<URLEncodedBase64Type>()) {
@@ -199,6 +204,7 @@ namespace WebAuthN::Protocol {
                 Transports.emplace(j["transports"].get<std::vector<AuthenticatorTransportType>>());
             }
         }
+
         CredentialDescriptorType(const CredentialDescriptorType& credentialDescriptor) noexcept = default;
         CredentialDescriptorType(CredentialDescriptorType&& credentialDescriptor) noexcept = default;
         ~CredentialDescriptorType() noexcept = default;
@@ -250,6 +256,7 @@ namespace WebAuthN::Protocol {
     struct AuthenticatorSelectionType {
         
         AuthenticatorSelectionType() noexcept = default;
+
         AuthenticatorSelectionType(const std::optional<AuthenticatorAttachmentType>& authenticatorAttachment,
             const std::optional<bool>& requireResidentKey,
             const std::optional<ResidentKeyRequirementType>& residentKey,
@@ -260,6 +267,7 @@ namespace WebAuthN::Protocol {
             ResidentKey(residentKey),
             UserVerification(userVerification) {
         }
+
         AuthenticatorSelectionType(const json& j) {
 
             if (j.find("authenticatorAttachment") != j.end()) {
@@ -278,6 +286,7 @@ namespace WebAuthN::Protocol {
                 UserVerification.emplace(j["userVerification"].get<UserVerificationRequirementType>());
             }
         }
+
         AuthenticatorSelectionType(const AuthenticatorSelectionType& authenticatorSelection) noexcept = default;
         AuthenticatorSelectionType(AuthenticatorSelectionType&& authenticatorSelection) noexcept = default;
         ~AuthenticatorSelectionType() noexcept = default;
@@ -355,6 +364,7 @@ namespace WebAuthN::Protocol {
     struct PublicKeyCredentialCreationOptionsType {
 
         PublicKeyCredentialCreationOptionsType() noexcept = default;
+
         PublicKeyCredentialCreationOptionsType(const RelyingPartyEntityType& relyingParty,
             const UserEntityType& user,
             const URLEncodedBase64Type& challenge,
@@ -373,7 +383,8 @@ namespace WebAuthN::Protocol {
             AuthenticatorSelection(authenticatorSelection),
             Attestation(attestation),
             Extensions(extensions) {
-        };
+        }
+
         PublicKeyCredentialCreationOptionsType(const json& j) :
             RelyingParty(j["rp"].get<RelyingPartyEntityType>()),
             User(j["user"].get<UserEntityType>()),
@@ -403,6 +414,7 @@ namespace WebAuthN::Protocol {
                 Extensions.emplace(j["extensions"].get<AuthenticationExtensionsType>());
             }
         }
+
         PublicKeyCredentialCreationOptionsType(const PublicKeyCredentialCreationOptionsType& publicKeyCredentialCreationOptions) noexcept = default;
         PublicKeyCredentialCreationOptionsType(PublicKeyCredentialCreationOptionsType&& publicKeyCredentialCreationOptions) noexcept = default;
         ~PublicKeyCredentialCreationOptionsType() noexcept = default;
@@ -495,6 +507,7 @@ namespace WebAuthN::Protocol {
     struct PublicKeyCredentialRequestOptionsType {
 
         PublicKeyCredentialRequestOptionsType() noexcept = default;
+
         PublicKeyCredentialRequestOptionsType(const json& j) :
             Challenge(j["challenge"].get<URLEncodedBase64Type>()) {
 
@@ -518,6 +531,7 @@ namespace WebAuthN::Protocol {
                 Extensions.emplace(j["extensions"].get<AuthenticationExtensionsType>());
             }
         }
+
         PublicKeyCredentialRequestOptionsType(const PublicKeyCredentialRequestOptionsType& publicKeyCredentialRequestOptions) noexcept = default;
         PublicKeyCredentialRequestOptionsType(PublicKeyCredentialRequestOptionsType&& publicKeyCredentialRequestOptions) noexcept = default;
         ~PublicKeyCredentialRequestOptionsType() noexcept = default;
@@ -604,12 +618,15 @@ namespace WebAuthN::Protocol {
     struct CredentialCreationType {
 
         CredentialCreationType() noexcept = default;
+
         CredentialCreationType(const PublicKeyCredentialCreationOptionsType& response) noexcept :
             Response(response) {
-        };
+        }
+
         CredentialCreationType(const json& j) :
             Response(j["publicKey"].get<PublicKeyCredentialCreationOptionsType>()) {
         }
+
         CredentialCreationType(const CredentialCreationType& credentialCreation) noexcept = default;
         CredentialCreationType(CredentialCreationType&& credentialCreation) noexcept = default;
         ~CredentialCreationType() noexcept = default;
@@ -635,9 +652,11 @@ namespace WebAuthN::Protocol {
     struct CredentialAssertionType {
 
         CredentialAssertionType() noexcept = default;
+
         CredentialAssertionType(const json& j) :
             Response(j["publicKey"].get<PublicKeyCredentialRequestOptionsType>()) {
         }
+
         CredentialAssertionType(const CredentialAssertionType& credentialAssertion) noexcept = default;
         CredentialAssertionType(CredentialAssertionType&& credentialAssertion) noexcept = default;
         ~CredentialAssertionType() noexcept = default;
@@ -663,10 +682,12 @@ namespace WebAuthN::Protocol {
     struct ServerResponseType {
 
         ServerResponseType() noexcept = default;
+
         ServerResponseType(const json& j) :
             Status(j["status"].get<ServerResponseStatusType>()),
             Message(j["errorMessage"].get<std::string>()) {
         }
+
         ServerResponseType(const ServerResponseType& serverResponse) noexcept = default;
         ServerResponseType(ServerResponseType&& serverResponse) noexcept = default;
         ~ServerResponseType() noexcept = default;

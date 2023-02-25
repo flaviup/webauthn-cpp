@@ -27,6 +27,7 @@ namespace WebAuthN::Protocol {
     struct ParsedAssertionResponseType {
 
         ParsedAssertionResponseType() noexcept = default;
+
         ParsedAssertionResponseType(const CollectedClientDataType& collectedClientData,
             const AuthenticatorDataType& authenticatorData,
             const std::vector<uint8_t>& signature,
@@ -36,6 +37,7 @@ namespace WebAuthN::Protocol {
             Signature(signature),
             UserHandle(userHandle) {
         }
+
         ParsedAssertionResponseType(const ParsedAssertionResponseType& parsedAssertionResponse) noexcept = default;
         ParsedAssertionResponseType(ParsedAssertionResponseType&& parsedAssertionResponse) noexcept = default;
         ~ParsedAssertionResponseType() noexcept = default;
@@ -54,6 +56,7 @@ namespace WebAuthN::Protocol {
     struct AuthenticatorAssertionResponseType : public AuthenticatorResponseType {
 
         AuthenticatorAssertionResponseType() noexcept = default;
+
         AuthenticatorAssertionResponseType(const json& j) :
             AuthenticatorResponseType(j),
             AuthenticatorData(j["authenticatorData"].get<URLEncodedBase64Type>()),
@@ -63,6 +66,7 @@ namespace WebAuthN::Protocol {
                 UserHandle.emplace(j["userHandle"].get<URLEncodedBase64Type>());
             }
         }
+
         AuthenticatorAssertionResponseType(const AuthenticatorAssertionResponseType& authenticatorAssertionResponse) noexcept = default;
         AuthenticatorAssertionResponseType(AuthenticatorAssertionResponseType&& authenticatorAssertionResponse) noexcept = default;
         ~AuthenticatorAssertionResponseType() noexcept override = default;
@@ -116,10 +120,12 @@ namespace WebAuthN::Protocol {
     struct CredentialAssertionResponseType : public PublicKeyCredentialType {
 
         CredentialAssertionResponseType() noexcept = default;
+
         CredentialAssertionResponseType(const json& j) :
             PublicKeyCredentialType(j),
             AssertionResponse(j["response"]) {
         }
+
         CredentialAssertionResponseType(const CredentialAssertionResponseType& credentialAssertionResponse) noexcept = default;
         CredentialAssertionResponseType(CredentialAssertionResponseType&& credentialAssertionResponse) noexcept = default;
         ~CredentialAssertionResponseType() noexcept override = default;
@@ -149,16 +155,19 @@ namespace WebAuthN::Protocol {
     struct ParsedCredentialAssertionDataType : public ParsedPublicKeyCredentialType {
 
         ParsedCredentialAssertionDataType() noexcept = default;
+
         ParsedCredentialAssertionDataType(const ParsedPublicKeyCredentialType& ppkc,
             const ParsedAssertionResponseType& response,
             const CredentialAssertionResponseType& raw) noexcept : 
             ParsedPublicKeyCredentialType(ppkc),
             Response(response),
             Raw(raw) {
-        };
+        }
+
         ParsedCredentialAssertionDataType(const json& j) :
             ParsedPublicKeyCredentialType(j) {
         }
+
         ParsedCredentialAssertionDataType(const ParsedCredentialAssertionDataType& parsedCredentialAssertionData) noexcept = default;
         ParsedCredentialAssertionDataType(ParsedCredentialAssertionDataType&& parsedCredentialAssertionData) noexcept = default;
         ~ParsedCredentialAssertionDataType() noexcept override = default;
@@ -254,7 +263,7 @@ namespace WebAuthN::Protocol {
             // Step 16. Using the credential public key looked up in step 3, verify that sig is
             // a valid signature over the binary concatenation of authData and hash.
 
-            std::vector<uint8_t> sigData{};
+            std::vector<uint8_t> sigData{0};
             std::copy(Raw.AssertionResponse.AuthenticatorData.begin(), Raw.AssertionResponse.AuthenticatorData.end(), std::back_inserter(sigData));
             std::copy(clientDataHash.begin(), clientDataHash.end(), std::back_inserter(sigData));
 

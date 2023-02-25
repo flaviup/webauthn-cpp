@@ -23,15 +23,18 @@ namespace WebAuthN::Protocol {
     struct ErrorType {
 
         ErrorType() noexcept = default;
+
         ErrorType(std::string&& type, std::string&& details) noexcept :
             Type(std::move(type)),
             Details(std::move(details)) {
         }
+
         ErrorType(const json& j) :
             Type(j["type"].get<std::string>()),
             Details(j["error"].get<std::string>()),
             DevInfo(j["debug"].get<std::string>()) {
         }
+
         ErrorType(const ErrorType& error) noexcept = default;
         ErrorType(ErrorType&& error) noexcept = default;
         virtual ~ErrorType() noexcept = default;

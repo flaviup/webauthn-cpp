@@ -33,10 +33,12 @@ namespace WebAuthN::Protocol {
     struct CredentialType {
 
         CredentialType() noexcept = default;
+
         CredentialType(const json& j) :
             ID(j["id"].get<std::string>()),
             Type(j["type"].get<std::string>()) {
         }
+
         CredentialType(const CredentialType& credential) noexcept = default;
         CredentialType(CredentialType&& credential) noexcept = default;
         virtual ~CredentialType() noexcept = default;
@@ -74,18 +76,22 @@ namespace WebAuthN::Protocol {
     struct ParsedCredentialType {
 
         ParsedCredentialType() noexcept = default;
+
         ParsedCredentialType(const std::string& id,
             const std::string& type) noexcept : 
             ID(id), 
             Type(type) {
-        };
+        }
+
         ParsedCredentialType(const json& j) :
             ID(j["id"].get<std::string>()),
             Type(j["type"].get<std::string>()) {
         }
+
         ParsedCredentialType(const std::vector<std::uint8_t>& cbor) :
             ParsedCredentialType(json::from_cbor(cbor)) {
         }
+
         ParsedCredentialType(const ParsedCredentialType& parsedCredential) noexcept = default;
         ParsedCredentialType(ParsedCredentialType&& parsedCredential) noexcept = default;
         virtual ~ParsedCredentialType() noexcept = default;
@@ -114,6 +120,7 @@ namespace WebAuthN::Protocol {
     struct PublicKeyCredentialType : public CredentialType {
 
         PublicKeyCredentialType() noexcept = default;
+
         PublicKeyCredentialType(const json& j) :
             CredentialType(j),
             RawID(j["rawId"].get<URLEncodedBase64Type>()) {
@@ -126,6 +133,7 @@ namespace WebAuthN::Protocol {
                 AuthenticatorAttachment.emplace(["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
             }
         }
+
         PublicKeyCredentialType(const PublicKeyCredentialType& publicKeyCredential) noexcept = default;
         PublicKeyCredentialType(PublicKeyCredentialType&& publicKeyCredential) noexcept = default;
         virtual ~PublicKeyCredentialType() noexcept override = default;
@@ -171,6 +179,7 @@ namespace WebAuthN::Protocol {
     struct ParsedPublicKeyCredentialType : public ParsedCredentialType {
 
         ParsedPublicKeyCredentialType() noexcept = default;
+
         ParsedPublicKeyCredentialType(const ParsedCredentialType& pc,
             const std::vector<uint8_t>& rawID,
             const std::optional<AuthenticationExtensionsClientOutputsType>& clientExtensionResults = std::nullopt,
@@ -179,7 +188,8 @@ namespace WebAuthN::Protocol {
             RawID(rawID),
             ClientExtensionResults(clientExtensionResults), 
             AuthenticatorAttachment(authenticatorAttachment) {
-        };
+        }
+
         ParsedPublicKeyCredentialType(const json& j) :
             ParsedCredentialType(j),
             RawID(j["rawId"].get<std::vector<uint8_t>>()) {
@@ -192,9 +202,11 @@ namespace WebAuthN::Protocol {
                 AuthenticatorAttachment.emplace(j["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
             }
         }
+
         ParsedPublicKeyCredentialType(const std::vector<std::uint8_t>& cbor) :
             ParsedPublicKeyCredentialType(json::from_cbor(cbor)) {
         }
+
         ParsedPublicKeyCredentialType(const ParsedPublicKeyCredentialType& parsedPublicKeyCredential) noexcept = default;
         ParsedPublicKeyCredentialType(ParsedPublicKeyCredentialType&& parsedPublicKeyCredential) noexcept = default;
         virtual ~ParsedPublicKeyCredentialType() noexcept override = default;
@@ -214,7 +226,8 @@ namespace WebAuthN::Protocol {
         // 8. Check that the appid extension in Session Data is a string and if it isn't return an error.
         // 9. Return the appid extension value from the Session data.
         inline expected<std::string>
-        GetAppID(const std::optional<AuthenticationExtensionsType>& authExt, const std::string& credentialAttestationType) const noexcept {
+        GetAppID(const std::optional<AuthenticationExtensionsType>& authExt, 
+                 const std::string& credentialAttestationType) const noexcept {
 
             bool enableAppID = false;
 
@@ -293,6 +306,7 @@ namespace WebAuthN::Protocol {
     struct CredentialCreationResponseType : public PublicKeyCredentialType {
 
         CredentialCreationResponseType() noexcept = default;
+
         CredentialCreationResponseType(const json& j) :
             PublicKeyCredentialType(j),
             AttestationResponse(j["response"].get<AuthenticatorAttestationResponseType>()) {
@@ -301,6 +315,7 @@ namespace WebAuthN::Protocol {
                 Transports.emplace(j["transports"].get<std::vector<std::string>>());
             }
         }
+
         CredentialCreationResponseType(const CredentialCreationResponseType& credentialCreationResponse) noexcept = default;
         CredentialCreationResponseType(CredentialCreationResponseType&& credentialCreationResponse) noexcept = default;
         ~CredentialCreationResponseType() noexcept override = default;
@@ -337,16 +352,19 @@ namespace WebAuthN::Protocol {
     struct ParsedCredentialCreationDataType : public ParsedPublicKeyCredentialType {
 
         ParsedCredentialCreationDataType() noexcept = default;
+
         ParsedCredentialCreationDataType(const ParsedPublicKeyCredentialType& ppkc,
             const ParsedAttestationResponseType& response,
             const CredentialCreationResponseType& raw) noexcept : 
             ParsedPublicKeyCredentialType(ppkc),
             Response(response),
             Raw(raw) {
-        };
+        }
+
         ParsedCredentialCreationDataType(const json& j) :
             ParsedPublicKeyCredentialType(j) {
         }
+
         ParsedCredentialCreationDataType(const ParsedCredentialCreationDataType& parsedCredentialCreationData) noexcept = default;
         ParsedCredentialCreationDataType(ParsedCredentialCreationDataType&& parsedCredentialCreationData) noexcept = default;
         ~ParsedCredentialCreationDataType() noexcept override = default;

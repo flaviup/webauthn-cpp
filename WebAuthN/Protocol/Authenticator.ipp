@@ -337,9 +337,11 @@ namespace WebAuthN::Protocol {
     struct AuthenticatorResponseType {
 
         AuthenticatorResponseType() noexcept = default;
+
         AuthenticatorResponseType(const json& j) :
             ClientDataJSON(j["clientDataJSON"].get<URLEncodedBase64Type>()) {
         }
+
         AuthenticatorResponseType(const AuthenticatorResponseType& authenticatorResponse) noexcept = default;
         AuthenticatorResponseType(AuthenticatorResponseType&& authenticatorResponse) noexcept = default;
         virtual ~AuthenticatorResponseType() noexcept = default;
@@ -382,6 +384,7 @@ namespace WebAuthN::Protocol {
     struct AuthenticatorDataType {
 
         AuthenticatorDataType() noexcept = default;
+
         AuthenticatorDataType(const json& j) :
             RPIDHash(j["rpid"].get<std::vector<uint8_t>>()),
             Flags(j["flags"].get<AuthenticatorFlagsType>()),
@@ -389,6 +392,7 @@ namespace WebAuthN::Protocol {
             AttData(j["att_data"].get<AttestedCredentialDataType>()),
             ExtData(j["ext_data"].get<std::vector<uint8_t>>()) {
         }
+
         AuthenticatorDataType(const AuthenticatorDataType& authenticatorData) noexcept = default;
         AuthenticatorDataType(AuthenticatorDataType&& authenticatorData) noexcept = default;
         ~AuthenticatorDataType() noexcept = default;
@@ -563,11 +567,13 @@ namespace WebAuthN::Protocol {
     struct AttestedCredentialDataType {
 
         AttestedCredentialDataType() noexcept = default;
+
         AttestedCredentialDataType(const json& j) :
             AAGUID(j["aaguid"].get<std::vector<uint8_t>>()),
             CredentialID(j["credential_id"].get<std::vector<uint8_t>>()),
             CredentialPublicKey(j["public_key"].get<std::vector<uint8_t>>()) {
         }
+
         AttestedCredentialDataType(const AttestedCredentialDataType& attestedCredentialData) noexcept = default;
         AttestedCredentialDataType(AttestedCredentialDataType&& attestedCredentialData) noexcept = default;
         ~AttestedCredentialDataType() noexcept = default;

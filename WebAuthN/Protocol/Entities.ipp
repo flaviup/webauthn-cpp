@@ -27,10 +27,12 @@ namespace WebAuthN::Protocol {
     struct CredentialEntityType {
 
         CredentialEntityType() noexcept = default;
+
         CredentialEntityType(const std::string& name, const std::optional<std::string>& icon = std::nullopt) noexcept : 
             Name(name), 
             Icon(icon) {
         }
+
         CredentialEntityType(const json& j) :
             Name(j["name"].get<std::string>()) {
 
@@ -38,6 +40,7 @@ namespace WebAuthN::Protocol {
                 Icon.emplace(j["icon"].get<std::string>());
             }
         }
+
         CredentialEntityType(const CredentialEntityType& credentialEntity) noexcept = default;
         CredentialEntityType(CredentialEntityType&& credentialEntity) noexcept = default;
         virtual ~CredentialEntityType() noexcept = default;
@@ -93,16 +96,19 @@ namespace WebAuthN::Protocol {
     struct RelyingPartyEntityType : public CredentialEntityType {
 
         RelyingPartyEntityType() noexcept = default;
+
         RelyingPartyEntityType(const std::string& id, 
             const std::string& name,
             const std::optional<std::string>& icon = std::nullopt) noexcept : 
             CredentialEntityType(name, icon),
             ID(id) {
         }
+
         RelyingPartyEntityType(const json& j) :
             CredentialEntityType(j),
             ID(j["id"].get<std::string>()) {
         }
+
         RelyingPartyEntityType(const RelyingPartyEntityType& relyingPartyEntity) noexcept = default;
         RelyingPartyEntityType(RelyingPartyEntityType&& relyingPartyEntity) noexcept = default;
         ~RelyingPartyEntityType() noexcept override = default;
@@ -135,6 +141,7 @@ namespace WebAuthN::Protocol {
     struct UserEntityType : public CredentialEntityType {
 
         UserEntityType() noexcept = default;
+
         UserEntityType(const URLEncodedBase64Type& id, 
             const std::string& name, 
             const std::optional<std::string>& displayName = std::nullopt, 
@@ -143,6 +150,7 @@ namespace WebAuthN::Protocol {
             ID(id), 
             DisplayName(displayName) {
         }
+
         UserEntityType(const json& j) :
             CredentialEntityType(j),
             ID(j["id"].get<URLEncodedBase64Type>()) {
@@ -151,6 +159,7 @@ namespace WebAuthN::Protocol {
                 DisplayName.emplace(j["displayName"].get<std::string>());
             }
         }
+
         UserEntityType(const UserEntityType& userEntity) noexcept = default;
         UserEntityType(UserEntityType&& userEntity) noexcept = default;
         ~UserEntityType() noexcept override = default;

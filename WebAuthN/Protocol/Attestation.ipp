@@ -43,6 +43,7 @@ namespace WebAuthN::Protocol {
     struct AttestationObjectType {
 
         AttestationObjectType() noexcept = default;
+
         AttestationObjectType(const json& j) :
             RawAuthData(j["authData"].get<std::vector<uint8_t>>()),
             Format(j["fmt"].get<std::string>()) {
@@ -51,6 +52,7 @@ namespace WebAuthN::Protocol {
                 AttStatement.emplace(j["attStmt"].get<std::map<std::string, std::any>>());
             }
         }
+
         AttestationObjectType(const AttestationObjectType& attestationObject) noexcept = default;
         AttestationObjectType(AttestationObjectType&& attestationObject) noexcept = default;
         ~AttestationObjectType() noexcept = default;
@@ -124,6 +126,7 @@ namespace WebAuthN::Protocol {
     struct AuthenticatorAttestationResponseType : public AuthenticatorResponseType {
 
         AuthenticatorAttestationResponseType() noexcept = default;
+
         AuthenticatorAttestationResponseType(const json& j) :
             AuthenticatorResponseType(j), // // The byte slice of clientDataJSON, which becomes CollectedClientData
             AttestationObject(j["attestationObject"].get<URLEncodedBase64Type>()) {
@@ -132,6 +135,7 @@ namespace WebAuthN::Protocol {
                 Transports.emplace(j["transports"].get<std::vector<std::string>>());
             }
         }
+
         AuthenticatorAttestationResponseType(const AuthenticatorAttestationResponseType& authenticatorAttestationResponse) noexcept = default;
         AuthenticatorAttestationResponseType(AuthenticatorAttestationResponseType&& authenticatorAttestationResponse) noexcept = default;
         ~AuthenticatorAttestationResponseType() noexcept override = default;
@@ -186,7 +190,7 @@ namespace WebAuthN::Protocol {
     using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::any>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
 
-    // RegisterAttestationFormat is a method to register attestation formats with the library. Generally using one of the
+    // RegisterAttestationFormat is a function to register attestation formats with the library. Generally using one of the
     // locally registered attestation formats is sufficient.
     inline void RegisterAttestationFormat(const std::string& format, AttestationFormatValidationHandlerType handler) {
 

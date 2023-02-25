@@ -22,6 +22,7 @@ namespace WebAuthN::WebAuthN {
     struct SessionDataType {
 
         SessionDataType() noexcept = default;
+
         SessionDataType(const std::string& challenge,
             const std::vector<uint8_t>& userID,
             const std::string& userDisplayName,
@@ -37,7 +38,8 @@ namespace WebAuthN::WebAuthN {
             Expires(expires),
             UserVerification(userVerification),
             Extensions(extensions) {
-        };
+        }
+
         SessionDataType(const json& j) :
             Challenge(j["challenge"].get<std::string>()),
             UserID(j["user_id"].get<std::vector<uint8_t>>()),
@@ -53,6 +55,7 @@ namespace WebAuthN::WebAuthN {
                 Extensions.emplace(j["extensions"].get<Protocol::AuthenticationExtensionsType>());
             }
         }
+
         SessionDataType(const SessionDataType& sessionData) noexcept = default;
         SessionDataType(SessionDataType&& sessionData) noexcept = default;
         ~SessionDataType() noexcept = default;
