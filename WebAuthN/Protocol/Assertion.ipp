@@ -26,6 +26,15 @@ namespace WebAuthN::Protocol {
     struct ParsedAssertionResponseType {
 
         ParsedAssertionResponseType() noexcept = default;
+        ParsedAssertionResponseType(const CollectedClientDataType& collectedClientData,
+            const AuthenticatorDataType& authenticatorData,
+            const std::vector<uint8_t>& signature,
+            const std::vector<uint8_t>& userHandle) noexcept : 
+            CollectedClientData(collectedClientData),
+            AuthenticatorData(authenticatorData),
+            Signature(signature),
+            UserHandle(userHandle) {
+        }
         ParsedAssertionResponseType(const ParsedAssertionResponseType& parsedAssertionResponse) noexcept = default;
         ParsedAssertionResponseType(ParsedAssertionResponseType&& parsedAssertionResponse) noexcept = default;
         ~ParsedAssertionResponseType() noexcept = default;
@@ -64,6 +73,13 @@ namespace WebAuthN::Protocol {
         // Step 8. This returns a fully decoded struct with the data put into a format that can be
         // used to verify the user and credential that was created.
         inline expected<ParsedAssertionResponseType> Parse() const {
+
+            return ParsedAssertionResponseType{
+                CollectedClientDataType{},
+                this->AuthenticatorData,
+                this->Signature,
+                this->UserHandle
+            };
         }
 
         URLEncodedBase64Type AuthenticatorData;
@@ -175,6 +191,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(ErrParsingData().WithDetails("Error parsing assertion response"));
             }
             auto response = responseParseResult.value();
+
             auto attachment = json(credentialAssertionResponse.AuthenticatorAttachment.value()).get<AuthenticatorAttachmentType>();
 
             return ParsedCredentialAssertionDataType{
