@@ -377,6 +377,7 @@ namespace WebAuthN::Protocol {
     // map ResidentKeyRequirementType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(ResidentKeyRequirementType, {
         { ResidentKeyRequirementType::Invalid,           nullptr },
+        { ResidentKeyRequirementType::Invalid,                "" },
         { ResidentKeyRequirementType::Discouraged, "discouraged" },
         { ResidentKeyRequirementType::Preferred,     "preferred" },
         { ResidentKeyRequirementType::Required,       "required" }

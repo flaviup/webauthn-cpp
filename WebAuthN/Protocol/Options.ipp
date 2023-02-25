@@ -41,7 +41,7 @@ namespace WebAuthN::Protocol {
 
         // PublicKey - Currently one credential type is defined, namely "public-key".
         PublicKey,
-        Invalid // Invalid value
+        Invalid = -1 // Invalid value
     };
 
     // map CredentialTypeType values to JSON as strings
@@ -318,7 +318,7 @@ namespace WebAuthN::Protocol {
         EnterpriseAttestation,
 
         // Invalid value
-        Invalid
+        Invalid = -1
     };
 
     // map ConveyancePreferenceType values to JSON as strings
@@ -651,7 +651,7 @@ namespace WebAuthN::Protocol {
 
         Ok,
         Failed,
-        Invalid  // Invalid value
+        Invalid = -1 // Invalid value
     };
 
     // map ServerResponseStatusType values to JSON as strings

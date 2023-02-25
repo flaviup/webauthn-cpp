@@ -58,11 +58,15 @@ namespace WebAuthN::Metadata {
         // AnonCA In this case, the authenticator uses an Anonymization CA which dynamically generates per-credential attestation certificates such that the attestation statements presented to Relying Parties do not provide uniquely identifiable information, e.g., that might be used for tracking purposes. The applicable [WebAuthn] attestation formats "fmt" are Google SafetyNet Attestation "android-safetynet", Android Keystore Attestation "android-key", Apple Anonymous Attestation "apple", and Apple Application Attestation "apple-appattest".
         AnonCA,
         // None - Indicates absence of attestation
-        None
+        None,
+        // Invalid value
+        Invalid = -1
     };
 
     // map AuthenticatorAttestationType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorAttestationType, {
+        { AuthenticatorAttestationType::Invalid,                  nullptr },
+        { AuthenticatorAttestationType::Invalid,                       "" },
         { AuthenticatorAttestationType::BasicFull,           "basic_full" },
         { AuthenticatorAttestationType::BasicSurrogate, "basic_surrogate" },
         { AuthenticatorAttestationType::Ecdaa,                    "ecdaa" },
@@ -104,11 +108,15 @@ namespace WebAuthN::Metadata {
         // FidoCertifiedL3 - The authenticator has passed FIDO Authenticator certification at level 3. This level is more strict than level 2+.
         FidoCertifiedL3,
         // FidoCertifiedL3plus - The authenticator has passed FIDO Authenticator certification at level 3+. This level is more strict than level 3.
-        FidoCertifiedL3plus
+        FidoCertifiedL3plus,
+        // Invalid value
+        Invalid = -1
     };
 
     // map AuthenticatorStatusType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorStatusType, {
+        { AuthenticatorStatusType::Invalid,                                          nullptr },
+        { AuthenticatorStatusType::Invalid,                                               "" },
         { AuthenticatorStatusType::NotFidoCertified,                    "NOT_FIDO_CERTIFIED" },
         { AuthenticatorStatusType::FidoCertified,                           "FIDO_CERTIFIED" },
         { AuthenticatorStatusType::UserVerificationBypass,        "USER_VERIFICATION_BYPASS" },
@@ -128,6 +136,7 @@ namespace WebAuthN::Metadata {
 
     // UNDESIRED_AUTHENTICATOR_STATUS is an array of undesirable authenticator statuses
     inline constexpr const AuthenticatorStatusType UNDESIRED_AUTHENTICATOR_STATUS[] = {
+        AuthenticatorStatusType::Invalid,
         AuthenticatorStatusType::UserVerificationBypass,
         AuthenticatorStatusType::AttestationKeyCompromise,
         AuthenticatorStatusType::UserKeyRemoteCompromise,
@@ -152,11 +161,15 @@ namespace WebAuthN::Metadata {
         // ASN.1 DER [ITU-X690-2008] encoded 2048-bit RSA RFC3447 public key RFC4055.
         ALG_KEY_RSA_2048_DER,
         // COSE_Key format, as defined in Section 7 of RFC8152. This encoding includes its own field for indicating the public key algorithm.
-        ALG_KEY_COSE
+        ALG_KEY_COSE,
+        // Invalid value
+        ALG_KEY_INVALID = -1
     };
 
     // map PublicKeyAlgAndEncodingType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(PublicKeyAlgAndEncodingType, {
+        { PublicKeyAlgAndEncodingType::ALG_KEY_INVALID,             nullptr },
+        { PublicKeyAlgAndEncodingType::ALG_KEY_INVALID,                  "" },
         { PublicKeyAlgAndEncodingType::ALG_KEY_ECC_X962_RAW, "ecc_x962_raw" },
         { PublicKeyAlgAndEncodingType::ALG_KEY_ECC_X962_DER, "ecc_x962_der" },
         { PublicKeyAlgAndEncodingType::ALG_KEY_RSA_2048_RAW, "rsa_2048_raw" },
@@ -203,11 +216,15 @@ namespace WebAuthN::Metadata {
         // An EdDSA signature on the curve 25519, which must have raw R and S buffers, encoded in big-endian order.
         ALG_SIGN_ED25519_EDDSA_SHA512_RAW,
         // An EdDSA signature on the curve Ed448, which must have raw R and S buffers, encoded in big-endian order.
-        ALG_SIGN_ED448_EDDSA_SHA512_RAW
+        ALG_SIGN_ED448_EDDSA_SHA512_RAW,
+        // Invalid value
+        ALG_INVALID = -1
     };
 
     // map AuthenticationAlgorithmType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticationAlgorithmType, {
+        { AuthenticationAlgorithmType::ALG_INVALID,                                              nullptr },
+        { AuthenticationAlgorithmType::ALG_INVALID,                                                   "" },
         { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW, "secp256r1_ecdsa_sha256_raw" },
         { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_DER, "secp256r1_ecdsa_sha256_der" },
         { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_RAW,           "rsassa_pss_sha256_raw" },
