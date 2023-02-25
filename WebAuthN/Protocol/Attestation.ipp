@@ -25,6 +25,8 @@ namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
 
+    // Structs
+
     // AttestationObjectType is the raw attestationObject.
     //
     // Authenticators SHOULD also provide some form of attestation, if possible. If an authenticator does, the basic
@@ -178,6 +180,8 @@ namespace WebAuthN::Protocol {
             authenticatorAttestationResponse.Transports.emplace(j["transports"].get<std::vector<std::string>>());
         }
     }
+
+    // Attestation Registry
 
     using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::any>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};

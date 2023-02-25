@@ -22,6 +22,8 @@ namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
 
+    // Enums
+
     enum class CeremonyType {
 
         Create,
@@ -63,6 +65,8 @@ namespace WebAuthN::Protocol {
         { TokenBindingStatusType::Supported,        "supported" },
         { TokenBindingStatusType::NotSupported, "not-supported" }
     })
+
+    // Structs
 
     struct TokenBindingType {
 
@@ -251,6 +255,8 @@ namespace WebAuthN::Protocol {
             collectedClientData.Hint.emplace(j["hint"].get<std::string>());
         }
     }
+
+    // Functions
 
     // FullyQualifiedOrigin returns the origin per the HTML spec: (scheme)://(host)[:(port)].
     inline expected<std::string> FullyQualifiedOrigin(const std::string& rawOrigin) noexcept {

@@ -18,9 +18,13 @@
 
 namespace WebAuthN::Protocol {
 
+    using json = nlohmann::json;
+
+    // Consts
+
     inline const std::string CREDENTIAL_TYPE_FIDO_U2F = "fido-u2f";
 
-    using json = nlohmann::json;
+    // Structs
 
     // CredentialType is the basic credential type from the Credential Management specification that is inherited by WebAuthn's
     // PublicKeyCredentialType type.
@@ -489,6 +493,8 @@ namespace WebAuthN::Protocol {
 
         from_json(j, static_cast<ParsedPublicKeyCredentialType&>(parsedCredentialCreationData));
     }
+
+    // Functions
 
     inline expected<ParsedCredentialCreationDataType> ParseCredentialCreationResponse(const std::string& response) noexcept {
 

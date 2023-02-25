@@ -17,293 +17,15 @@
 
 namespace WebAuthN::Protocol {
 
+    using json = nlohmann::json;
+
+    // Consts
+
     inline constexpr const size_t MIN_AUTH_DATA_LENGTH = 37;
     inline constexpr const size_t MIN_ATTESTED_AUTH_LENGTH = 55;
     inline constexpr const size_t MAX_CREDENTIAL_ID_LENGTH = 1023;
 
-    using json = nlohmann::json;
-
-    // ResidentKeyRequired - Require that the key be private key resident to the client device.
-    inline bool ResidentKeyRequired() noexcept {
-
-        return true;
-    }
-
-    // ResidentKeyNotRequired - Do not require that the private key be resident to the client device.
-    inline bool ResidentKeyNotRequired() noexcept {
-
-        return false;
-    }
-
-    // AuthenticatorResponseType represents the IDL with the same name.
-    //
-    // Authenticators respond to Relying Party requests by returning an object derived from the AuthenticatorResponse
-    // interface
-    //
-    // Specification: §5.2. Authenticator Responses (https://www.w3.org/TR/webauthn/#iface-authenticatorresponse)
-    struct AuthenticatorResponseType {
-
-        AuthenticatorResponseType() noexcept = default;
-        AuthenticatorResponseType(const json& j) :
-            ClientDataJSON(j["clientDataJSON"].get<URLEncodedBase64Type>()) {
-        }
-        AuthenticatorResponseType(const AuthenticatorResponseType& authenticatorResponse) noexcept = default;
-        AuthenticatorResponseType(AuthenticatorResponseType&& authenticatorResponse) noexcept = default;
-        virtual ~AuthenticatorResponseType() noexcept = default;
-
-        AuthenticatorResponseType& operator =(const AuthenticatorResponseType& other) noexcept = default;
-        AuthenticatorResponseType& operator =(AuthenticatorResponseType&& other) noexcept = default;
-
-        // From the spec https://www.w3.org/TR/webauthn/#dom-authenticatorresponse-clientdatajson
-        // This attribute contains a JSON serialization of the client data passed to the authenticator
-        // by the client in its call to either create() or get().
-        URLEncodedBase64Type ClientDataJSON;
-    };
-
-    inline void to_json(json& j, const AuthenticatorResponseType& authenticatorResponse) {
-
-        j = json{
-            { "clientDataJSON", authenticatorResponse.ClientDataJSON }
-        };
-    }
-
-    inline void from_json(const json& j, AuthenticatorResponseType& authenticatorResponse) {
-
-        j.at("clientDataJSON").get_to(authenticatorResponse.ClientDataJSON);
-    }
-
-    // AuthenticatorDataType represents the IDL with the same name.
-    //
-    // The authenticator data structure encodes contextual bindings made by the authenticator. These bindings are controlled
-    // by the authenticator itself, and derive their trust from the WebAuthn Relying Party's assessment of the security
-    // properties of the authenticator. In one extreme case, the authenticator may be embedded in the client, and its
-    // bindings may be no more trustworthy than the client data. At the other extreme, the authenticator may be a discrete
-    // entity with high-security hardware and software, connected to the client over a secure channel. In both cases, the
-    // Relying Party receives the authenticator data in the same format, and uses its knowledge of the authenticator to make
-    // trust decisions.
-    //
-    // The authenticator data has a compact but extensible encoding. This is desired since authenticators can be devices
-    // with limited capabilities and low power requirements, with much simpler software stacks than the client platform.
-    //
-    // Specification: §6.1. Authenticator Data (https://www.w3.org/TR/webauthn/#sctn-authenticator-data)
-    struct AuthenticatorDataType {
-
-        AuthenticatorDataType() noexcept = default;
-        AuthenticatorDataType(const json& j) :
-            RPIDHash(j["rpid"].get<std::vector<uint8_t>>()),
-            Flags(j["flags"].get<AuthenticatorFlagsType>()),
-            Counter(j["sign_count"].get<uint32_t>()),
-            AttData(j["att_data"].get<AttestedCredentialDataType>()),
-            ExtData(j["ext_data"].get<std::vector<uint8_t>>()) {
-        }
-        AuthenticatorDataType(const AuthenticatorDataType& authenticatorData) noexcept = default;
-        AuthenticatorDataType(AuthenticatorDataType&& authenticatorData) noexcept = default;
-        ~AuthenticatorDataType() noexcept = default;
-
-        AuthenticatorDataType& operator =(const AuthenticatorDataType& other) noexcept = default;
-        AuthenticatorDataType& operator =(AuthenticatorDataType&& other) noexcept = default;
-
-        // Unmarshal will take the raw Authenticator Data and marshals it into AuthenticatorDataType for further validation.
-        // The authenticator data has a compact but extensible encoding. This is desired since authenticators can be
-        // devices with limited capabilities and low power requirements, with much simpler software stacks than the client platform.
-        // The authenticator data structure is a byte array of 37 bytes or more, and is laid out in this table:
-        // https://www.w3.org/TR/webauthn/#table-authData
-        inline std::optional<ErrorType> Unmarshal(const std::vector<uint8_t>& rawAuthData) noexcept {
-
-            /*if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
-                return ErrBadRequest.
-                    WithDetails("Authenticator data length too short").
-                    WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes", MIN_AUTH_DATA_LENGTH, rawAuthData.size()));
-            }
-
-            RPIDHash = rawAuthData[:32];
-            Flags = AuthenticatorFlagsType(rawAuthData[32]);
-            Counter = binary.BigEndian.Uint32(rawAuthData[33:37])
-
-            auto remaining = rawAuthData.size() - MIN_AUTH_DATA_LENGTH;
-
-            if (Flags.HasAttestedCredentialData()) {
-                if (rawAuthData.size() > MIN_ATTESTED_AUTH_LENGTH) {
-                    auto err = _UnmarshalAttestedData(rawAuthData);
-                    if (err) {
-                        return err;
-                    }
-
-                    auto attDataLen = AttData.AAGUID.size() + 2 + AttData.CredentialID.size() + AttData.CredentialPublicKey.size();
-                    remaining = remaining - attDataLen;
-                } else {
-                    return ErrBadRequest.WithDetails("Attested credential flag set but data is missing");
-                }
-            } else {
-                if (!Flags.HasExtensions() && rawAuthData.size() != 37) {
-                    return ErrBadRequest.WithDetails("Attested credential flag not set");
-                }
-            }
-
-            if (Flags.HasExtensions()) {
-                if (remaining != 0) {
-                    ExtData = rawAuthData[rawAuthData.size() - remaining:];
-                    remaining -= ExtData.size();
-                } else {
-                    return ErrBadRequest.WithDetails("Extensions flag set but extensions data is missing");
-                }
-            }
-
-            if (remaining != 0) {
-                return ErrBadRequest.WithDetails("Leftover bytes decoding AuthenticatorData");
-            }*/
-
-            return std::nullopt;
-        }
-
-        // Verify on AuthenticatorData handles Steps 9 through 12 for Registration
-        // and Steps 11 through 14 for Assertion.
-        inline std::optional<ErrorType> Verify(const std::vector<uint8_t>& rpIdHash, 
-            const std::vector<uint8_t>& appIDHash, 
-            bool userVerificationRequired) const noexcept {
-
-            // Registration Step 9 & Assertion Step 11
-            // Verify that the RP ID hash in authData is indeed the SHA-256
-            // hash of the RP ID expected by the RP.
-            /*if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
-                return ErrVerification.WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}", RPIDHash, rpIdHash));
-            }
-
-            // Registration Step 10 & Assertion Step 12
-            // Verify that the User Present bit of the flags in authData is set.
-            if (!Flags.UserPresent()) {
-                return ErrVerification.WithInfo("User presence flag not set by authenticator");
-            }
-
-            // Registration Step 11 & Assertion Step 13
-            // If user verification is required for this assertion, verify that
-            // the User Verified bit of the flags in authData is set.
-            if (userVerificationRequired && !Flags.UserVerified) {
-                return ErrVerification.WithInfo("User verification required but flag not set by authenticator");
-            }*/
-
-            // Registration Step 12 & Assertion Step 14
-            // Verify that the values of the client extension outputs in clientExtensionResults
-            // and the authenticator extension outputs in the extensions in authData are as
-            // expected, considering the client extension input values that were given as the
-            // extensions option in the create() call. In particular, any extension identifier
-            // values in the clientExtensionResults and the extensions in authData MUST be also be
-            // present as extension identifier values in the extensions member of options, i.e., no
-            // extensions are present that were not requested. In the general case, the meaning
-            // of "are as expected" is specific to the Relying Party and which extensions are in use.
-
-            // This is not yet fully implemented by the spec or by browsers.
-
-            return std::nullopt;
-        }
-
-        std::vector<uint8_t> RPIDHash;
-        AuthenticatorFlagsType Flags;
-        uint32_t Counter;
-        AttestedCredentialDataType AttData;
-        std::vector<uint8_t> ExtData;
-
-    private:
-        // If Attestation Data is present, unmarshall that into the appropriate public key structure.
-        inline std::optional<ErrorType> _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
-
-            /*AttData.AAGUID = rawAuthData[37:53];
-
-            auto idLength = binary.BigEndian.Uint16(rawAuthData[53:55]);
-            if len(rawAuthData) < int(55+idLength) {
-                return ErrBadRequest.WithDetails("Authenticator attestation data length too short");
-            }
-
-            if (idLength > MAX_CREDENTIAL_ID_LENGTH) {
-                return ErrBadRequest.WithDetails("Authenticator attestation data credential id length too long");
-            }
-
-            AttData.CredentialID = rawAuthData[55 : 55+idLength];
-
-            AttData.CredentialPublicKey, err = _UnmarshalCredentialPublicKey(rawAuthData[55+idLength:]);
-            if (err) {
-                return ErrBadRequest.WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", err));
-            }*/
-
-            return std::nullopt;
-        }
-
-        // Unmarshall the credential's Public Key into CBOR encoding.
-        inline static expected<std::vector<uint8_t>> _UnmarshalCredentialPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
-
-            std::any m;
-
-            /*auto exp = webauthncbor.Unmarshal(keyBytes, &m);
-            if (err) {
-                return err;
-            }
-
-            rawBytes, err := webauthncbor.Marshal(m);
-            if (err) {
-                return err;
-            }
-
-            return rawBytes; */
-        }
-    };
-
-    inline void to_json(json& j, const AuthenticatorDataType& authenticatorData) {
-
-        j = json{
-            { "rpid",      authenticatorData.RPIDHash },
-            { "flags",        authenticatorData.Flags },
-            { "sign_count", authenticatorData.Counter },
-            { "att_data",   authenticatorData.AttData },
-            { "ext_data",   authenticatorData.ExtData }
-        };
-    }
-
-    inline void from_json(const json& j, AuthenticatorDataType& authenticatorData) {
-
-        j.at("rpid").get_to(authenticatorData.RPIDHash);
-        j.at("flags").get_to(authenticatorData.Flags);
-        j.at("sign_count").get_to(authenticatorData.Counter);
-        j.at("att_data").get_to(authenticatorData.AttData);
-        j.at("ext_data").get_to(authenticatorData.ExtData);
-    }
-
-    struct AttestedCredentialDataType {
-
-        AttestedCredentialDataType() noexcept = default;
-        AttestedCredentialDataType(const json& j) :
-            AAGUID(j["aaguid"].get<std::vector<uint8_t>>()),
-            CredentialID(j["credential_id"].get<std::vector<uint8_t>>()),
-            CredentialPublicKey(j["public_key"].get<std::vector<uint8_t>>()) {
-        }
-        AttestedCredentialDataType(const AttestedCredentialDataType& attestedCredentialData) noexcept = default;
-        AttestedCredentialDataType(AttestedCredentialDataType&& attestedCredentialData) noexcept = default;
-        ~AttestedCredentialDataType() noexcept = default;
-
-        AttestedCredentialDataType& operator =(const AttestedCredentialDataType& other) noexcept = default;
-        AttestedCredentialDataType& operator =(AttestedCredentialDataType&& other) noexcept = default;
-
-        std::vector<uint8_t> AAGUID;
-        std::vector<uint8_t> CredentialID;
-
-        // The raw credential public key bytes received from the attestation data.
-        std::vector<uint8_t> CredentialPublicKey;
-    };
-
-    inline void to_json(json& j, const AttestedCredentialDataType& attestedCredentialData) {
-
-        j = json{
-            { "aaguid",                  attestedCredentialData.AAGUID },
-            { "credential_id",     attestedCredentialData.CredentialID },
-            { "public_key", attestedCredentialData.CredentialPublicKey }
-        };
-    }
-
-    inline void from_json(const json& j, AttestedCredentialDataType& attestedCredentialData) {
-
-        j.at("aaguid").get_to(attestedCredentialData.AAGUID);
-        j.at("credential_id").get_to(attestedCredentialData.CredentialID);
-        j.at("public_key").get_to(attestedCredentialData.CredentialPublicKey);
-    }
+    // Enums
 
     // AuthenticatorAttachmentType represents the IDL enum of the same name, and is used as part of the Authenticator Selection
     // Criteria.
@@ -602,6 +324,292 @@ namespace WebAuthN::Protocol {
     inline bool HasExtensions(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::HasExtensions) != 0;
+    }
+
+    // Structs
+
+    // AuthenticatorResponseType represents the IDL with the same name.
+    //
+    // Authenticators respond to Relying Party requests by returning an object derived from the AuthenticatorResponse
+    // interface
+    //
+    // Specification: §5.2. Authenticator Responses (https://www.w3.org/TR/webauthn/#iface-authenticatorresponse)
+    struct AuthenticatorResponseType {
+
+        AuthenticatorResponseType() noexcept = default;
+        AuthenticatorResponseType(const json& j) :
+            ClientDataJSON(j["clientDataJSON"].get<URLEncodedBase64Type>()) {
+        }
+        AuthenticatorResponseType(const AuthenticatorResponseType& authenticatorResponse) noexcept = default;
+        AuthenticatorResponseType(AuthenticatorResponseType&& authenticatorResponse) noexcept = default;
+        virtual ~AuthenticatorResponseType() noexcept = default;
+
+        AuthenticatorResponseType& operator =(const AuthenticatorResponseType& other) noexcept = default;
+        AuthenticatorResponseType& operator =(AuthenticatorResponseType&& other) noexcept = default;
+
+        // From the spec https://www.w3.org/TR/webauthn/#dom-authenticatorresponse-clientdatajson
+        // This attribute contains a JSON serialization of the client data passed to the authenticator
+        // by the client in its call to either create() or get().
+        URLEncodedBase64Type ClientDataJSON;
+    };
+
+    inline void to_json(json& j, const AuthenticatorResponseType& authenticatorResponse) {
+
+        j = json{
+            { "clientDataJSON", authenticatorResponse.ClientDataJSON }
+        };
+    }
+
+    inline void from_json(const json& j, AuthenticatorResponseType& authenticatorResponse) {
+
+        j.at("clientDataJSON").get_to(authenticatorResponse.ClientDataJSON);
+    }
+
+    // AuthenticatorDataType represents the IDL with the same name.
+    //
+    // The authenticator data structure encodes contextual bindings made by the authenticator. These bindings are controlled
+    // by the authenticator itself, and derive their trust from the WebAuthn Relying Party's assessment of the security
+    // properties of the authenticator. In one extreme case, the authenticator may be embedded in the client, and its
+    // bindings may be no more trustworthy than the client data. At the other extreme, the authenticator may be a discrete
+    // entity with high-security hardware and software, connected to the client over a secure channel. In both cases, the
+    // Relying Party receives the authenticator data in the same format, and uses its knowledge of the authenticator to make
+    // trust decisions.
+    //
+    // The authenticator data has a compact but extensible encoding. This is desired since authenticators can be devices
+    // with limited capabilities and low power requirements, with much simpler software stacks than the client platform.
+    //
+    // Specification: §6.1. Authenticator Data (https://www.w3.org/TR/webauthn/#sctn-authenticator-data)
+    struct AuthenticatorDataType {
+
+        AuthenticatorDataType() noexcept = default;
+        AuthenticatorDataType(const json& j) :
+            RPIDHash(j["rpid"].get<std::vector<uint8_t>>()),
+            Flags(j["flags"].get<AuthenticatorFlagsType>()),
+            Counter(j["sign_count"].get<uint32_t>()),
+            AttData(j["att_data"].get<AttestedCredentialDataType>()),
+            ExtData(j["ext_data"].get<std::vector<uint8_t>>()) {
+        }
+        AuthenticatorDataType(const AuthenticatorDataType& authenticatorData) noexcept = default;
+        AuthenticatorDataType(AuthenticatorDataType&& authenticatorData) noexcept = default;
+        ~AuthenticatorDataType() noexcept = default;
+
+        AuthenticatorDataType& operator =(const AuthenticatorDataType& other) noexcept = default;
+        AuthenticatorDataType& operator =(AuthenticatorDataType&& other) noexcept = default;
+
+        // Unmarshal will take the raw Authenticator Data and marshals it into AuthenticatorDataType for further validation.
+        // The authenticator data has a compact but extensible encoding. This is desired since authenticators can be
+        // devices with limited capabilities and low power requirements, with much simpler software stacks than the client platform.
+        // The authenticator data structure is a byte array of 37 bytes or more, and is laid out in this table:
+        // https://www.w3.org/TR/webauthn/#table-authData
+        inline std::optional<ErrorType> Unmarshal(const std::vector<uint8_t>& rawAuthData) noexcept {
+
+            /*if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
+                return ErrBadRequest.
+                    WithDetails("Authenticator data length too short").
+                    WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes", MIN_AUTH_DATA_LENGTH, rawAuthData.size()));
+            }
+
+            RPIDHash = rawAuthData[:32];
+            Flags = AuthenticatorFlagsType(rawAuthData[32]);
+            Counter = binary.BigEndian.Uint32(rawAuthData[33:37])
+
+            auto remaining = rawAuthData.size() - MIN_AUTH_DATA_LENGTH;
+
+            if (Flags.HasAttestedCredentialData()) {
+                if (rawAuthData.size() > MIN_ATTESTED_AUTH_LENGTH) {
+                    auto err = _UnmarshalAttestedData(rawAuthData);
+                    if (err) {
+                        return err;
+                    }
+
+                    auto attDataLen = AttData.AAGUID.size() + 2 + AttData.CredentialID.size() + AttData.CredentialPublicKey.size();
+                    remaining = remaining - attDataLen;
+                } else {
+                    return ErrBadRequest.WithDetails("Attested credential flag set but data is missing");
+                }
+            } else {
+                if (!Flags.HasExtensions() && rawAuthData.size() != 37) {
+                    return ErrBadRequest.WithDetails("Attested credential flag not set");
+                }
+            }
+
+            if (Flags.HasExtensions()) {
+                if (remaining != 0) {
+                    ExtData = rawAuthData[rawAuthData.size() - remaining:];
+                    remaining -= ExtData.size();
+                } else {
+                    return ErrBadRequest.WithDetails("Extensions flag set but extensions data is missing");
+                }
+            }
+
+            if (remaining != 0) {
+                return ErrBadRequest.WithDetails("Leftover bytes decoding AuthenticatorData");
+            }*/
+
+            return std::nullopt;
+        }
+
+        // Verify on AuthenticatorData handles Steps 9 through 12 for Registration
+        // and Steps 11 through 14 for Assertion.
+        inline std::optional<ErrorType> Verify(const std::vector<uint8_t>& rpIdHash, 
+            const std::vector<uint8_t>& appIDHash, 
+            bool userVerificationRequired) const noexcept {
+
+            // Registration Step 9 & Assertion Step 11
+            // Verify that the RP ID hash in authData is indeed the SHA-256
+            // hash of the RP ID expected by the RP.
+            /*if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
+                return ErrVerification.WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}", RPIDHash, rpIdHash));
+            }
+
+            // Registration Step 10 & Assertion Step 12
+            // Verify that the User Present bit of the flags in authData is set.
+            if (!Flags.UserPresent()) {
+                return ErrVerification.WithInfo("User presence flag not set by authenticator");
+            }
+
+            // Registration Step 11 & Assertion Step 13
+            // If user verification is required for this assertion, verify that
+            // the User Verified bit of the flags in authData is set.
+            if (userVerificationRequired && !Flags.UserVerified) {
+                return ErrVerification.WithInfo("User verification required but flag not set by authenticator");
+            }*/
+
+            // Registration Step 12 & Assertion Step 14
+            // Verify that the values of the client extension outputs in clientExtensionResults
+            // and the authenticator extension outputs in the extensions in authData are as
+            // expected, considering the client extension input values that were given as the
+            // extensions option in the create() call. In particular, any extension identifier
+            // values in the clientExtensionResults and the extensions in authData MUST be also be
+            // present as extension identifier values in the extensions member of options, i.e., no
+            // extensions are present that were not requested. In the general case, the meaning
+            // of "are as expected" is specific to the Relying Party and which extensions are in use.
+
+            // This is not yet fully implemented by the spec or by browsers.
+
+            return std::nullopt;
+        }
+
+        std::vector<uint8_t> RPIDHash;
+        AuthenticatorFlagsType Flags;
+        uint32_t Counter;
+        AttestedCredentialDataType AttData;
+        std::vector<uint8_t> ExtData;
+
+    private:
+        // If Attestation Data is present, unmarshall that into the appropriate public key structure.
+        inline std::optional<ErrorType> _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
+
+            /*AttData.AAGUID = rawAuthData[37:53];
+
+            auto idLength = binary.BigEndian.Uint16(rawAuthData[53:55]);
+            if len(rawAuthData) < int(55+idLength) {
+                return ErrBadRequest.WithDetails("Authenticator attestation data length too short");
+            }
+
+            if (idLength > MAX_CREDENTIAL_ID_LENGTH) {
+                return ErrBadRequest.WithDetails("Authenticator attestation data credential id length too long");
+            }
+
+            AttData.CredentialID = rawAuthData[55 : 55+idLength];
+
+            AttData.CredentialPublicKey, err = _UnmarshalCredentialPublicKey(rawAuthData[55+idLength:]);
+            if (err) {
+                return ErrBadRequest.WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", err));
+            }*/
+
+            return std::nullopt;
+        }
+
+        // Unmarshall the credential's Public Key into CBOR encoding.
+        inline static expected<std::vector<uint8_t>> _UnmarshalCredentialPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
+
+            std::any m;
+
+            /*auto exp = webauthncbor.Unmarshal(keyBytes, &m);
+            if (err) {
+                return err;
+            }
+
+            rawBytes, err := webauthncbor.Marshal(m);
+            if (err) {
+                return err;
+            }
+
+            return rawBytes; */
+        }
+    };
+
+    inline void to_json(json& j, const AuthenticatorDataType& authenticatorData) {
+
+        j = json{
+            { "rpid",      authenticatorData.RPIDHash },
+            { "flags",        authenticatorData.Flags },
+            { "sign_count", authenticatorData.Counter },
+            { "att_data",   authenticatorData.AttData },
+            { "ext_data",   authenticatorData.ExtData }
+        };
+    }
+
+    inline void from_json(const json& j, AuthenticatorDataType& authenticatorData) {
+
+        j.at("rpid").get_to(authenticatorData.RPIDHash);
+        j.at("flags").get_to(authenticatorData.Flags);
+        j.at("sign_count").get_to(authenticatorData.Counter);
+        j.at("att_data").get_to(authenticatorData.AttData);
+        j.at("ext_data").get_to(authenticatorData.ExtData);
+    }
+
+    struct AttestedCredentialDataType {
+
+        AttestedCredentialDataType() noexcept = default;
+        AttestedCredentialDataType(const json& j) :
+            AAGUID(j["aaguid"].get<std::vector<uint8_t>>()),
+            CredentialID(j["credential_id"].get<std::vector<uint8_t>>()),
+            CredentialPublicKey(j["public_key"].get<std::vector<uint8_t>>()) {
+        }
+        AttestedCredentialDataType(const AttestedCredentialDataType& attestedCredentialData) noexcept = default;
+        AttestedCredentialDataType(AttestedCredentialDataType&& attestedCredentialData) noexcept = default;
+        ~AttestedCredentialDataType() noexcept = default;
+
+        AttestedCredentialDataType& operator =(const AttestedCredentialDataType& other) noexcept = default;
+        AttestedCredentialDataType& operator =(AttestedCredentialDataType&& other) noexcept = default;
+
+        std::vector<uint8_t> AAGUID;
+        std::vector<uint8_t> CredentialID;
+
+        // The raw credential public key bytes received from the attestation data.
+        std::vector<uint8_t> CredentialPublicKey;
+    };
+
+    inline void to_json(json& j, const AttestedCredentialDataType& attestedCredentialData) {
+
+        j = json{
+            { "aaguid",                  attestedCredentialData.AAGUID },
+            { "credential_id",     attestedCredentialData.CredentialID },
+            { "public_key", attestedCredentialData.CredentialPublicKey }
+        };
+    }
+
+    inline void from_json(const json& j, AttestedCredentialDataType& attestedCredentialData) {
+
+        j.at("aaguid").get_to(attestedCredentialData.AAGUID);
+        j.at("credential_id").get_to(attestedCredentialData.CredentialID);
+        j.at("public_key").get_to(attestedCredentialData.CredentialPublicKey);
+    }
+
+    // Functions
+
+    // ResidentKeyRequired - Require that the key be private key resident to the client device.
+    inline bool ResidentKeyRequired() noexcept {
+
+        return true;
+    }
+
+    // ResidentKeyNotRequired - Do not require that the private key be resident to the client device.
+    inline bool ResidentKeyNotRequired() noexcept {
+
+        return false;
     }
 } // namespace WebAuthN::Protocol
 

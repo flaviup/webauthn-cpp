@@ -21,6 +21,8 @@ namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
 
+    // Structs
+
     // ParsedAssertionResponseType is the parsed form of AuthenticatorAssertionResponseType.
     struct ParsedAssertionResponseType {
 
@@ -296,6 +298,8 @@ namespace WebAuthN::Protocol {
 
         from_json(j, static_cast<ParsedPublicKeyCredentialType&>(parsedCredentialAssertionData));
     }
+
+    // Functions
 
     inline expected<ParsedCredentialAssertionDataType> ParseCredentialRequestResponse(const std::string& response) noexcept {
 
