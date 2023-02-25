@@ -31,6 +31,12 @@ namespace WebAuthN::Protocol {
             PublicKeyCredentialType(j),
             AssertionResponse(j["response"]) {
         }
+        CredentialAssertionResponseType(const CredentialAssertionResponseType& credentialAssertionResponse) noexcept = default;
+        CredentialAssertionResponseType(CredentialAssertionResponseType&& credentialAssertionResponse) noexcept = default;
+        ~CredentialAssertionResponseType() noexcept override = default;
+
+        CredentialAssertionResponseType& operator =(const CredentialAssertionResponseType& other) noexcept = default;
+        CredentialAssertionResponseType& operator =(CredentialAssertionResponseType&& other) noexcept = default;
 
         AuthenticatorAssertionResponseType AssertionResponse;
     };
@@ -57,6 +63,12 @@ namespace WebAuthN::Protocol {
         ParsedCredentialAssertionDataType(const json& j) :
             ParsedPublicKeyCredentialType(j) {
         }
+        ParsedCredentialAssertionDataType(const ParsedCredentialAssertionDataType& parsedCredentialAssertionData) noexcept = default;
+        ParsedCredentialAssertionDataType(ParsedCredentialAssertionDataType&& parsedCredentialAssertionData) noexcept = default;
+        ~ParsedCredentialAssertionDataType() noexcept override = default;
+
+        ParsedCredentialAssertionDataType& operator =(const ParsedCredentialAssertionDataType& other) noexcept = default;
+        ParsedCredentialAssertionDataType& operator =(ParsedCredentialAssertionDataType&& other) noexcept = default;
 
         // Verify the remaining elements of the assertion data by following the steps outlined in the referenced specification
         // documentation.
@@ -97,6 +109,12 @@ namespace WebAuthN::Protocol {
                 UserHandle.emplace(j["userHandle"].get<URLEncodedBase64Type>());
             }
         }
+        AuthenticatorAssertionResponseType(const AuthenticatorAssertionResponseType& authenticatorAssertionResponse) noexcept = default;
+        AuthenticatorAssertionResponseType(AuthenticatorAssertionResponseType&& authenticatorAssertionResponse) noexcept = default;
+        ~AuthenticatorAssertionResponseType() noexcept override = default;
+
+        AuthenticatorAssertionResponseType& operator =(const AuthenticatorAssertionResponseType& other) noexcept = default;
+        AuthenticatorAssertionResponseType& operator =(AuthenticatorAssertionResponseType&& other) noexcept = default;
 
 	    URLEncodedBase64Type AuthenticatorData;
 	    URLEncodedBase64Type Signature;
@@ -130,6 +148,12 @@ namespace WebAuthN::Protocol {
     struct ParsedAssertionResponseType {
 	    
         ParsedAssertionResponseType() noexcept = default;
+        ParsedAssertionResponseType(const ParsedAssertionResponseType& parsedAssertionResponse) noexcept = default;
+        ParsedAssertionResponseType(ParsedAssertionResponseType&& parsedAssertionResponse) noexcept = default;
+        ~ParsedAssertionResponseType() noexcept = default;
+
+        ParsedAssertionResponseType& operator =(const ParsedAssertionResponseType& other) noexcept = default;
+        ParsedAssertionResponseType& operator =(ParsedAssertionResponseType&& other) noexcept = default;
 
         CollectedClientDataType CollectedClientData;
 	    AuthenticatorDataType AuthenticatorData;

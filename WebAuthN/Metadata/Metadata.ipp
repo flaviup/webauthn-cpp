@@ -400,6 +400,12 @@ namespace WebAuthN::Metadata {
             Type(j["type"].get<std::string>()),
             Alg(j["alg"].get<WebAuthNCOSE::COSEAlgorithmIdentifierType>()) {
         }
+        PublicKeyCredentialParametersType(const PublicKeyCredentialParametersType& publicKeyCredentialParameters) noexcept = default;
+        PublicKeyCredentialParametersType(PublicKeyCredentialParametersType&& publicKeyCredentialParameters) noexcept = default;
+        ~PublicKeyCredentialParametersType() noexcept = default;
+
+        PublicKeyCredentialParametersType& operator =(const PublicKeyCredentialParametersType& other) noexcept = default;
+        PublicKeyCredentialParametersType& operator =(PublicKeyCredentialParametersType&& other) noexcept = default;
 
 	    std::string Type;
 	    WebAuthNCOSE::COSEAlgorithmIdentifierType Alg;
@@ -502,6 +508,12 @@ namespace WebAuthN::Metadata {
                 VendorPrototypeConfigCommands.emplace(j["vendorPrototypeConfigCommands"].get<std::vector<uint32_t>>());
             }
         }
+        AuthenticatorGetInfoType(const AuthenticatorGetInfoType& authenticatorGetInfo) noexcept = default;
+        AuthenticatorGetInfoType(AuthenticatorGetInfoType&& authenticatorGetInfo) noexcept = default;
+        ~AuthenticatorGetInfoType() noexcept = default;
+
+        AuthenticatorGetInfoType& operator =(const AuthenticatorGetInfoType& other) noexcept = default;
+        AuthenticatorGetInfoType& operator =(AuthenticatorGetInfoType&& other) noexcept = default;
 
         // List of supported versions.
         std::vector<std::string> Versions;
@@ -722,6 +734,12 @@ namespace WebAuthN::Metadata {
             Sk(j["sk"].get<std::string>()),
             Date(j["date"].get<std::string>()) {
         }
+        RogueListEntryType(const RogueListEntryType& rogueListEntry) noexcept = default;
+        RogueListEntryType(RogueListEntryType&& rogueListEntry) noexcept = default;
+        ~RogueListEntryType() noexcept = default;
+
+        RogueListEntryType& operator =(const RogueListEntryType& other) noexcept = default;
+        RogueListEntryType& operator =(RogueListEntryType&& other) noexcept = default;
 
         // Base64url encoding of the rogue authenticator's secret key
         std::string Sk;
@@ -759,6 +777,12 @@ namespace WebAuthN::Metadata {
                 BlockSlowdown.emplace(j["blockSlowdown"].get<uint16_t>());
             }
         }
+        CodeAccuracyDescriptorType(const CodeAccuracyDescriptorType& codeAccuracyDescriptor) noexcept = default;
+        CodeAccuracyDescriptorType(CodeAccuracyDescriptorType&& codeAccuracyDescriptor) noexcept = default;
+        ~CodeAccuracyDescriptorType() noexcept = default;
+
+        CodeAccuracyDescriptorType& operator =(const CodeAccuracyDescriptorType& other) noexcept = default;
+        CodeAccuracyDescriptorType& operator =(CodeAccuracyDescriptorType&& other) noexcept = default;
 
         // The numeric system base (radix) of the code, e.g. 10 in the case of decimal digits.
         uint16_t Base;
@@ -828,6 +852,12 @@ namespace WebAuthN::Metadata {
                 BlockSlowdown.emplace(j["blockSlowdown"].get<uint16_t>());
             }
         }
+        BiometricAccuracyDescriptorType(const BiometricAccuracyDescriptorType& biometricAccuracyDescriptor) noexcept = default;
+        BiometricAccuracyDescriptorType(BiometricAccuracyDescriptorType&& biometricAccuracyDescriptor) noexcept = default;
+        ~BiometricAccuracyDescriptorType() noexcept = default;
+
+        BiometricAccuracyDescriptorType& operator =(const BiometricAccuracyDescriptorType& other) noexcept = default;
+        BiometricAccuracyDescriptorType& operator =(BiometricAccuracyDescriptorType&& other) noexcept = default;
 
         // The false rejection rate [ISO19795-1] for a single template, i.e. the percentage of verification transactions with truthful claims of identity that are incorrectly denied.
         std::optional<double> SelfAttestedFRR;
@@ -906,6 +936,12 @@ namespace WebAuthN::Metadata {
                 BlockSlowdown.emplace(j["blockSlowdown"].get<uint16_t>());
             }
         }
+        PatternAccuracyDescriptorType(const PatternAccuracyDescriptorType& patternAccuracyDescriptor) noexcept = default;
+        PatternAccuracyDescriptorType(PatternAccuracyDescriptorType&& patternAccuracyDescriptor) noexcept = default;
+        ~PatternAccuracyDescriptorType() noexcept = default;
+
+        PatternAccuracyDescriptorType& operator =(const PatternAccuracyDescriptorType& other) noexcept = default;
+        PatternAccuracyDescriptorType& operator =(PatternAccuracyDescriptorType&& other) noexcept = default;
 
         // Number of possible patterns (having the minimum length) out of which exactly one would be the right one, i.e. 1/probability in the case of equal distribution.
         uint32_t MinComplexity;
@@ -967,6 +1003,12 @@ namespace WebAuthN::Metadata {
                 PaDesc.emplace(j["paDesc"].get<PatternAccuracyDescriptorType>());
             }
         }
+        VerificationMethodDescriptorType(const VerificationMethodDescriptorType& verificationMethodDescriptor) noexcept = default;
+        VerificationMethodDescriptorType(VerificationMethodDescriptorType&& verificationMethodDescriptor) noexcept = default;
+        ~VerificationMethodDescriptorType() noexcept = default;
+
+        VerificationMethodDescriptorType& operator =(const VerificationMethodDescriptorType& other) noexcept = default;
+        VerificationMethodDescriptorType& operator =(VerificationMethodDescriptorType&& other) noexcept = default;
 
         // a single USER_VERIFY constant (see [FIDORegistry]), not a bit flag combination. This value MUST be non-zero.
         std::optional<std::string> UserVerificationMethod;
@@ -1027,6 +1069,12 @@ namespace WebAuthN::Metadata {
             G(j["g"].get<uint16_t>()),
             B(j["b"].get<uint16_t>()) {
         }
+        RGBPaletteEntryType(const RGBPaletteEntryType& rgbPaletteEntry) noexcept = default;
+        RGBPaletteEntryType(RGBPaletteEntryType&& rgbPaletteEntry) noexcept = default;
+        ~RGBPaletteEntryType() noexcept = default;
+
+        RGBPaletteEntryType& operator =(const RGBPaletteEntryType& other) noexcept = default;
+        RGBPaletteEntryType& operator =(RGBPaletteEntryType&& other) noexcept = default;
 
         // Red channel sample value
         uint16_t R;
@@ -1069,6 +1117,12 @@ namespace WebAuthN::Metadata {
                 Plte.emplace(j["plte"].get<std::vector<RGBPaletteEntryType>>());
             }
         }
+        DisplayPNGCharacteristicsDescriptorType(const DisplayPNGCharacteristicsDescriptorType& displayPNGCharacteristicsDescriptor) noexcept = default;
+        DisplayPNGCharacteristicsDescriptorType(DisplayPNGCharacteristicsDescriptorType&& displayPNGCharacteristicsDescriptor) noexcept = default;
+        ~DisplayPNGCharacteristicsDescriptorType() noexcept = default;
+
+        DisplayPNGCharacteristicsDescriptorType& operator =(const DisplayPNGCharacteristicsDescriptorType& other) noexcept = default;
+        DisplayPNGCharacteristicsDescriptorType& operator =(DisplayPNGCharacteristicsDescriptorType&& other) noexcept = default;
 
         // image width
         uint32_t Width;
@@ -1132,6 +1186,12 @@ namespace WebAuthN::Metadata {
             SY(j["sy"].get<std::string>()),
             G1Curve(j["G1Curve"].get<std::string>()) {
         }
+        EcdaaTrustAnchorType(const EcdaaTrustAnchorType& ecdaaTrustAnchor) noexcept = default;
+        EcdaaTrustAnchorType(EcdaaTrustAnchorType&& ecdaaTrustAnchor) noexcept = default;
+        ~EcdaaTrustAnchorType() noexcept = default;
+
+        EcdaaTrustAnchorType& operator =(const EcdaaTrustAnchorType& other) noexcept = default;
+        EcdaaTrustAnchorType& operator =(EcdaaTrustAnchorType&& other) noexcept = default;
 
         // base64url encoding of the result of ECPoint2ToB of the ECPoint2 X
         std::string X;
@@ -1185,6 +1245,12 @@ namespace WebAuthN::Metadata {
                 Data.emplace(j["data"].get<std::string>());
             }
         }
+        ExtensionDescriptorType(const ExtensionDescriptorType& extensionDescriptor) noexcept = default;
+        ExtensionDescriptorType(ExtensionDescriptorType&& extensionDescriptor) noexcept = default;
+        ~ExtensionDescriptorType() noexcept = default;
+
+        ExtensionDescriptorType& operator =(const ExtensionDescriptorType& other) noexcept = default;
+        ExtensionDescriptorType& operator =(ExtensionDescriptorType&& other) noexcept = default;
 
         // Identifies the extension.
         std::string ID;
@@ -1235,6 +1301,12 @@ namespace WebAuthN::Metadata {
             Major(j["major"].get<uint16_t>()),
             Minor(j["minor"].get<uint16_t>()) {
         }
+        VersionType(const VersionType& version) noexcept = default;
+        VersionType(VersionType&& version) noexcept = default;
+        ~VersionType() noexcept = default;
+
+        VersionType& operator =(const VersionType& other) noexcept = default;
+        VersionType& operator =(VersionType&& other) noexcept = default;
 
         // Major version.
         uint16_t Major;
@@ -1335,6 +1407,12 @@ namespace WebAuthN::Metadata {
                 AuthenticatorGetInfo.emplace(j["authenticatorGetInfo"].get<AuthenticatorGetInfoType>());
             }
         }
+        MetadataStatementType(const MetadataStatementType& metadataStatement) noexcept = default;
+        MetadataStatementType(MetadataStatementType&& metadataStatement) noexcept = default;
+        ~MetadataStatementType() noexcept = default;
+
+        MetadataStatementType& operator =(const MetadataStatementType& other) noexcept = default;
+        MetadataStatementType& operator =(MetadataStatementType&& other) noexcept = default;
 
         // The legalHeader, if present, contains a legal guide for accessing and using metadata, which itself MAY contain URL(s) pointing to further information, such as a full Terms and Conditions statement.
         std::optional<std::string> LegalHeader;
@@ -1589,6 +1667,12 @@ namespace WebAuthN::Metadata {
                 CertificationRequirementsVersion.emplace(j["certificationRequirementsVersion"].get<std::string>());
             }
         }
+        BiometricStatusReportType(const BiometricStatusReportType& biometricStatusReport) noexcept = default;
+        BiometricStatusReportType(BiometricStatusReportType&& biometricStatusReport) noexcept = default;
+        ~BiometricStatusReportType() noexcept = default;
+
+        BiometricStatusReportType& operator =(const BiometricStatusReportType& other) noexcept = default;
+        BiometricStatusReportType& operator =(BiometricStatusReportType&& other) noexcept = default;
 
         // Achieved level of the biometric certification of this biometric component of the authenticator
         uint16_t CertLevel;
@@ -1700,6 +1784,12 @@ namespace WebAuthN::Metadata {
                 CertificationRequirementsVersion.emplace(j["certificationRequirementsVersion"].get<std::string>());
             }
         }
+        StatusReportType(const StatusReportType& statusReport) noexcept = default;
+        StatusReportType(StatusReportType&& statusReport) noexcept = default;
+        ~StatusReportType() noexcept = default;
+
+        StatusReportType& operator =(const StatusReportType& other) noexcept = default;
+        StatusReportType& operator =(StatusReportType&& other) noexcept = default;
 
         // Status of the authenticator. Additional fields MAY be set depending on this value.
         AuthenticatorStatusType Status;
@@ -1834,6 +1924,12 @@ namespace WebAuthN::Metadata {
                 RogueListHash.emplace(j["rogueListHash"].get<std::string>());
             }
         }
+        MetadataBLOBPayloadEntryType(const MetadataBLOBPayloadEntryType& metadataBLOBPayloadEntry) noexcept = default;
+        MetadataBLOBPayloadEntryType(MetadataBLOBPayloadEntryType&& metadataBLOBPayloadEntry) noexcept = default;
+        ~MetadataBLOBPayloadEntryType() noexcept = default;
+
+        MetadataBLOBPayloadEntryType& operator =(const MetadataBLOBPayloadEntryType& other) noexcept = default;
+        MetadataBLOBPayloadEntryType& operator =(MetadataBLOBPayloadEntryType&& other) noexcept = default;
 
         // The Authenticator Attestation ID.
         std::optional<std::string> Aaid;
@@ -1946,6 +2042,12 @@ namespace WebAuthN::Metadata {
                 LegalHeader.emplace(j["legalHeader"].get<std::string>());
             }
         }
+        MetadataBLOBPayloadType(const MetadataBLOBPayloadType& metadataBLOBPayload) noexcept = default;
+        MetadataBLOBPayloadType(MetadataBLOBPayloadType&& metadataBLOBPayload) noexcept = default;
+        ~MetadataBLOBPayloadType() noexcept = default;
+
+        MetadataBLOBPayloadType& operator =(const MetadataBLOBPayloadType& other) noexcept = default;
+        MetadataBLOBPayloadType& operator =(MetadataBLOBPayloadType&& other) noexcept = default;
 
         // The legalHeader, if present, contains a legal guide for accessing and using metadata, which itself MAY contain URL(s) pointing to further information, such as a full Terms and Conditions statement.
         std::optional<std::string> LegalHeader;
@@ -1991,6 +2093,12 @@ namespace WebAuthN::Metadata {
         MDSGetEndpointsRequestType(const json& j) :
             Endpoint(j["endpoint"].get<std::string>()) {
         }
+        MDSGetEndpointsRequestType(const MDSGetEndpointsRequestType& mdsGetEndpointsRequest) noexcept = default;
+        MDSGetEndpointsRequestType(MDSGetEndpointsRequestType&& mdsGetEndpointsRequest) noexcept = default;
+        ~MDSGetEndpointsRequestType() noexcept = default;
+
+        MDSGetEndpointsRequestType& operator =(const MDSGetEndpointsRequestType& other) noexcept = default;
+        MDSGetEndpointsRequestType& operator =(MDSGetEndpointsRequestType&& other) noexcept = default;
 
         // The URL of the local server endpoint, e.g. https://webauthn.io/
         std::string Endpoint;
@@ -2016,6 +2124,12 @@ namespace WebAuthN::Metadata {
             Status(j["status"].get<std::string>()),
             Result(j["result"].get<std::vector<std::string>>()) {
         }
+        MDSGetEndpointsResponseType(const MDSGetEndpointsResponseType& mdsGetEndpointsResponse) noexcept = default;
+        MDSGetEndpointsResponseType(MDSGetEndpointsResponseType&& mdsGetEndpointsResponse) noexcept = default;
+        ~MDSGetEndpointsResponseType() noexcept = default;
+
+        MDSGetEndpointsResponseType& operator =(const MDSGetEndpointsResponseType& other) noexcept = default;
+        MDSGetEndpointsResponseType& operator =(MDSGetEndpointsResponseType&& other) noexcept = default;
 
         // The status of the response.
         std::string Status;
@@ -2042,39 +2156,39 @@ namespace WebAuthN::Metadata {
     struct MetadataError : public WebAuthN::Protocol::ErrorType {
 
         MetadataError() noexcept :
-        WebAuthN::Protocol::ErrorType() {
+            WebAuthN::Protocol::ErrorType() {
         }
 		MetadataError(std::string&& type, std::string&& details) noexcept :
-		WebAuthN::Protocol::ErrorType(
-			std::move(type),
-			std::move(details)) {
+		    WebAuthN::Protocol::ErrorType(
+			    std::move(type),
+			    std::move(details)) {
 		}
 	};
 
     struct ErrIntermediateCertRevoked : public MetadataError {
 
         ErrIntermediateCertRevoked() noexcept :
-		MetadataError(
-			"intermediate_revoked",
-			"Intermediate certificate is on issuers revocation list") {
+		    MetadataError(
+			    "intermediate_revoked",
+			    "Intermediate certificate is on issuers revocation list") {
 		}
 	};
 
 	struct ErrLeafCertRevoked : public MetadataError {
 
         ErrLeafCertRevoked() noexcept :
-		MetadataError(
-			"leaf_revoked",
-			"Leaf certificate is on issuers revocation list") {
+		    MetadataError(
+			    "leaf_revoked",
+			    "Leaf certificate is on issuers revocation list") {
 		}
 	};
 
 	struct ErrCRLUnavailable : public MetadataError {
 
         ErrCRLUnavailable() noexcept :
-		MetadataError(
-			"crl_unavailable",
-			"Certificate revocation list is unavailable") {
+		    MetadataError(
+			    "crl_unavailable",
+			    "Certificate revocation list is unavailable") {
 		}
 	};
 

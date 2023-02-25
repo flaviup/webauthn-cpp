@@ -38,6 +38,12 @@ namespace WebAuthN::Protocol {
                 Icon.emplace(j["icon"].get<std::string>());
             }
         }
+        CredentialEntityType(const CredentialEntityType& credentialEntity) noexcept = default;
+        CredentialEntityType(CredentialEntityType&& credentialEntity) noexcept = default;
+        virtual ~CredentialEntityType() noexcept = default;
+
+        CredentialEntityType& operator =(const CredentialEntityType& other) noexcept = default;
+        CredentialEntityType& operator =(CredentialEntityType&& other) noexcept = default;
 
         // A human-palatable name for the entity. Its function depends on what the PublicKeyCredentialEntity represents:
         //
@@ -63,7 +69,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialEntityType& credentialEntity) {
 
         j = json{
-            {"name", credentialEntity.Name}
+            { "name", credentialEntity.Name }
         };
 
         if (credentialEntity.Icon) {
@@ -97,6 +103,12 @@ namespace WebAuthN::Protocol {
             CredentialEntityType(j),
             ID(j["id"].get<std::string>()) {
         }
+        RelyingPartyEntityType(const RelyingPartyEntityType& relyingPartyEntity) noexcept = default;
+        RelyingPartyEntityType(RelyingPartyEntityType&& relyingPartyEntity) noexcept = default;
+        ~RelyingPartyEntityType() noexcept override = default;
+
+        RelyingPartyEntityType& operator =(const RelyingPartyEntityType& other) noexcept = default;
+        RelyingPartyEntityType& operator =(RelyingPartyEntityType&& other) noexcept = default;
 
         // A unique identifier for the Relying Party entity, which sets the RP ID.
         std::string ID;
@@ -139,6 +151,12 @@ namespace WebAuthN::Protocol {
                 DisplayName.emplace(j["displayName"].get<std::string>());
             }
         }
+        UserEntityType(const UserEntityType& userEntity) noexcept = default;
+        UserEntityType(UserEntityType&& userEntity) noexcept = default;
+        ~UserEntityType() noexcept override = default;
+
+        UserEntityType& operator =(const UserEntityType& other) noexcept = default;
+        UserEntityType& operator =(UserEntityType&& other) noexcept = default;
 
         // ID is the user handle of the user account entity. To ensure secure operation,
         // authentication and authorization decisions MUST be made on the basis of this id

@@ -31,10 +31,10 @@ namespace WebAuthN::Protocol {
 
     // map CeremonyType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(CeremonyType, {
-        {CeremonyType::Invalid, nullptr},
-        {CeremonyType::Invalid, ""},
-        {CeremonyType::Create, "webauthn.create"},
-        {CeremonyType::Assert, "webauthn.get"}
+        { CeremonyType::Invalid,          nullptr },
+        { CeremonyType::Invalid,               "" },
+        { CeremonyType::Create, "webauthn.create" },
+        { CeremonyType::Assert,    "webauthn.get" }
     })
 
     enum class TokenBindingStatusType {
@@ -57,11 +57,11 @@ namespace WebAuthN::Protocol {
 
     // map TokenBindingStatusType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(TokenBindingStatusType, {
-        {TokenBindingStatusType::Invalid, nullptr},
-        {TokenBindingStatusType::Invalid, ""},
-        {TokenBindingStatusType::Present, "present"},
-        {TokenBindingStatusType::Supported, "supported"},
-        {TokenBindingStatusType::NotSupported, "not-supported"}
+        { TokenBindingStatusType::Invalid,              nullptr },
+        { TokenBindingStatusType::Invalid,                   "" },
+        { TokenBindingStatusType::Present,            "present" },
+        { TokenBindingStatusType::Supported,        "supported" },
+        { TokenBindingStatusType::NotSupported, "not-supported" }
     })
 
     struct TokenBindingType {
@@ -74,6 +74,13 @@ namespace WebAuthN::Protocol {
                 ID.emplace(j["id"].get<std::string>());
             }
         }
+        TokenBindingType(const TokenBindingType& tokenBinding) noexcept = default;
+        TokenBindingType(TokenBindingType&& tokenBinding) noexcept = default;
+        ~TokenBindingType() noexcept = default;
+
+        TokenBindingType& operator =(const TokenBindingType& other) noexcept = default;
+        TokenBindingType& operator =(TokenBindingType&& other) noexcept = default;
+
         TokenBindingStatusType Status;
         std::optional<std::string> ID;
     };
@@ -81,7 +88,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const TokenBindingType& tokenBinding) {
 
         j = json{
-            {"status", tokenBinding.Status}
+            { "status", tokenBinding.Status }
         };
 
         if (tokenBinding.ID) {
@@ -119,6 +126,12 @@ namespace WebAuthN::Protocol {
                 Hint.emplace(j["hint"].get<std::string>());
             }
         }
+        CollectedClientDataType(const CollectedClientDataType& collectedClientData) noexcept = default;
+        CollectedClientDataType(CollectedClientDataType&& collectedClientData) noexcept = default;
+        ~CollectedClientDataType() noexcept = default;
+
+        CollectedClientDataType& operator =(const CollectedClientDataType& other) noexcept = default;
+        CollectedClientDataType& operator =(CollectedClientDataType&& other) noexcept = default;
 
         // Verify handles steps 3 through 6 of verifying the registering client data of a
         // new credential and steps 7 through 10 of verifying an authentication assertion
@@ -209,9 +222,9 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CollectedClientDataType& collectedClientData) {
 
         j = json{
-            {"type", collectedClientData.Type},
-            {"challenge", collectedClientData.Challenge},
-            {"origin", collectedClientData.Origin}
+            { "type",           collectedClientData.Type },
+            { "challenge", collectedClientData.Challenge },
+            { "origin",       collectedClientData.Origin }
         };
 
         if (collectedClientData.TokenBinding) {

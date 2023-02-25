@@ -53,6 +53,12 @@ namespace WebAuthN::WebAuthN {
                 Extensions.emplace(j["extensions"].get<Protocol::AuthenticationExtensionsType>());
             }
         }
+        SessionDataType(const SessionDataType& sessionData) noexcept = default;
+        SessionDataType(SessionDataType&& sessionData) noexcept = default;
+        ~SessionDataType() noexcept = default;
+
+        SessionDataType& operator =(const SessionDataType& other) noexcept = default;
+        SessionDataType& operator =(SessionDataType&& other) noexcept = default;
 
         std::string Challenge;
         std::vector<uint8_t> UserID;

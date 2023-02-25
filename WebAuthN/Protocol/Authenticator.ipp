@@ -47,6 +47,12 @@ namespace WebAuthN::Protocol {
         AuthenticatorResponseType(const json& j) :
             ClientDataJSON(j["clientDataJSON"].get<URLEncodedBase64Type>()) {
         }
+        AuthenticatorResponseType(const AuthenticatorResponseType& authenticatorResponse) noexcept = default;
+        AuthenticatorResponseType(AuthenticatorResponseType&& authenticatorResponse) noexcept = default;
+        virtual ~AuthenticatorResponseType() noexcept = default;
+
+        AuthenticatorResponseType& operator =(const AuthenticatorResponseType& other) noexcept = default;
+        AuthenticatorResponseType& operator =(AuthenticatorResponseType&& other) noexcept = default;
 
         // From the spec https://www.w3.org/TR/webauthn/#dom-authenticatorresponse-clientdatajson
         // This attribute contains a JSON serialization of the client data passed to the authenticator
@@ -57,7 +63,7 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const AuthenticatorResponseType& authenticatorResponse) {
 
         j = json{
-            {"clientDataJSON", authenticatorResponse.ClientDataJSON}
+            { "clientDataJSON", authenticatorResponse.ClientDataJSON }
         };
     }
 
@@ -90,6 +96,12 @@ namespace WebAuthN::Protocol {
             AttData(j["att_data"].get<AttestedCredentialDataType>()),
             ExtData(j["ext_data"].get<std::vector<uint8_t>>()) {
         }
+        AuthenticatorDataType(const AuthenticatorDataType& authenticatorData) noexcept = default;
+        AuthenticatorDataType(AuthenticatorDataType&& authenticatorData) noexcept = default;
+        ~AuthenticatorDataType() noexcept = default;
+
+        AuthenticatorDataType& operator =(const AuthenticatorDataType& other) noexcept = default;
+        AuthenticatorDataType& operator =(AuthenticatorDataType&& other) noexcept = default;
 
         // Unmarshal will take the raw Authenticator Data and marshals it into AuthenticatorDataType for further validation.
         // The authenticator data has a compact but extensible encoding. This is desired since authenticators can be
@@ -238,11 +250,11 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const AuthenticatorDataType& authenticatorData) {
 
         j = json{
-            {"rpid", authenticatorData.RPIDHash},
-            {"flags", authenticatorData.Flags},
-            {"sign_count", authenticatorData.Counter},
-            {"att_data", authenticatorData.AttData},
-            {"ext_data", authenticatorData.ExtData}
+            { "rpid",      authenticatorData.RPIDHash },
+            { "flags",        authenticatorData.Flags },
+            { "sign_count", authenticatorData.Counter },
+            { "att_data",   authenticatorData.AttData },
+            { "ext_data",   authenticatorData.ExtData }
         };
     }
 
@@ -263,6 +275,12 @@ namespace WebAuthN::Protocol {
             CredentialID(j["credential_id"].get<std::vector<uint8_t>>()),
             CredentialPublicKey(j["public_key"].get<std::vector<uint8_t>>()) {
         }
+        AttestedCredentialDataType(const AttestedCredentialDataType& attestedCredentialData) noexcept = default;
+        AttestedCredentialDataType(AttestedCredentialDataType&& attestedCredentialData) noexcept = default;
+        ~AttestedCredentialDataType() noexcept = default;
+
+        AttestedCredentialDataType& operator =(const AttestedCredentialDataType& other) noexcept = default;
+        AttestedCredentialDataType& operator =(AttestedCredentialDataType&& other) noexcept = default;
 
         std::vector<uint8_t> AAGUID;
         std::vector<uint8_t> CredentialID;
@@ -274,9 +292,9 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const AttestedCredentialDataType& attestedCredentialData) {
 
         j = json{
-            {"aaguid", attestedCredentialData.AAGUID},
-            {"credential_id", attestedCredentialData.CredentialID},
-            {"public_key", attestedCredentialData.CredentialPublicKey}
+            { "aaguid",                  attestedCredentialData.AAGUID },
+            { "credential_id",     attestedCredentialData.CredentialID },
+            { "public_key", attestedCredentialData.CredentialPublicKey }
         };
     }
 
@@ -319,10 +337,10 @@ namespace WebAuthN::Protocol {
 
     // map AuthenticatorAttachmentType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorAttachmentType, {
-        {AuthenticatorAttachmentType::Invalid, nullptr},
-        {AuthenticatorAttachmentType::Invalid, ""},
-        {AuthenticatorAttachmentType::Platform, "platform"},
-        {AuthenticatorAttachmentType::CrossPlatform, "cross-platform"}
+        { AuthenticatorAttachmentType::Invalid,                nullptr },
+        { AuthenticatorAttachmentType::Invalid,                     "" },
+        { AuthenticatorAttachmentType::Platform,            "platform" },
+        { AuthenticatorAttachmentType::CrossPlatform, "cross-platform" }
     })
 
     // ResidentKeyRequirementType represents the IDL of the same name.
@@ -358,10 +376,10 @@ namespace WebAuthN::Protocol {
 
     // map ResidentKeyRequirementType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(ResidentKeyRequirementType, {
-        {ResidentKeyRequirementType::Invalid, nullptr},
-        {ResidentKeyRequirementType::Discouraged, "discouraged"},
-        {ResidentKeyRequirementType::Preferred, "preferred"},
-        {ResidentKeyRequirementType::Required, "required"}
+        { ResidentKeyRequirementType::Invalid,           nullptr },
+        { ResidentKeyRequirementType::Discouraged, "discouraged" },
+        { ResidentKeyRequirementType::Preferred,     "preferred" },
+        { ResidentKeyRequirementType::Required,       "required" }
     })
 
     // AuthenticatorTransportType represents the IDL enum with the same name.
@@ -401,13 +419,13 @@ namespace WebAuthN::Protocol {
 
     // map AuthenticatorTransportType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(AuthenticatorTransportType, {
-        {AuthenticatorTransportType::Invalid, nullptr},
-        {AuthenticatorTransportType::Invalid, ""},
-        {AuthenticatorTransportType::USB, "usb"},
-        {AuthenticatorTransportType::NFC, "nfc"},
-        {AuthenticatorTransportType::BLE, "ble"},
-        {AuthenticatorTransportType::Hybrid, "hybrid"},
-        {AuthenticatorTransportType::Internal, "internal"}
+        { AuthenticatorTransportType::Invalid,     nullptr },
+        { AuthenticatorTransportType::Invalid,          "" },
+        { AuthenticatorTransportType::USB,           "usb" },
+        { AuthenticatorTransportType::NFC,           "nfc" },
+        { AuthenticatorTransportType::BLE,           "ble" },
+        { AuthenticatorTransportType::Hybrid,     "hybrid" },
+        { AuthenticatorTransportType::Internal, "internal" }
     })
 
     // UserVerificationRequirementType is a representation of the UserVerificationRequirement IDL enum.
@@ -433,11 +451,11 @@ namespace WebAuthN::Protocol {
 
     // map UserVerificationRequirementType values to JSON as strings
     NLOHMANN_JSON_SERIALIZE_ENUM(UserVerificationRequirementType, {
-        {UserVerificationRequirementType::Invalid, nullptr},
-        {UserVerificationRequirementType::Invalid, ""},
-        {UserVerificationRequirementType::Required, "required"},
-        {UserVerificationRequirementType::Preferred, "preferred"},
-        {UserVerificationRequirementType::Discouraged, "discouraged"}
+        { UserVerificationRequirementType::Invalid,           nullptr },
+        { UserVerificationRequirementType::Invalid,                "" },
+        { UserVerificationRequirementType::Required,       "required" },
+        { UserVerificationRequirementType::Preferred,     "preferred" },
+        { UserVerificationRequirementType::Discouraged, "discouraged" }
     })
 
     // AuthenticatorFlagsType A byte of information returned during during ceremonies in the

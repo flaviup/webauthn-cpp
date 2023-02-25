@@ -57,12 +57,12 @@ namespace WebAuthN::WebAuthN {
             return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
         }
 
-        Protocol::URLEncodedBase64Type challenge;
-        auto challengeCreationError = Protocol::CreateChallenge(challenge);
+        auto challengeCreationResult = Protocol::CreateChallenge();
 
-        if (challengeCreationError) {
-            return Protocol::unexpected(challengeCreationError.value());
+        if (!challengeCreationResult) {
+            return Protocol::unexpected(challengeCreationResult.error());
         }
+        Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
 
         auto assertion = Protocol::CredentialAssertionType{
             Response: Protocol::PublicKeyCredentialRequestOptionsType{

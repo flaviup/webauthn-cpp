@@ -236,6 +236,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             KeyType(j["kty"].get<int64_t>()),
             Algorithm(j["alg"].get<int64_t>()) {
         }
+        PublicKeyDataType(const PublicKeyDataType& publicKeyData) noexcept = default;
+        PublicKeyDataType(PublicKeyDataType&& publicKeyData) noexcept = default;
+        virtual ~PublicKeyDataType() noexcept = default;
+
+        PublicKeyDataType& operator =(const PublicKeyDataType& other) noexcept = default;
+        PublicKeyDataType& operator =(PublicKeyDataType&& other) noexcept = default;
 
         // Decode the results to int by default.
         bool _struct;      // cbor:",keyasint"
@@ -279,6 +285,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 YCoord.emplace(j["y"].get<std::vector<uint8_t>>());
             }
         }
+        EC2PublicKeyDataType(const EC2PublicKeyDataType& ec2PublicKeyData) noexcept = default;
+        EC2PublicKeyDataType(EC2PublicKeyDataType&& ec2PublicKeyData) noexcept = default;
+        ~EC2PublicKeyDataType() noexcept override = default;
+
+        EC2PublicKeyDataType& operator =(const EC2PublicKeyDataType& other) noexcept = default;
+        EC2PublicKeyDataType& operator =(EC2PublicKeyDataType&& other) noexcept = default;
 
         // Verify Elliptic Curve Public Key Signature.
         inline expected<bool> Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
@@ -392,6 +404,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 Exponent.emplace(j["e"].get<std::vector<uint8_t>>());
             }
         }
+        RSAPublicKeyDataType(const RSAPublicKeyDataType& rsaPublicKeyData) noexcept = default;
+        RSAPublicKeyDataType(RSAPublicKeyDataType&& rsaPublicKeyData) noexcept = default;
+        ~RSAPublicKeyDataType() noexcept override = default;
+
+        RSAPublicKeyDataType& operator =(const RSAPublicKeyDataType& other) noexcept = default;
+        RSAPublicKeyDataType& operator =(RSAPublicKeyDataType&& other) noexcept = default;
 
         // Verify RSA Public Key Signature.
         inline expected<bool> Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
@@ -478,6 +496,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 XCoord.emplace(j["x"].get<std::vector<uint8_t>>());
             }
         }
+        OKPPublicKeyDataType(const OKPPublicKeyDataType& okpPublicKeyData) noexcept = default;
+        OKPPublicKeyDataType(OKPPublicKeyDataType&& okpPublicKeyData) noexcept = default;
+        ~OKPPublicKeyDataType() noexcept override = default;
+
+        OKPPublicKeyDataType& operator =(const OKPPublicKeyDataType& other) noexcept = default;
+        OKPPublicKeyDataType& operator =(OKPPublicKeyDataType&& other) noexcept = default;
 
         // Verify Octet Key Pair (OKP) Public Key Signature.
         inline expected<bool> Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
@@ -718,27 +742,27 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     struct ErrUnsupportedKey : public ErrorType {
 
 		ErrUnsupportedKey() noexcept :
-		ErrorType(
-			"invalid_key_type",
-			"Unsupported Public Key Type") {
+		    ErrorType(
+			    "invalid_key_type",
+			    "Unsupported Public Key Type") {
 		}
 	};
 	
 	struct ErrUnsupportedAlgorithm : public ErrorType {
 
 		ErrUnsupportedAlgorithm() noexcept :
-		ErrorType(
-			"unsupported_key_algorithm",
-			"Unsupported public key algorithm") {
+		    ErrorType(
+			    "unsupported_key_algorithm",
+			    "Unsupported public key algorithm") {
 		}
 	};
 	
 	struct ErrSigNotProvidedOrInvalid : public ErrorType {
 
 		ErrSigNotProvidedOrInvalid() noexcept :
-		ErrorType(
-			"signature_not_provided_or_invalid",
-			"Signature invalid or not provided") {
+		    ErrorType(
+			    "signature_not_provided_or_invalid",
+			    "Signature invalid or not provided") {
 		}
 	};
 } // namespace WebAuthN::Protocol::WebAuthNCOSE

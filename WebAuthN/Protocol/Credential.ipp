@@ -33,6 +33,12 @@ namespace WebAuthN::Protocol {
             ID(j["id"].get<std::string>()),
             Type(j["type"].get<std::string>()) {
         }
+        CredentialType(const CredentialType& credential) noexcept = default;
+        CredentialType(CredentialType&& credential) noexcept = default;
+        virtual ~CredentialType() noexcept = default;
+
+        CredentialType& operator =(const CredentialType& other) noexcept = default;
+        CredentialType& operator =(CredentialType&& other) noexcept = default;
 
         // ID is The credential’s identifier. The requirements for the
 	    // identifier are distinct for each type of credential. It might
@@ -48,8 +54,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialType& credential) {
 
         j = json{
-            {"id", credential.ID},
-            {"type", credential.Type}
+            { "id",     credential.ID },
+            { "type", credential.Type }
         };
     }
 
@@ -76,6 +82,12 @@ namespace WebAuthN::Protocol {
         ParsedCredentialType(const std::vector<std::uint8_t>& cbor) :
             ParsedCredentialType(json::from_cbor(cbor)) {
         }
+        ParsedCredentialType(const ParsedCredentialType& parsedCredential) noexcept = default;
+        ParsedCredentialType(ParsedCredentialType&& parsedCredential) noexcept = default;
+        virtual ~ParsedCredentialType() noexcept = default;
+
+        ParsedCredentialType& operator =(const ParsedCredentialType& other) noexcept = default;
+        ParsedCredentialType& operator =(ParsedCredentialType&& other) noexcept = default;
 
         std::string ID;
         std::string Type;
@@ -84,8 +96,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const ParsedCredentialType& parsedCredential) {
 
         j = json{
-            {"id", parsedCredential.ID},
-            {"type", parsedCredential.Type}
+            { "id",     parsedCredential.ID },
+            { "type", parsedCredential.Type }
         };
     }
 
@@ -110,6 +122,12 @@ namespace WebAuthN::Protocol {
                 AuthenticatorAttachment.emplace(["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
             }
         }
+        PublicKeyCredentialType(const PublicKeyCredentialType& publicKeyCredential) noexcept = default;
+        PublicKeyCredentialType(PublicKeyCredentialType&& publicKeyCredential) noexcept = default;
+        virtual ~PublicKeyCredentialType() noexcept override = default;
+
+        PublicKeyCredentialType& operator =(const PublicKeyCredentialType& other) noexcept = default;
+        PublicKeyCredentialType& operator =(PublicKeyCredentialType&& other) noexcept = default;
 
         URLEncodedBase64Type RawID;
         std::optional<AuthenticationExtensionsClientOutputsType> ClientExtensionResults;
@@ -170,10 +188,15 @@ namespace WebAuthN::Protocol {
                 AuthenticatorAttachment.emplace(j["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
             }
         }
-
         ParsedPublicKeyCredentialType(const std::vector<std::uint8_t>& cbor) :
             ParsedPublicKeyCredentialType(json::from_cbor(cbor)) {
         }
+        ParsedPublicKeyCredentialType(const ParsedPublicKeyCredentialType& parsedPublicKeyCredential) noexcept = default;
+        ParsedPublicKeyCredentialType(ParsedPublicKeyCredentialType&& parsedPublicKeyCredential) noexcept = default;
+        virtual ~ParsedPublicKeyCredentialType() noexcept override = default;
+
+        ParsedPublicKeyCredentialType& operator =(const ParsedPublicKeyCredentialType& other) noexcept = default;
+        ParsedPublicKeyCredentialType& operator =(ParsedPublicKeyCredentialType&& other) noexcept = default;
 
         // GetAppID takes a AuthenticationExtensions object. It then performs the following checks in order:
         //
@@ -262,7 +285,7 @@ namespace WebAuthN::Protocol {
         }
     }
 
-    struct CredentialCreationResponseType : PublicKeyCredentialType {
+    struct CredentialCreationResponseType : public PublicKeyCredentialType {
 
         CredentialCreationResponseType() noexcept = default;
         CredentialCreationResponseType(const json& j) :
@@ -273,6 +296,12 @@ namespace WebAuthN::Protocol {
                 Transports.emplace(j["transports"].get<std::vector<std::string>>());
             }
         }
+        CredentialCreationResponseType(const CredentialCreationResponseType& credentialCreationResponse) noexcept = default;
+        CredentialCreationResponseType(CredentialCreationResponseType&& credentialCreationResponse) noexcept = default;
+        ~CredentialCreationResponseType() noexcept override = default;
+
+        CredentialCreationResponseType& operator =(const CredentialCreationResponseType& other) noexcept = default;
+        CredentialCreationResponseType& operator =(CredentialCreationResponseType&& other) noexcept = default;
 
         AuthenticatorAttestationResponseType AttestationResponse;
         std::optional<std::vector<std::string>> Transports;
@@ -300,7 +329,7 @@ namespace WebAuthN::Protocol {
         }
     }
 
-    struct ParsedCredentialCreationDataType : ParsedPublicKeyCredentialType {
+    struct ParsedCredentialCreationDataType : public ParsedPublicKeyCredentialType {
 
         ParsedCredentialCreationDataType() noexcept = default;
         ParsedCredentialCreationDataType(const ParsedPublicKeyCredentialType& ppkc,
@@ -314,6 +343,12 @@ namespace WebAuthN::Protocol {
         ParsedCredentialCreationDataType(const json& j) :
             ParsedPublicKeyCredentialType(j) {
         }
+        ParsedCredentialCreationDataType(const ParsedCredentialCreationDataType& parsedCredentialCreationData) noexcept = default;
+        ParsedCredentialCreationDataType(ParsedCredentialCreationDataType&& parsedCredentialCreationData) noexcept = default;
+        ~ParsedCredentialCreationDataType() noexcept override = default;
+
+        ParsedCredentialCreationDataType& operator =(const ParsedCredentialCreationDataType& other) noexcept = default;
+        ParsedCredentialCreationDataType& operator =(ParsedCredentialCreationDataType&& other) noexcept = default;
 
         // Parse validates and parses the CredentialCreationResponseType into a ParsedCredentialCreationDataType.
         inline static expected<ParsedCredentialCreationDataType> Parse(const CredentialCreationResponseType& credentialCreationResponse) noexcept {
@@ -321,10 +356,9 @@ namespace WebAuthN::Protocol {
             if (credentialCreationResponse.ID.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing ID"));
             }
-            std::string decodedID;
-            auto testB64Error = URLEncodedBase64_Decode(credentialCreationResponse.ID, decodedID);
+            auto testB64Result = URLEncodedBase64_Decode(credentialCreationResponse.ID);
 
-            if (testB64Error || decodedID.empty()) {
+            if (!testB64Result || testB64Result.value().empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("ID not base64 URL Encoded"));
             }
 

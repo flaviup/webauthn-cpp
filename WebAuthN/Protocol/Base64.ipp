@@ -19,58 +19,51 @@ namespace WebAuthN::Protocol {
 
     using URLEncodedBase64Type = std::string;
 
-    inline std::optional<ErrorType> URLEncodedBase64_Encode(const unsigned char* str, size_t length, URLEncodedBase64Type& encoded) noexcept {
+    inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const unsigned char* str, size_t length) noexcept {
 
         try {
 
-            encoded = base64_encode(str, length, true);
+            return base64_encode(str, length, true);
         } catch (const std::exception& e) {
-            return ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding.");
+            return unexpected(ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding."));
         }
-
-        return std::nullopt;
     }
 
-    inline std::optional<ErrorType> URLEncodedBase64_Encode(const char* str, URLEncodedBase64Type& encoded) noexcept {
+    inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const char* str) noexcept {
 
-        return URLEncodedBase64_Encode(reinterpret_cast<const unsigned char*>(str), std::strlen(str), encoded);
+        return URLEncodedBase64_Encode(reinterpret_cast<const unsigned char*>(str), std::strlen(str));
     }
 
-    inline std::optional<ErrorType> URLEncodedBase64_Encode(const std::string& str, URLEncodedBase64Type& encoded) noexcept {
+    inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const std::string& str) noexcept {
 
-        return URLEncodedBase64_Encode(reinterpret_cast<const unsigned char*>(str.data()), str.size(), encoded);
+        return URLEncodedBase64_Encode(reinterpret_cast<const unsigned char*>(str.data()), str.size());
     }
 
-    inline std::optional<ErrorType> URLEncodedBase64_Encode(const std::vector<uint8_t>& data, URLEncodedBase64Type& encoded) noexcept {
+    inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const std::vector<uint8_t>& data) noexcept {
 
-        return URLEncodedBase64_Encode(data.data(), data.size(), encoded);
+        return URLEncodedBase64_Encode(data.data(), data.size());
     }
 
-    inline std::optional<ErrorType> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded, std::string& decoded) noexcept {
+    inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded) noexcept {
 
         try {
 
-            decoded = base64_decode(encoded, true);
+            return base64_decode(encoded, true);
         } catch (const std::exception& e) {
-            return ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding.");
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }
-
-        return std::nullopt;
     }
 
-    inline std::optional<ErrorType> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded, std::vector<uint8_t>& decoded) noexcept {
+    inline expected<std::vector<uint8_t>> URLEncodedBase64_DecodeAsBinary(const URLEncodedBase64Type& encoded) noexcept {
 
         try {
 
             auto decodedStr = base64_decode(encoded, true);
-            decoded = std::vector<uint8_t>(decoded.begin(), decoded.end());
+            return std::vector<uint8_t>(decodedStr.begin(), decodedStr.end());
         } catch (const std::exception& e) {
-            return ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding.");
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }
-
-        return std::nullopt;
     }
-
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop

@@ -106,23 +106,25 @@ namespace WebAuthN::WebAuthN {
 
             return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
         }
-        Protocol::URLEncodedBase64Type challenge;
-        auto challengeCreationError = Protocol::CreateChallenge(challenge);
 
-        if (challengeCreationError) {
-            return Protocol::unexpected(challengeCreationError.value());
+        auto challengeCreationResult = Protocol::CreateChallenge();
+
+        if (!challengeCreationResult) {
+            return Protocol::unexpected(challengeCreationResult.error());
         }
+        Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
 
         Protocol::URLEncodedBase64Type entityUserID{};
 
         if (_config.EncodeUserIDAsString) {
             entityUserID = std::string(user.GetWebAuthNID());
         } else {
-            auto idEncodingError = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID(), entityUserID);
+            auto idEncodingResult = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID());
 
-            if (idEncodingError) {
-                return Protocol::unexpected(idEncodingError.value());
+            if (!idEncodingResult) {
+                return Protocol::unexpected(idEncodingResult.error());
             }
+            entityUserID = idEncodingResult.value();
         }
 
         auto entityUser = Protocol::UserEntityType{

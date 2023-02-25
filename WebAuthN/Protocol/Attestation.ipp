@@ -49,6 +49,12 @@ namespace WebAuthN::Protocol {
                 AttStatement.emplace(j["attStmt"].get<std::map<std::string, std::any>>());
             }
         }
+        AttestationObjectType(const AttestationObjectType& attestationObject) noexcept = default;
+        AttestationObjectType(AttestationObjectType&& attestationObject) noexcept = default;
+        ~AttestationObjectType() noexcept = default;
+
+        AttestationObjectType& operator =(const AttestationObjectType& other) noexcept = default;
+        AttestationObjectType& operator =(AttestationObjectType&& other) noexcept = default;
 
         // Verify performs Steps 9 through 14 of registration verification.
         //
@@ -72,8 +78,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const AttestationObjectType& attestationObject) {
 
         j = json{
-            {"authData", attestationObject.RawAuthData},
-            {"fmt", attestationObject.Format}
+            { "authData", attestationObject.RawAuthData },
+            { "fmt",           attestationObject.Format }
         };
 
         if (attestationObject.AttStatement) {
@@ -95,6 +101,12 @@ namespace WebAuthN::Protocol {
     struct ParsedAttestationResponseType {
         
         ParsedAttestationResponseType() noexcept = default;
+        ParsedAttestationResponseType(const ParsedAttestationResponseType& parsedAttestationResponse) noexcept = default;
+        ParsedAttestationResponseType(ParsedAttestationResponseType&& parsedAttestationResponse) noexcept = default;
+        ~ParsedAttestationResponseType() noexcept = default;
+
+        ParsedAttestationResponseType& operator =(const ParsedAttestationResponseType& other) noexcept = default;
+        ParsedAttestationResponseType& operator =(ParsedAttestationResponseType&& other) noexcept = default;
 
         CollectedClientDataType CollectedClientData;
         AttestationObjectType AttestationObject;
@@ -118,6 +130,12 @@ namespace WebAuthN::Protocol {
                 Transports.emplace(j["transports"].get<std::vector<std::string>>());
             }
         }
+        AuthenticatorAttestationResponseType(const AuthenticatorAttestationResponseType& authenticatorAttestationResponse) noexcept = default;
+        AuthenticatorAttestationResponseType(AuthenticatorAttestationResponseType&& authenticatorAttestationResponse) noexcept = default;
+        ~AuthenticatorAttestationResponseType() noexcept override = default;
+
+        AuthenticatorAttestationResponseType& operator =(const AuthenticatorAttestationResponseType& other) noexcept = default;
+        AuthenticatorAttestationResponseType& operator =(AuthenticatorAttestationResponseType&& other) noexcept = default;
 
         // Parse the values returned in the authenticator response and perform attestation verification
         // Step 8. This returns a fully decoded struct with the data put into a format that can be
