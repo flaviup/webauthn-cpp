@@ -9,7 +9,6 @@
 #ifndef WEBAUTHN_PROTOCOL_ATTESTATION_IPP
 #define WEBAUTHN_PROTOCOL_ATTESTATION_IPP
 
-#include <any>
 #include <string>
 #include <vector>
 #include <map>
@@ -49,7 +48,7 @@ namespace WebAuthN::Protocol {
             Format(j["fmt"].get<std::string>()) {
 
             if (j.find("attStmt") != j.end()) {
-                AttStatement.emplace(j["attStmt"].get<std::map<std::string, std::any>>());
+                AttStatement.emplace(j["attStmt"].get<json::object_t>());
             }
         }
 
@@ -66,7 +65,7 @@ namespace WebAuthN::Protocol {
         // handle them with AuthData.
         inline std::optional<ErrorType> Verify(const std::string& relyingPartyID, 
             const std::vector<uint8_t>& clientDataHash, 
-            bool verificationRequired) const {
+            bool verificationRequired) const noexcept {
         }
 
         // The authenticator data, including the newly created public key. See AuthenticatorData for more info
@@ -76,7 +75,7 @@ namespace WebAuthN::Protocol {
         // The format of the Attestation data.
         std::string Format;
         // The attestation statement data sent back if attestation is requested.
-        std::optional<std::map<std::string, std::any>> AttStatement;
+        std::optional<json::object_t> AttStatement;
     };
 
     inline void to_json(json& j, const AttestationObjectType& attestationObject) {
@@ -97,7 +96,7 @@ namespace WebAuthN::Protocol {
         j.at("fmt").get_to(attestationObject.Format);
 
         if (j.find("attStmt") != j.end()) {
-            attestationObject.AttStatement.emplace(j["attStmt"].get<std::map<std::string, std::any>>());
+            attestationObject.AttStatement.emplace(j["attStmt"].get<json::object_t>());
         }
     }
 
@@ -146,7 +145,7 @@ namespace WebAuthN::Protocol {
         // Parse the values returned in the authenticator response and perform attestation verification
         // Step 8. This returns a fully decoded struct with the data put into a format that can be
         // used to verify the user and credential that was created.
-        inline expected<ParsedAttestationResponseType> Parse() const {
+        inline expected<ParsedAttestationResponseType> Parse() const noexcept {
         }
 
         // AttestationObject is the byte slice version of attestationObject.
@@ -187,7 +186,7 @@ namespace WebAuthN::Protocol {
 
     // Attestation Registry
 
-    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::any>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
+    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, json::object_t>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
 
     // RegisterAttestationFormat is a function to register attestation formats with the library. Generally using one of the

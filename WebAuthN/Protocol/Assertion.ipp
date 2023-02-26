@@ -77,7 +77,7 @@ namespace WebAuthN::Protocol {
         // Parse the values returned in the authenticator response and perform attestation verification
         // Step 8. This returns a fully decoded struct with the data put into a format that can be
         // used to verify the user and credential that was created.
-        inline expected<ParsedAssertionResponseType> Parse() const {
+        inline expected<ParsedAssertionResponseType> Parse() const noexcept {
 
             return ParsedAssertionResponseType{
                 CollectedClientDataType{},
