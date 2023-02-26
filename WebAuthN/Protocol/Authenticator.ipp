@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <fmt/format.h>
 #include "Core.ipp"
+#include "WebAuthNCBOR/WebAuthNCBOR.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -412,9 +413,9 @@ namespace WebAuthN::Protocol {
                                       .WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes", MIN_AUTH_DATA_LENGTH, rawAuthData.size()));
             }
 
-            RPIDHash = rawAuthData[:32];
+            RPIDHash = std::vector<uint8_t>(rawAuthData.cbegin(), rawAuthData.cbegin() + 32);
             Flags = AuthenticatorFlagsType(rawAuthData[32]);
-            Counter = binary.BigEndian.Uint32(rawAuthData[33:37]);
+            Counter = binary.BigEndian.Uint32(rawAuthData[33:37]); // std::vector<uint8_t>(rawAuthData.cbegin() + 33, rawAuthData.cbegin() + 37);
 
             auto remaining = rawAuthData.size() - MIN_AUTH_DATA_LENGTH;
 
@@ -440,8 +441,10 @@ namespace WebAuthN::Protocol {
             }
 
             if (HasExtensions(Flags)) {
+
                 if (remaining != 0) {
-                    ExtData = rawAuthData[rawAuthData.size() - remaining:];
+
+                    ExtData = std::vector<uint8_t>(rawAuthData.cend() - remaining, rawAuthData.cend());
                     remaining -= ExtData.size();
                 } else {
                     return ErrBadRequest().WithDetails("Extensions flag set but extensions data is missing");
@@ -506,23 +509,26 @@ namespace WebAuthN::Protocol {
         // If Attestation Data is present, unmarshall that into the appropriate public key structure.
         inline std::optional<ErrorType> _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
 
-            /*AttData.AAGUID = rawAuthData[37:53];
+            AttData.AAGUID = std::vector<uint8_t>(rawAuthData.cbegin() + 37, rawAuthData.cbegin() + 53);
 
-            auto idLength = binary.BigEndian.Uint16(rawAuthData[53:55]);
-            if len(rawAuthData) < int(55+idLength) {
-                return ErrBadRequest.WithDetails("Authenticator attestation data length too short");
+            auto idLength = binary.BigEndian.Uint16(rawAuthData[53:55]);  //std::vector<uint8_t>(rawAuthData.cbegin() + 53, rawAuthData.cbegin() + 55);
+            
+            if (rawAuthData.size() < static_cast<size_t>(MIN_ATTESTED_AUTH_LENGTH + idLength)) {
+                return ErrBadRequest().WithDetails("Authenticator attestation data length too short");
             }
 
             if (idLength > MAX_CREDENTIAL_ID_LENGTH) {
-                return ErrBadRequest.WithDetails("Authenticator attestation data credential id length too long");
+                return ErrBadRequest().WithDetails("Authenticator attestation data credential id length too long");
             }
 
-            AttData.CredentialID = rawAuthData[55 : 55+idLength];
+            AttData.CredentialID = std::vector<uint8_t>(rawAuthData.cbegin() + MIN_ATTESTED_AUTH_LENGTH, rawAuthData.cbegin() + MIN_ATTESTED_AUTH_LENGTH + idLength);
+            auto lastChunk = std::vector<uint8_t>(rawAuthData.cbegin() + MIN_ATTESTED_AUTH_LENGTH + idLength, rawAuthData.cend());
 
-            AttData.CredentialPublicKey, err = _UnmarshalCredentialPublicKey(rawAuthData[55+idLength:]);
-            if (err) {
-                return ErrBadRequest.WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", err));
-            }*/
+            auto data = _UnmarshalCredentialPublicKey(lastChunk);
+            if (!data) {
+                return ErrBadRequest().WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", data.error()));
+            }
+            AttData.CredentialPublicKey = data.value();
 
             return std::nullopt;
         }
@@ -530,19 +536,12 @@ namespace WebAuthN::Protocol {
         // Unmarshall the credential's Public Key into CBOR encoding.
         inline static expected<std::vector<uint8_t>> _UnmarshalCredentialPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
 
-            std::any m;
-
-            /*auto exp = webauthncbor.Unmarshal(keyBytes, &m);
-            if (err) {
-                return err;
+            auto m = WebAuthNCBOR::Unmarshal(keyBytes);
+            if (!m) {
+                return unexpected(m.error());
             }
 
-            rawBytes, err := webauthncbor.Marshal(m);
-            if (err) {
-                return err;
-            }
-
-            return rawBytes; */
+            return WebAuthNCBOR::Marshal(m.value());
         }
     };
 
