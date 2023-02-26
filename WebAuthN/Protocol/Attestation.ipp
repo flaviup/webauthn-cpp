@@ -16,7 +16,10 @@
 #include <tuple>
 #include <utility>
 #include <nlohmann/json.hpp>
+#include <uuid/uuid.h>
 #include "Client.ipp"
+#include "../Util/Crypto.ipp"
+#include "../Metadata/Metadata.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -66,6 +69,109 @@ namespace WebAuthN::Protocol {
         inline std::optional<ErrorType> Verify(const std::string& relyingPartyID, 
             const std::vector<uint8_t>& clientDataHash, 
             bool verificationRequired) const noexcept {
+
+            auto rpIDHash = Util::Crypto::SHA256(relyingPartyID);
+
+            // Begin Step 9 through 12. Verify that the rpIdHash in authData is the SHA-256 hash of the RP ID expected by the RP.
+            auto err = AuthData.Verify(rpIDHash, std::vector<uint8_t>{}, verificationRequired);
+
+            if (err) {
+                return err;
+            }
+
+            // Step 13. Determine the attestation statement format by performing a
+            // USASCII case-sensitive match on fmt against the set of supported
+            // WebAuthn Attestation Statement Format Identifier values. The up-to-date
+            // list of registered WebAuthn Attestation Statement Format Identifier
+            // values is maintained in the IANA registry of the same name
+            // [WebAuthn-Registries] (https://www.w3.org/TR/webauthn/#biblio-webauthn-registries).
+
+            // Since there is not an active registry yet, we'll check it against our internal
+            // Supported types.
+
+            // But first let's make sure attestation is present. If it isn't, we don't need to handle
+            // any of the following steps
+            if (Format == "none") {
+                if (AttStatement && !AttStatement.value().empty()) {
+                    return ErrAttestationFormat().WithInfo("Attestation format none with attestation present");
+                }
+
+                return std::nullopt;
+            }
+
+            auto formatHandlerIter= ATTESTATION_REGISTRY.find(Format);
+            
+            if (formatHandlerIter == ATTESTATION_REGISTRY.end()) {
+                return ErrAttestationFormat().WithInfo(fmt::format("Attestation format {} is unsupported", Format));
+            }
+
+            // Step 14. Verify that attStmt is a correct attestation statement, conveying a valid attestation signature, by using
+            // the attestation statement format fmt’s verification procedure given attStmt, authData and the hash of the serialized
+            // client data computed in step 7.
+            auto formatHandler = formatHandlerIter->second;
+            auto result = formatHandler(*this, clientDataHash);
+            if (!result) {
+                return result.error();
+            }
+            auto attestationType = result.value().first;
+            auto x5c = result.value().second;
+
+            uuid_t aaguid;
+            uuid_parse(reinterpret_cast<const char*>(AuthData.AttData.AAGUID.data()), aaguid);
+            
+            if (uuid_parse(reinterpret_cast<const char*>(AuthData.AttData.AAGUID.data()), aaguid) != 0) {
+                return ErrAttestationFormat().WithInfo(fmt::format("Attestation AAGUID could not be parsed: {}", AuthData.AttData.AAGUID));
+            }
+            auto metaIter = Metadata::METADATA.find(aaguid);
+
+            if (metaIter != Metadata::METADATA.end()) {
+                auto meta = metaIter->second;
+
+                for (const auto& s : meta.StatusReports) {
+                    
+                    if (Metadata::IsUndesiredAuthenticatorStatus(s.Status)) {
+                        return ErrInvalidAttestation().WithDetails("Authenticator with undesirable status encountered");
+                    }
+                }
+
+                if (!x5c.empty()) {
+
+                    std::pair<std::string, std::string> names;
+                    
+                    if (!Util::Crypto::GetNamesX509(x5c.begin()->second, names)) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
+
+                        return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
+                    }
+                    
+
+                    if (names.first != names.second) {
+
+                        auto hasBasicFull = false;
+
+                        if (meta.MetadataStatement) {
+
+                            for (const auto& a : meta.MetadataStatement.value().AttestationTypes) {
+                                
+                                if (a == Metadata::AuthenticatorAttestationType::BasicFull) {
+
+                                    hasBasicFull = true;
+                                }
+                            }
+                        }
+
+                        if (!hasBasicFull) {
+                            return ErrInvalidAttestation().WithDetails("Attestation with full attestation from authenticator that does not support full attestation");
+                        }
+                    }
+                }
+            } else if (Metadata::Conformance) {
+
+                char strAaguid[37]{0};
+                uuid_unparse(aaguid, strAaguid);
+                return ErrInvalidAttestation().WithDetails(fmt::format("AAGUID {} not found in metadata during conformance testing", strAaguid));
+            }
+
+            return std::nullopt;
         }
 
         // The authenticator data, including the newly created public key. See AuthenticatorData for more info

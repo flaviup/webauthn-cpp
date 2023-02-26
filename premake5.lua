@@ -33,7 +33,8 @@ project "webauthn-cpp"
         "icu",
         "nlohmann-json",
         "sodium",
-        "ssl"
+        "ssl",
+        "uuid"
     }
 
     libdirs {

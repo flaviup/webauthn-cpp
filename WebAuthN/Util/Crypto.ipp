@@ -14,6 +14,10 @@
 #include <vector>
 #include <sodium.h>
 
+#include <openssl/asn1.h>>
+#include <openssl/bio.h>
+#include <openssl/x509.h>
+
 #pragma GCC visibility push(default)
 
 namespace WebAuthN::Util::Crypto {
@@ -24,6 +28,59 @@ namespace WebAuthN::Util::Crypto {
         crypto_hash_sha256(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
 
         return std::vector<uint8_t>(out, out + crypto_hash_sha256_BYTES);
+    }
+
+#pragma GCC visibility push(hidden)
+
+    namespace {
+
+        // Obtains an entry from a X509 name (i.e. either
+        // the certificate’s issuer or subject)
+        inline std::string _ExtractNameEntry(X509_NAME* name, int nid) {
+
+            auto position = X509_NAME_get_index_by_NID(name, nid, -1);
+            auto entry = X509_NAME_get_entry(name, position);
+
+            ASN1_STRING* asn1Data = X509_NAME_ENTRY_get_data(entry);
+            auto entryString = ASN1_STRING_data(asn1Data);
+            std::string s(reinterpret_cast<char*>(entryString));
+            //free(entryString);
+            ASN1_STRING_clear_free(asn1Data);
+            X509_NAME_ENTRY_free(entry);
+
+            return s;
+        }
+    }
+
+#pragma GCC visibility pop
+
+    bool GetNamesX509(const std::vector<uint8_t>& data, std::pair<std::string, std::string>& names) {
+
+        auto bio = BIO_new(BIO_s_mem());
+        BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
+        X509* certificate = nullptr;
+        d2i_X509_bio(bio, &certificate);
+
+        if (certificate == nullptr) {
+
+            BIO_free(bio);
+            return false;
+        }
+
+        auto subject = X509_get_subject_name(certificate);
+        auto issuer = X509_get_issuer_name(certificate);
+
+        auto subjectName = _ExtractNameEntry(subject, NID_commonName);
+        auto issuerName  = _ExtractNameEntry(issuer, NID_commonName);
+        names = std::make_pair(subjectName, issuerName);
+
+        X509_NAME_free(subject);
+        X509_NAME_free(issuer);
+
+        X509_free(certificate);
+        BIO_free(bio);
+
+        return true;
     }
 } // namespace WebAuthN::Util::Crypto
 

@@ -17,6 +17,7 @@
 #include <iterator>
 #include <optional>
 #include <nlohmann/json.hpp>
+#include <uuid/uuid.h>
 #include "../Protocol/Core.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
 
@@ -2134,7 +2135,7 @@ namespace WebAuthN::Metadata {
     }
 
     // METADATA is a map of authenticator AAGUIDs to corresponding metadata statements
-    inline std::map<uuid.UUID, MetadataBLOBPayloadEntryType> METADATA{};
+    inline std::map<uuid_t, MetadataBLOBPayloadEntryType> METADATA{};
 
     // MDSGetEndpointsRequestType is the request sent to the conformance metadata getEndpoints endpoint.
     struct MDSGetEndpointsRequestType {
