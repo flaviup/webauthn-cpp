@@ -210,6 +210,15 @@ namespace WebAuthN::Protocol {
     struct ParsedAttestationResponseType {
         
         ParsedAttestationResponseType() noexcept = default;
+        
+        ParsedAttestationResponseType(const CollectedClientDataType& collectedClientData,
+            const AttestationObjectType& attestationObject,
+            const std::vector<AuthenticatorTransportType>& transports) noexcept : 
+            CollectedClientData(collectedClientData), 
+            AttestationObject(attestationObject), 
+            Transports(transports) {
+        }
+
         ParsedAttestationResponseType(const ParsedAttestationResponseType& parsedAttestationResponse) noexcept = default;
         ParsedAttestationResponseType(ParsedAttestationResponseType&& parsedAttestationResponse) noexcept = default;
         ~ParsedAttestationResponseType() noexcept = default;
@@ -252,6 +261,56 @@ namespace WebAuthN::Protocol {
         // Step 8. This returns a fully decoded struct with the data put into a format that can be
         // used to verify the user and credential that was created.
         inline expected<ParsedAttestationResponseType> Parse() const noexcept {
+
+            auto decodedClientData = URLEncodedBase64_DecodeAsBinary(ClientDataJSON);
+
+            if (!decodedClientData) {
+                return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
+            }
+            auto collectedClientData = WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
+
+            if (!collectedClientData) {
+                return unexpected(collectedClientData.error());
+            }
+            auto decodedAttestationData = URLEncodedBase64_DecodeAsBinary(AttestationObject);
+
+            if (!decodedAttestationData) {
+                return unexpected(ErrParsingData().WithDetails("Error unmarshalling attestation data"));
+            }
+            auto attestationData = WebAuthNCBOR::JsonUnmarshal(decodedAttestationData.value());
+
+            if (!attestationData) {
+                return unexpected(attestationData.error());
+            }
+            auto attestationObject = AttestationObjectType(attestationData.value());
+
+            // Step 8. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse
+            // structure to obtain the attestation statement format fmt, the authenticator data authData, and
+            // the attestation statement attStmt.
+            auto err = attestationObject.AuthData.Unmarshal(attestationObject.RawAuthData);
+            if (err) {
+                return unexpected(fmt::format("error decoding auth data: {}", err));
+            }
+
+            if (!HasAttestedCredentialData(attestationObject.AuthData.Flags)) {
+                return unexpected(ErrAttestationFormat().WithInfo("Attestation missing attested credential data flag"));
+            }
+
+            std::vector<AuthenticatorTransportType> transports{};
+
+            if (Transports) {
+
+                for (const auto& t : Transports.value()) {
+                    auto authT = json(t).get<AuthenticatorTransportType>();
+                    transports.push_back(authT);
+                }
+            }
+
+            return ParsedAttestationResponseType{
+                CollectedClientDataType(collectedClientData.value()),
+                attestationObject,
+                transports
+            };
         }
 
         // AttestationObject is the byte slice version of attestationObject.
