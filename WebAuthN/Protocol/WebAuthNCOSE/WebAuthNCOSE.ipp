@@ -20,9 +20,13 @@
 
 namespace WebAuthN::Protocol::WebAuthNCOSE {
 
+    using json = nlohmann::json;
+
+    // Consts
+
     inline const std::string KEY_CANNOT_DISPLAY = "Cannot display key";
 
-    using json = nlohmann::json;
+    // Enums
 
     // COSEAlgorithmIdentifierType is a number identifying a cryptographic algorithm. The algorithm identifiers SHOULD be values
     // registered in the IANA COSE Algorithms registry [https://www.w3.org/TR/webauthn/#biblio-iana-cose-algs-reg], for
@@ -202,12 +206,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         };
     }
 
+    // Structs
+
+    using HasherHandlerType = std::vector<uint8_t> (*)(const std::string& str);
+
     inline const struct {
         SignatureAlgorithmType algo;
         COSEAlgorithmIdentifierType coseAlg;
         std::string name;
-        hash.Hash hasher;
-    } SignatureAlgorithmDetails[] {
+        HasherHandlerType hasher;
+    } SIGNATURE_ALGORITHM_DETAILS[] {
         { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA",   crypto.SHA1.New },
         { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA", crypto.SHA256.New },
         { SignatureAlgorithmType::SHA384WithRSA,             COSEAlgorithmIdentifierType::AlgRS384,    "SHA384-RSA", crypto.SHA384.New },
@@ -363,15 +371,15 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         to_json(_j, static_cast<const PublicKeyDataType&>(ec2PublicKeyData));
 
         if (ec2PublicKeyData.Curve) {
-            _j["crv"] = ec2PublicKeyData.Curve;
+            _j["crv"] = ec2PublicKeyData.Curve.value();
         }
 
         if (ec2PublicKeyData.XCoord) {
-            _j["x"] = ec2PublicKeyData.XCoord;
+            _j["x"] = ec2PublicKeyData.XCoord.value();
         }
 
         if (ec2PublicKeyData.YCoord) {
-            _j["y"] = ec2PublicKeyData.YCoord;
+            _j["y"] = ec2PublicKeyData.YCoord.value();
         }
 
         j = _j;
@@ -469,11 +477,11 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         to_json(_j, static_cast<const PublicKeyDataType&>(rsaPublicKeyData));
 
         if (rsaPublicKeyData.Modulus) {
-            _j["n"] = rsaPublicKeyData.Modulus;
+            _j["n"] = rsaPublicKeyData.Modulus.value();
         }
 
         if (rsaPublicKeyData.Exponent) {
-            _j["e"] = rsaPublicKeyData.Exponent;
+            _j["e"] = rsaPublicKeyData.Exponent.value();
         }
 
         j = _j;
@@ -531,7 +539,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         to_json(_j, static_cast<const PublicKeyDataType&>(okpPublicKeyData));
 
         if (okpPublicKeyData.XCoord) {
-            _j["x"] = okpPublicKeyData.XCoord;
+            _j["x"] = okpPublicKeyData.XCoord.value();
         }
 
         j = _j;
@@ -546,6 +554,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
     }
 
+    // Functions
+
     // SigAlgFromCOSEAlg return which signature algorithm is being used from the COSE Key.
     inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
         /*for _, details := range SignatureAlgorithmDetails {
@@ -558,14 +568,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }
 
     // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
-    inline hash.Hash HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) func() noexcept {
-        for _, details := range SignatureAlgorithmDetailsType {
-            if details.coseAlg == coseAlg {
-                return details.hasher
+    inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
+
+        for (const auto& details : SIGNATURE_ALGORITHM_DETAILS) {
+
+            if (details.coseAlg == coseAlg) {
+                return details.hasher;
             }
         }
         // default to SHA256?  Why not.
-        return crypto.SHA256.New
+        return Util::Crypto::SHA256;
     }
 
     // ParsePublicKey figures out what kind of COSE material was provided and create the data for the new key.
@@ -746,6 +758,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             return "Cannot display key of this type"
         }*/
     }
+
+    // Errors
 
     struct ErrUnsupportedKey : public ErrorType {
 
