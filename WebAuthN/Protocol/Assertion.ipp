@@ -79,11 +79,47 @@ namespace WebAuthN::Protocol {
         // used to verify the user and credential that was created.
         inline expected<ParsedAssertionResponseType> Parse() const noexcept {
 
+            // Step 5. Let JSONtext be the result of running UTF-8 decode on the value of cData.
+            // We don't call it cData but this is Step 5 in the spec.
+            auto decodedData = URLEncodedBase64_Decode(ClientDataJSON);
+            if (!decodedData) {
+                return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
+            }
+
+            auto collectedClientData = WebAuthNCBOR::JsonUnmarshal(decodedData.value());
+
+            if (!collectedClientData) {
+                return unexpected(collectedClientData.error());
+            }
+
+            AuthenticatorDataType auth{};
+            auto binaryData = URLEncodedBase64_DecodeAsBinary(AuthenticatorData);
+
+            if (!binaryData || auth.Unmarshal(binaryData.value())) {
+                return unexpected(ErrParsingData().WithDetails("Error unmarshalling auth data"));
+            }
+            binaryData = URLEncodedBase64_DecodeAsBinary(Signature);
+
+            if (!binaryData) {
+                return unexpected(ErrParsingData().WithDetails("Error unmarshalling signature"));
+            }
+            auto signature = binaryData.value();
+            std::vector<uint8_t> userHandle{};
+
+            if (UserHandle) {
+                binaryData = URLEncodedBase64_DecodeAsBinary(UserHandle.value());
+
+                if (!binaryData) {
+                    return unexpected(ErrParsingData().WithDetails("Error unmarshalling user handle"));
+                }
+                userHandle = binaryData.value();
+            }
+
             return ParsedAssertionResponseType{
-                CollectedClientDataType{},
-                this->AuthenticatorData,
-                this->Signature,
-                this->UserHandle
+                collectedClientData.value(),
+                auth,
+                signature,
+                userHandle
             };
         }
 
