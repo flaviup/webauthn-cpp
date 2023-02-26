@@ -1988,7 +1988,7 @@ namespace WebAuthN::Metadata {
         std::optional<std::vector<std::string>> AttestationCertificateKeyIdentifiers;
         // The metadataStatement JSON object as defined in FIDOMetadataStatement.
         std::optional<MetadataStatementType> MetadataStatement;
-        // Status of the FIDO Biometric Certification of one or more biometric components of the Authenticator
+        // Status of the FIDO Biometric Certification of one or more biometric components of the Authenticator.
         std::optional<std::vector<BiometricStatusReportType>> BiometricStatusReports;
         // An array of status reports applicable to this authenticator.
         std::vector<StatusReportType> StatusReports;
@@ -2022,14 +2022,6 @@ namespace WebAuthN::Metadata {
 
         if (metadataBLOBPayloadEntry.BiometricStatusReports) {
             j["biometricStatusReports"] = metadataBLOBPayloadEntry.BiometricStatusReports.value();
-        }
-
-        if (metadataBLOBPayloadEntry.Aaid) {
-            j["aaid"] = metadataBLOBPayloadEntry.Aaid.value();
-        }
-
-        if (metadataBLOBPayloadEntry.Aaid) {
-            j["aaid"] = metadataBLOBPayloadEntry.Aaid.value();
         }
 
         j["statusReports"] = metadataBLOBPayloadEntry.StatusReports;
