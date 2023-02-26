@@ -569,7 +569,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }
 
     // ParsePublicKey figures out what kind of COSE material was provided and create the data for the new key.
-    inline expected<std::any> ParsePublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
+    inline expected<PublicKeyDataType&> ParsePublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
         auto pk = PublicKeyDataType{};
         /*WebAuthNCBOR::Unmarshal(keyBytes, &pk);
 

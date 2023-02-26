@@ -81,12 +81,12 @@ namespace WebAuthN::Protocol {
 
             // Step 5. Let JSONtext be the result of running UTF-8 decode on the value of cData.
             // We don't call it cData but this is Step 5 in the spec.
-            auto decodedData = URLEncodedBase64_Decode(ClientDataJSON);
-            if (!decodedData) {
+            auto decodedClientData = URLEncodedBase64_DecodeAsBinary(ClientDataJSON);
+
+            if (!decodedClientData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
-
-            auto collectedClientData = WebAuthNCBOR::JsonUnmarshal(decodedData.value());
+            auto collectedClientData = WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
 
             if (!collectedClientData) {
                 return unexpected(collectedClientData.error());
@@ -116,7 +116,7 @@ namespace WebAuthN::Protocol {
             }
 
             return ParsedAssertionResponseType{
-                collectedClientData.value(),
+                CollectedClientDataType(collectedClientData.value()),
                 auth,
                 signature,
                 userHandle
@@ -305,16 +305,21 @@ namespace WebAuthN::Protocol {
 
             // If the Session Data does not contain the appID extension or it wasn't reported as used by the Client/RP then we
             // use the standard CTAP2 public key parser.
-            expected<> result;
 
             if (appID.empty()) {
-                result = WebAuthNCOSE::ParsePublicKey(credentialBytes);
-            } else {
-                result = WebAuthNCOSE::ParseFIDOPublicKey(credentialBytes);
-            }
 
-            if (!result) {
-                err = result.error();
+                auto result = WebAuthNCOSE::ParsePublicKey(credentialBytes);
+
+                if (!result) {
+                    err = result.error();
+                }
+            } else {
+
+                auto result = WebAuthNCOSE::ParseFIDOPublicKey(credentialBytes);
+
+                if (!result) {
+                    err = result.error();
+                }
             }
 
             if (err) {
