@@ -92,6 +92,7 @@ namespace WebAuthN::Protocol {
             // But first let's make sure attestation is present. If it isn't, we don't need to handle
             // any of the following steps
             if (Format == "none") {
+
                 if (AttStatement && !AttStatement.value().empty()) {
                     return ErrAttestationFormat().WithInfo("Attestation format none with attestation present");
                 }
@@ -110,6 +111,7 @@ namespace WebAuthN::Protocol {
             // client data computed in step 7.
             auto formatHandler = formatHandlerIter->second;
             auto result = formatHandler(*this, clientDataHash);
+
             if (!result) {
                 return result.error();
             }
@@ -125,6 +127,7 @@ namespace WebAuthN::Protocol {
             auto metaIter = Metadata::METADATA.find(aaguid);
 
             if (metaIter != Metadata::METADATA.end()) {
+
                 auto meta = metaIter->second;
 
                 for (const auto& s : meta.StatusReports) {
@@ -139,7 +142,6 @@ namespace WebAuthN::Protocol {
                     std::pair<std::string, std::string> names;
                     
                     if (!Util::Crypto::GetNamesX509(x5c.begin()->second, names)) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
-
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
                     
@@ -153,7 +155,6 @@ namespace WebAuthN::Protocol {
                             for (const auto& a : meta.MetadataStatement.value().AttestationTypes) {
                                 
                                 if (a == Metadata::AuthenticatorAttestationType::BasicFull) {
-
                                     hasBasicFull = true;
                                 }
                             }
