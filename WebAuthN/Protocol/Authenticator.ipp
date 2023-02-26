@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include "Core.ipp"
 #include "WebAuthNCBOR/WebAuthNCBOR.ipp"
+#include "Util/Endianness.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -415,7 +416,7 @@ namespace WebAuthN::Protocol {
 
             RPIDHash = std::vector<uint8_t>(rawAuthData.cbegin(), rawAuthData.cbegin() + 32);
             Flags = AuthenticatorFlagsType(rawAuthData[32]);
-            Counter = binary.BigEndian.Uint32(rawAuthData[33:37]); // std::vector<uint8_t>(rawAuthData.cbegin() + 33, rawAuthData.cbegin() + 37);
+            Counter = MAKE_UINT32(rawAuthData[33], rawAuthData[34], rawAuthData[35], rawAuthData[36]);
 
             auto remaining = rawAuthData.size() - MIN_AUTH_DATA_LENGTH;
 
@@ -511,7 +512,7 @@ namespace WebAuthN::Protocol {
 
             AttData.AAGUID = std::vector<uint8_t>(rawAuthData.cbegin() + 37, rawAuthData.cbegin() + 53);
 
-            auto idLength = binary.BigEndian.Uint16(rawAuthData[53:55]);  //std::vector<uint8_t>(rawAuthData.cbegin() + 53, rawAuthData.cbegin() + 55);
+            auto idLength = MAKE_UINT16(rawAuthData[53], rawAuthData[54]);
             
             if (rawAuthData.size() < static_cast<size_t>(MIN_ATTESTED_AUTH_LENGTH + idLength)) {
                 return ErrBadRequest().WithDetails("Authenticator attestation data length too short");
