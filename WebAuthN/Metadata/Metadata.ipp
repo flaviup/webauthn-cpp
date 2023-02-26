@@ -248,7 +248,7 @@ namespace WebAuthN::Metadata {
 
     // Structs
 
-    namespace WebAuthNCOSE = WebAuthN::Protocol::WebAuthNCOSE;
+    namespace WebAuthNCOSE = ::WebAuthN::Protocol::WebAuthNCOSE;
 
     // TODO: this goes away after WebAuthNCOSE::CredentialPublicKey gets implemented
     struct AlgKeyCose {
@@ -829,11 +829,11 @@ namespace WebAuthN::Metadata {
         };
 
         if (codeAccuracyDescriptor.MaxRetries) {
-            j["maxRetries"] = codeAccuracyDescriptor.MaxRetries;
+            j["maxRetries"] = codeAccuracyDescriptor.MaxRetries.value();
         }
 
         if (codeAccuracyDescriptor.BlockSlowdown) {
-            j["blockSlowdown"] = codeAccuracyDescriptor.BlockSlowdown;
+            j["blockSlowdown"] = codeAccuracyDescriptor.BlockSlowdown.value();
         }
     }
 
@@ -905,23 +905,23 @@ namespace WebAuthN::Metadata {
         j = json{};
 
         if (biometricAccuracyDescriptor.SelfAttestedFRR) {
-            j["selfAttestedFRR"] = biometricAccuracyDescriptor.SelfAttestedFRR;
+            j["selfAttestedFRR"] = biometricAccuracyDescriptor.SelfAttestedFRR.value();
         }
 
         if (biometricAccuracyDescriptor.SelfAttestedFAR) {
-            j["selfAttestedFAR"] = biometricAccuracyDescriptor.SelfAttestedFAR;
+            j["selfAttestedFAR"] = biometricAccuracyDescriptor.SelfAttestedFAR.value();
         }
 
         if (biometricAccuracyDescriptor.MaxTemplates) {
-            j["maxTemplates"] = biometricAccuracyDescriptor.MaxTemplates;
+            j["maxTemplates"] = biometricAccuracyDescriptor.MaxTemplates.value();
         }
         
         if (biometricAccuracyDescriptor.MaxRetries) {
-            j["maxRetries"] = biometricAccuracyDescriptor.MaxRetries;
+            j["maxRetries"] = biometricAccuracyDescriptor.MaxRetries.value();
         }
 
         if (biometricAccuracyDescriptor.BlockSlowdown) {
-            j["blockSlowdown"] = biometricAccuracyDescriptor.BlockSlowdown;
+            j["blockSlowdown"] = biometricAccuracyDescriptor.BlockSlowdown.value();
         }
     }
 
@@ -989,11 +989,11 @@ namespace WebAuthN::Metadata {
         };
 
         if (patternAccuracyDescriptor.MaxRetries) {
-            j["maxRetries"] = patternAccuracyDescriptor.MaxRetries;
+            j["maxRetries"] = patternAccuracyDescriptor.MaxRetries.value();
         }
 
         if (patternAccuracyDescriptor.BlockSlowdown) {
-            j["blockSlowdown"] = patternAccuracyDescriptor.BlockSlowdown;
+            j["blockSlowdown"] = patternAccuracyDescriptor.BlockSlowdown.value();
         }
     }
 
@@ -1056,19 +1056,19 @@ namespace WebAuthN::Metadata {
         j = json{};
 
         if (verificationMethodDescriptor.UserVerificationMethod) {
-            j["userVerificationMethod"] = verificationMethodDescriptor.UserVerificationMethod;
+            j["userVerificationMethod"] = verificationMethodDescriptor.UserVerificationMethod.value();
         }
 
         if (verificationMethodDescriptor.CaDesc) {
-            j["caDesc"] = verificationMethodDescriptor.CaDesc;
+            j["caDesc"] = verificationMethodDescriptor.CaDesc.value();
         }
 
         if (verificationMethodDescriptor.BaDesc) {
-            j["baDesc"] = verificationMethodDescriptor.BaDesc;
+            j["baDesc"] = verificationMethodDescriptor.BaDesc.value();
         }
 
         if (verificationMethodDescriptor.PaDesc) {
-            j["paDesc"] = verificationMethodDescriptor.PaDesc;
+            j["paDesc"] = verificationMethodDescriptor.PaDesc.value();
         }
     }
 
@@ -1190,7 +1190,7 @@ namespace WebAuthN::Metadata {
         };
 
         if (displayPNGCharacteristicsDescriptor.Plte) {
-            j["plte"] = displayPNGCharacteristicsDescriptor.Plte;
+            j["plte"] = displayPNGCharacteristicsDescriptor.Plte.value();
         }
     }
 
@@ -1260,9 +1260,9 @@ namespace WebAuthN::Metadata {
 
         j.at("X").get_to(ecdaaTrustAnchor.X);
         j.at("Y").get_to(ecdaaTrustAnchor.Y);
-        j.at("c").get_to(ecdaaTrustAnchor.c);
-        j.at("sx").get_to(ecdaaTrustAnchor.sx);
-        j.at("sy").get_to(ecdaaTrustAnchor.sy);
+        j.at("c").get_to(ecdaaTrustAnchor.C);
+        j.at("sx").get_to(ecdaaTrustAnchor.SX);
+        j.at("sy").get_to(ecdaaTrustAnchor.SY);
         j.at("G1Curve").get_to(ecdaaTrustAnchor.G1Curve);
     }
 
@@ -1308,11 +1308,11 @@ namespace WebAuthN::Metadata {
         };
 
         if (extensionDescriptor.Tag) {
-            j["tag"] = extensionDescriptor.Tag;
+            j["tag"] = extensionDescriptor.Tag.value();
         }
 
         if (extensionDescriptor.Data) {
-            j["data"] = extensionDescriptor.Data;
+            j["data"] = extensionDescriptor.Data.value();
         }
 
         j["fail_if_unknown"] = extensionDescriptor.FailIfUnknown;
@@ -1366,7 +1366,7 @@ namespace WebAuthN::Metadata {
     inline void from_json(const json& j, VersionType& version) {
 
         j.at("major").get_to(version.Major);
-        j.at("minor").get_to(version.Minor;
+        j.at("minor").get_to(version.Minor);
     }
 
     // MetadataStatementType - Authenticator metadata statements are used directly by the FIDO server at a relying party, but the information contained in the authoritative statement is used in several other places.
@@ -1526,25 +1526,25 @@ namespace WebAuthN::Metadata {
         j = json{};
 
         if (metadataStatement.LegalHeader) {
-            j["legalHeader"] = metadataStatement.LegalHeader;
+            j["legalHeader"] = metadataStatement.LegalHeader.value();
         }
 
         if (metadataStatement.Aaid) {
-            j["aaid"] = metadataStatement.Aaid;
+            j["aaid"] = metadataStatement.Aaid.value();
         }
 
         if (metadataStatement.AaGUID) {
-            j["aaguid"] = metadataStatement.AaGUID;
+            j["aaguid"] = metadataStatement.AaGUID.value();
         }
 
         if (metadataStatement.AttestationCertificateKeyIdentifiers) {
-            j["attestationCertificateKeyIdentifiers"] = metadataStatement.AttestationCertificateKeyIdentifiers;
+            j["attestationCertificateKeyIdentifiers"] = metadataStatement.AttestationCertificateKeyIdentifiers.value();
         }
 
         j["description"] = metadataStatement.Description;
 
         if (metadataStatement.AlternativeDescriptions) {
-            j["alternativeDescriptions"] = metadataStatement.AlternativeDescriptions;
+            j["alternativeDescriptions"] = metadataStatement.AlternativeDescriptions.value();
         }
 
         j["authenticatorVersion"] = metadataStatement.AuthenticatorVersion;
@@ -1558,49 +1558,49 @@ namespace WebAuthN::Metadata {
         j["keyProtection"] = metadataStatement.KeyProtection;
 
         if (metadataStatement.IsKeyRestricted) {
-            j["isKeyRestricted"] = metadataStatement.IsKeyRestricted;
+            j["isKeyRestricted"] = metadataStatement.IsKeyRestricted.value();
         }
 
         if (metadataStatement.IsFreshUserVerificationRequired) {
-            j["isFreshUserVerificationRequired"] = metadataStatement.IsFreshUserVerificationRequired;
+            j["isFreshUserVerificationRequired"] = metadataStatement.IsFreshUserVerificationRequired.value();
         }
 
         j["matcherProtection"] = metadataStatement.MatcherProtection;
 
         if (metadataStatement.CryptoStrength) {
-            j["cryptoStrength"] = metadataStatement.CryptoStrength;
+            j["cryptoStrength"] = metadataStatement.CryptoStrength.value();
         }
 
         if (metadataStatement.AttachmentHint) {
-            j["attachmentHint"] = metadataStatement.AttachmentHint;
+            j["attachmentHint"] = metadataStatement.AttachmentHint.value();
         }
 
         j["tcDisplay"] = metadataStatement.TcDisplay;
 
         if (metadataStatement.TcDisplayContentType) {
-            j["tcDisplayContentType"] = metadataStatement.TcDisplayContentType;
+            j["tcDisplayContentType"] = metadataStatement.TcDisplayContentType.value();
         }
 
         if (metadataStatement.TcDisplayPNGCharacteristics) {
-            j["tcDisplayPNGCharacteristics"] = metadataStatement.TcDisplayPNGCharacteristics;
+            j["tcDisplayPNGCharacteristics"] = metadataStatement.TcDisplayPNGCharacteristics.value();
         }
 
         j["attestationRootCertificates"] = metadataStatement.AttestationRootCertificates;
 
         if (metadataStatement.EcdaaTrustAnchors) {
-            j["ecdaaTrustAnchors"] = metadataStatement.EcdaaTrustAnchors;
+            j["ecdaaTrustAnchors"] = metadataStatement.EcdaaTrustAnchors.value();
         }
 
         if (metadataStatement.Icon) {
-            j["icon"] = metadataStatement.Icon;
+            j["icon"] = metadataStatement.Icon.value();
         }
 
         if (metadataStatement.SupportedExtensions) {
-            j["supportedExtensions"] = metadataStatement.SupportedExtensions;
+            j["supportedExtensions"] = metadataStatement.SupportedExtensions.value();
         }
 
         if (metadataStatement.AuthenticatorGetInfo) {
-            j["authenticatorGetInfo"] = metadataStatement.AuthenticatorGetInfo;
+            j["authenticatorGetInfo"] = metadataStatement.AuthenticatorGetInfo.value();
         }
     }
 
@@ -1869,15 +1869,15 @@ namespace WebAuthN::Metadata {
         }
 
         if (statusReport.AuthenticatorVersion) {
-            j["authenticatorVersion"] = statusReport.AuthenticatorVersion;
+            j["authenticatorVersion"] = statusReport.AuthenticatorVersion.value();
         }
 
         if (statusReport.Certificate) {
-            j["certificate"] = statusReport.Certificate;
+            j["certificate"] = statusReport.Certificate.value();
         }
 
         if (statusReport.URL) {
-            j["url"] = statusReport.URL;
+            j["url"] = statusReport.URL.value();
         }
 
         if (statusReport.CertificationDescriptor) {
@@ -2208,14 +2208,14 @@ namespace WebAuthN::Metadata {
 
     // Metadata Errors
 
-    struct MetadataError : public WebAuthN::Protocol::ErrorType {
+    struct MetadataError : public ::WebAuthN::Protocol::ErrorType {
 
         MetadataError() noexcept :
-            WebAuthN::Protocol::ErrorType() {
+            ::WebAuthN::Protocol::ErrorType() {
         }
 
         MetadataError(std::string&& type, std::string&& details) noexcept :
-            WebAuthN::Protocol::ErrorType(
+            ::WebAuthN::Protocol::ErrorType(
                 std::move(type),
                 std::move(details)) {
         }
