@@ -29,6 +29,7 @@ project "webauthn-cpp"
     }
 
     links {
+        "cbor",
         "fmt",
         "icu",
         "nlohmann-json",

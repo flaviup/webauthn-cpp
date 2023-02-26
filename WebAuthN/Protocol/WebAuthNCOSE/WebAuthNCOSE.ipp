@@ -9,6 +9,7 @@
 #ifndef WEBAUTHN_PROTOCOL_WEBAUTHNCOSE_IPP
 #define WEBAUTHN_PROTOCOL_WEBAUTHNCOSE_IPP
 
+#include <algorithm>
 #include <any>
 #include <string>
 #include <vector>
@@ -305,7 +306,9 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         EC2PublicKeyDataType& operator =(EC2PublicKeyDataType&& other) noexcept = default;
 
         // Verify Elliptic Curve Public Key Signature.
-        inline expected<bool> Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+        inline expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+            return true;
             /*var curve elliptic.Curve
 
             switch COSEAlgorithmIdentifier(Algorithm) {
@@ -426,7 +429,9 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         RSAPublicKeyDataType& operator =(RSAPublicKeyDataType&& other) noexcept = default;
 
         // Verify RSA Public Key Signature.
-        inline expected<bool> Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+        inline expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+            return true;
             /*pubkey := &rsa.PublicKey{
                 N: big.NewInt(0).SetBytes(Modulus),
                 E: int(uint(Exponent[2]) | uint(Exponent[1])<<8 | uint(Exponent[0])<<16),
@@ -520,7 +525,9 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         OKPPublicKeyDataType& operator =(OKPPublicKeyDataType&& other) noexcept = default;
 
         // Verify Octet Key Pair (OKP) Public Key Signature.
-        inline expected<bool> Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+        inline expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+            return true;
             /*var key ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
 
             std::copy(key, XCoord);
@@ -558,31 +565,30 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // SigAlgFromCOSEAlg return which signature algorithm is being used from the COSE Key.
     inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
-        /*for _, details := range SignatureAlgorithmDetails {
-            if details.coseAlg == coseAlg {
-                return details.algo
-            }
-        }
 
-        return UnknownSignatureAlgorithm */
+        const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
+
+        auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
+                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
+
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
     }
 
     // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
     inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
 
-        for (const auto& details : SIGNATURE_ALGORITHM_DETAILS) {
+        const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
 
-            if (details.coseAlg == coseAlg) {
-                return details.hasher;
-            }
-        }
-        // default to SHA256?  Why not.
-        return Util::Crypto::SHA256;
+        auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
+                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
+
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : Util::Crypto::SHA256;  // default to SHA256?  Why not.
     }
 
     // ParsePublicKey figures out what kind of COSE material was provided and create the data for the new key.
     inline expected<PublicKeyDataType&> ParsePublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
         auto pk = PublicKeyDataType{};
+        return pk;
         /*WebAuthNCBOR::Unmarshal(keyBytes, &pk);
 
         switch COSEKeyType(pk.KeyType) {
@@ -613,6 +619,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // ParseFIDOPublicKey is only used when the appID extension is configured by the assertion response.
     inline expected<EC2PublicKeyDataType> ParseFIDOPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
+        return true;
         /*x, y := elliptic.Unmarshal(elliptic.P256(), keyBytes)
 
         if x == nil || y == nil {
@@ -665,6 +672,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }*/
 
     inline expected<bool> VerifySignature(const std::any& key, const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) {
+        return true;
         /*switch k := key.(type) {
         case OKPPublicKeyData:
             return k.Verify(data, sig)
@@ -678,6 +686,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }
 
     inline std::string DisplayPublicKey(const std::vector<uint8_t>& cpk) {
+
+        return "";
         
         /*parsedKey, err := ParsePublicKey(cpk)
         if err != nil {
