@@ -279,49 +279,49 @@ namespace WebAuthN::Protocol {
         }
     }
 
-    inline void to_json(json& j, const AuthenticatorFlagsType& authenticatorFlags) {
+    inline void to_json(json& j, const AuthenticatorFlagsType authenticatorFlags) {
 
         j = json{
             static_cast<uint8_t>(authenticatorFlags)
         };
     }
 
-    inline bool HasUserPresent(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasUserPresent(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::UserPresent) != 0;
     }
 
-    inline bool HasRFU1(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasRFU1(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::RFU1) != 0;
     }
 
-    inline bool HasUserVerified(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasUserVerified(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::UserVerified) != 0;
     }
 
-    inline bool HasBackupEligible(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasBackupEligible(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::BackupEligible) != 0;
     }
 
-    inline bool HasBackupState(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasBackupState(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::BackupState) != 0;
     }
 
-    inline bool HasRFU2(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasRFU2(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::RFU2) != 0;
     }
 
-    inline bool HasAttestedCredentialData(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasAttestedCredentialData(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::AttestedCredentialData) != 0;
     }
 
-    inline bool HasExtensions(const AuthenticatorFlagsType& authenticatorFlags) noexcept {
+    inline bool HasExtensions(const AuthenticatorFlagsType authenticatorFlags) noexcept {
 
         return static_cast<uint8_t>(authenticatorFlags & AuthenticatorFlagsType::HasExtensions) != 0;
     }
@@ -407,20 +407,21 @@ namespace WebAuthN::Protocol {
         // https://www.w3.org/TR/webauthn/#table-authData
         inline std::optional<ErrorType> Unmarshal(const std::vector<uint8_t>& rawAuthData) noexcept {
 
-            /*if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
-                return ErrBadRequest.
-                    WithDetails("Authenticator data length too short").
-                    WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes", MIN_AUTH_DATA_LENGTH, rawAuthData.size()));
+            if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
+                return ErrBadRequest().WithDetails("Authenticator data length too short")
+                                      .WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes", MIN_AUTH_DATA_LENGTH, rawAuthData.size()));
             }
 
             RPIDHash = rawAuthData[:32];
             Flags = AuthenticatorFlagsType(rawAuthData[32]);
-            Counter = binary.BigEndian.Uint32(rawAuthData[33:37])
+            Counter = binary.BigEndian.Uint32(rawAuthData[33:37]);
 
             auto remaining = rawAuthData.size() - MIN_AUTH_DATA_LENGTH;
 
-            if (Flags.HasAttestedCredentialData()) {
+            if (HasAttestedCredentialData(Flags)) {
+
                 if (rawAuthData.size() > MIN_ATTESTED_AUTH_LENGTH) {
+
                     auto err = _UnmarshalAttestedData(rawAuthData);
                     if (err) {
                         return err;
@@ -429,26 +430,27 @@ namespace WebAuthN::Protocol {
                     auto attDataLen = AttData.AAGUID.size() + 2 + AttData.CredentialID.size() + AttData.CredentialPublicKey.size();
                     remaining = remaining - attDataLen;
                 } else {
-                    return ErrBadRequest.WithDetails("Attested credential flag set but data is missing");
+                    return ErrBadRequest().WithDetails("Attested credential flag set but data is missing");
                 }
             } else {
-                if (!Flags.HasExtensions() && rawAuthData.size() != 37) {
-                    return ErrBadRequest.WithDetails("Attested credential flag not set");
+
+                if (!HasExtensions(Flags) && rawAuthData.size() != 37) {
+                    return ErrBadRequest().WithDetails("Attested credential flag not set");
                 }
             }
 
-            if (Flags.HasExtensions()) {
+            if (HasExtensions(Flags)) {
                 if (remaining != 0) {
                     ExtData = rawAuthData[rawAuthData.size() - remaining:];
                     remaining -= ExtData.size();
                 } else {
-                    return ErrBadRequest.WithDetails("Extensions flag set but extensions data is missing");
+                    return ErrBadRequest().WithDetails("Extensions flag set but extensions data is missing");
                 }
             }
 
             if (remaining != 0) {
-                return ErrBadRequest.WithDetails("Leftover bytes decoding AuthenticatorData");
-            }*/
+                return ErrBadRequest().WithDetails("Leftover bytes decoding AuthenticatorData");
+            }
 
             return std::nullopt;
         }
@@ -462,22 +464,22 @@ namespace WebAuthN::Protocol {
             // Registration Step 9 & Assertion Step 11
             // Verify that the RP ID hash in authData is indeed the SHA-256
             // hash of the RP ID expected by the RP.
-            /*if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
-                return ErrVerification.WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}", RPIDHash, rpIdHash));
+            if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
+                return ErrVerification().WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}", RPIDHash, rpIdHash));
             }
 
             // Registration Step 10 & Assertion Step 12
             // Verify that the User Present bit of the flags in authData is set.
-            if (!Flags.UserPresent()) {
-                return ErrVerification.WithInfo("User presence flag not set by authenticator");
+            if (!HasUserPresent(Flags)) {
+                return ErrVerification().WithInfo("User presence flag not set by authenticator");
             }
 
             // Registration Step 11 & Assertion Step 13
             // If user verification is required for this assertion, verify that
             // the User Verified bit of the flags in authData is set.
-            if (userVerificationRequired && !Flags.UserVerified) {
-                return ErrVerification.WithInfo("User verification required but flag not set by authenticator");
-            }*/
+            if (userVerificationRequired && !HasUserVerified(Flags)) {
+                return ErrVerification().WithInfo("User verification required but flag not set by authenticator");
+            }
 
             // Registration Step 12 & Assertion Step 14
             // Verify that the values of the client extension outputs in clientExtensionResults
