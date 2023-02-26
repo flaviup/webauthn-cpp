@@ -30,6 +30,7 @@ project "webauthn-cpp"
 
     links {
         "fmt",
+        "icu",
         "nlohmann-json",
         "sodium",
         "ssl"

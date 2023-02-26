@@ -9,12 +9,10 @@
 #ifndef WEBAUTHN_PROTOCOL_CLIENT_IPP
 #define WEBAUTHN_PROTOCOL_CLIENT_IPP
 
-#include <string>
 #include <vector>
-#include <optional>
-#include <nlohmann/json.hpp>
 #include "Authenticator.ipp"
-#include "Extensions.ipp"
+#include "../Util/UrlParse.ipp"
+#include "../Util/StringCompare.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -150,47 +148,46 @@ namespace WebAuthN::Protocol {
                CeremonyType ceremony, 
                const std::vector<std::string>& rpOrigins) const noexcept {
 
-            // Registration Step 3. Verify that the value of C.type is webauthn.create.
+            // Registration Step 3. Verify that the value of Type is webauthn.create.
 
-            // Assertion Step 7. Verify that the value of C.type is the string webauthn.get.
-            /*if (Type != ceremony) {
-                return ErrVerification.WithDetails("Error validating ceremony type").WithInfo(fmt::format("Expected Value: {}, Received: {}", ceremony, Type));
+            // Assertion Step 7. Verify that the value of Type is the string webauthn.get.
+            if (Type != ceremony) {
+
+                return ErrVerification().WithDetails("Error validating ceremony type")
+                                        .WithInfo(fmt::format("Expected Value: {}, Received: {}", ceremony, Type));
             }
 
-            // Registration Step 4. Verify that the value of C.challenge matches the challenge
+            // Registration Step 4. Verify that the value of Challenge matches the challenge
             // that was sent to the authenticator in the create() call.
 
-            // Assertion Step 8. Verify that the value of C.challenge matches the challenge
+            // Assertion Step 8. Verify that the value of Challenge matches the challenge
             // that was sent to the authenticator in the PublicKeyCredentialRequestOptions
             // passed to the get() call.
 
-            auto challenge = Challenge
-            if (subtle.ConstantTimeCompare([]byte(storedChallenge), []byte(challenge)) != 1) {
-                return ErrVerification.
-                    WithDetails("Error validating challenge").
-                    WithInfo(fmt.Sprintf("Expected b Value: %#v\nReceived b: %#v\n", storedChallenge, challenge))
+            if (!Util::StringCompare::ConstantTimeEqual(storedChallenge, Challenge)) {
+
+                return ErrVerification().WithDetails("Error validating challenge")
+                                        .WithInfo(fmt::format("Expected b Value: {}\nReceived b: {}\n", storedChallenge, Challenge));
             }
 
             // Registration Step 5 & Assertion Step 9. Verify that the value of C.origin matches
             // the Relying Party's origin.
-            fqOrigin, err := FullyQualifiedOrigin(Origin)
-            if (err) {
-                return ErrParsingData.WithDetails("Error decoding clientData origin as URL")
+            std::string fqOrigin{};
+            auto ok = Util::Url::FullyQualifiedOrigin(Origin, fqOrigin);
+
+            if (!ok) {
+
+                return ErrParsingData().WithDetails("Error decoding clientData origin as URL");
             }
 
-            auto found = false;
-
-            for _, origin := range rpOrigins {
-                if strings.EqualFold(fqOrigin, origin) {
-                    found = true
-                    break
-                }
-            }
+            auto found = std::any_of(rpOrigins.cbegin(), 
+                                     rpOrigins.cend(), 
+                                     [&fqOrigin](const std::string& origin) { return Util::StringCompare::Utf8EqualFold(fqOrigin, origin); });
 
             if (!found) {
-                return ErrVerification.
-                    WithDetails("Error validating origin").
-                    WithInfo(fmt::format("Expected Values: {}, Received: {}", rpOrigins, fqOrigin));
+
+                return ErrVerification().WithDetails("Error validating origin")
+                                        .WithInfo(fmt::format("Expected Values: {}, Received: {}", rpOrigins, fqOrigin));
             }
 
             // Registration Step 6 and Assertion Step 10. Verify that the value of C.tokenBinding.status
@@ -198,18 +195,21 @@ namespace WebAuthN::Protocol {
             // obtained. If Token Binding was used on that TLS connection, also verify that C.tokenBinding.id
             // matches the base64url encoding of the Token Binding ID for the connection.
             if (TokenBinding) {
+
                 if (TokenBinding.value().Status == TokenBindingStatusType::Invalid) {
-                    return ErrParsingData.WithDetails("Error decoding clientData, token binding present without status");
+
+                    return ErrParsingData().WithDetails("Error decoding clientData, token binding present without status");
                 }
 
                 if (TokenBinding.value().Status != TokenBindingStatusType::Present && 
                     TokenBinding.value().Status != TokenBindingStatusType::Supported && 
                     TokenBinding.value().Status != TokenBindingStatusType::NotSupported) {
-                    return ErrParsingData.
-                        WithDetails("Error decoding clientData, token binding present with invalid status").
-                        WithInfo(fmt::format("Got: {}", TokenBinding.value().Status));
+
+                    return ErrParsingData().WithDetails("Error decoding clientData, token binding present with invalid status")
+                                           .WithInfo(fmt::format("Got: {}", TokenBinding.value().Status));
                 }
-            }*/
+            }
+
             // Not yet fully implemented by the spec, browsers, and me.
 
             return std::nullopt;
@@ -258,30 +258,6 @@ namespace WebAuthN::Protocol {
         if (j.find("hint") != j.end()) {
             collectedClientData.Hint.emplace(j["hint"].get<std::string>());
         }
-    }
-
-    // Functions
-
-    // FullyQualifiedOrigin returns the origin per the HTML spec: (scheme)://(host)[:(port)].
-    inline expected<std::string> FullyQualifiedOrigin(const std::string& rawOrigin) noexcept {
-
-        /*if strings.HasPrefix(rawOrigin, "android:apk-key-hash:") {
-            return rawOrigin, nil
-        }
-
-        var origin *url.URL
-
-        if origin, err = url.ParseRequestURI(rawOrigin); err != nil {
-            return "", err
-        }
-
-        if origin.Host == "" {
-            return "", fmt::format("url '{}' does not have a host", rawOrigin);
-        }
-
-        origin.Path, origin.RawPath, origin.RawQuery, origin.User = "", "", "", nil
-
-        return origin.String(), nil*/
     }
 } // namespace WebAuthN::Protocol
 

@@ -130,7 +130,7 @@ namespace WebAuthN::Protocol {
             }
 
             if (j.find("authenticatorAttachment") != j.end()) {
-                AuthenticatorAttachment.emplace(["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
+                AuthenticatorAttachment.emplace(j["authenticatorAttachment"].get<AuthenticatorAttachmentType>());
             }
         }
 

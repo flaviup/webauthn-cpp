@@ -9,6 +9,7 @@
 #ifndef WEBAUTHN_UTIL_URL_PARSE_IPP
 #define WEBAUTHN_UTIL_URL_PARSE_IPP
 
+#include <algorithm>
 #include <string>
 #include <regex>
 
@@ -40,21 +41,52 @@ namespace WebAuthN::Util::Url {
 
         std::smatch matchResults;
         return std::regex_match(url.cbegin(), url.cend(), matchResults, URL_REGEX);
-        
-        /*if (std::regex_match(url.cbegin(), url.cend(), matchResults, URL_REGEX))
-        {
-            m_scheme.assign(matchResults[2].first, matchResults[2].second);
-            m_user.assign(matchResults[4].first, matchResults[4].second);
-            m_host.assign(matchResults[5].first, matchResults[5].second);
-            m_port.assign(matchResults[7].first, matchResults[7].second);
-            m_path.assign(matchResults[8].first, matchResults[8].second);
-            m_query.assign(matchResults[10].first, matchResults[10].second);
-            m_fragment.assign(matchResults[15].first, matchResults[15].second);
+    }
 
-            return true;
+    // FullyQualifiedOrigin returns the origin per the HTML spec: (scheme)://(host)[:(port)].
+    inline bool FullyQualifiedOrigin(const std::string& rawOrigin, std::string& fqo) noexcept {
+
+        const std::string androidPrefix = "android:apk-key-hash:";
+
+        if (rawOrigin.size() >= androidPrefix.size()) {
+
+            auto res = std::mismatch(androidPrefix.cbegin(), androidPrefix.cend(), rawOrigin.cbegin());
+
+            if (res.first == androidPrefix.cend()) { // androidPrefix is a prefix of rawOrigin
+
+                fqo = rawOrigin;
+                return true;
+            }
         }
 
-        return false;*/
+        std::smatch matchResults;
+
+        if (std::regex_match(rawOrigin.cbegin(), rawOrigin.cend(), matchResults, URL_REGEX)) {
+
+            std::string scheme;
+            //std::string user;
+            std::string host;
+            std::string port;
+            //std::string path;
+            //std::string query;
+            //std::string fragment;
+            scheme.assign(matchResults[2].first, matchResults[2].second);
+            //user.assign(matchResults[4].first, matchResults[4].second);
+            host.assign(matchResults[5].first, matchResults[5].second);
+            port.assign(matchResults[7].first, matchResults[7].second);
+            //path.assign(matchResults[8].first, matchResults[8].second);
+            //query.assign(matchResults[10].first, matchResults[10].second);
+            //fragment.assign(matchResults[15].first, matchResults[15].second);
+
+            if (!host.empty()) {
+
+                fqo = (scheme.empty() ? host : scheme + "://" + host) + (port.empty() ? "" : ":" + port);
+                return true;
+            }
+        }
+
+        fqo = "";
+        return false;
     }
 } // namespace WebAuthN::Util::Url
 

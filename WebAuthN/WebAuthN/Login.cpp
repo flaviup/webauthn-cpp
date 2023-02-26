@@ -171,30 +171,18 @@ namespace WebAuthN::WebAuthN {
 
             for (const auto& allowedCredentialID : sessionData.AllowedCredentialIDs.value()) {
 
-                auto credentialsOwned = false;
-
-                for ( const auto& userCredential : userCredentials) {
-
-                    if (userCredential.ID == allowedCredentialID) {
-
-                        credentialsOwned = true;
-                        break;
-                    }
-                }
+                auto credentialsOwned = std::any_of(userCredentials.cbegin(), 
+                                                    userCredentials.cend(), 
+                                                    [&allowedCredentialID](const std::vector<uint8_t>& userCredential) { return userCredential == allowedCredentialID; });
 
                 if (!credentialsOwned) {
                     return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
                 }
             }
 
-            for (const auto& allowedCredentialID : sessionData.AllowedCredentialIDs.value()) {
-
-                if (parsedResponse.RawID == allowedCredentialID) {
-
-                    credentialFound = true;
-                    break;
-                }
-            }
+            credentialFound = std::any_of(sessionData.AllowedCredentialIDs.value().cbegin(), 
+                                          sessionData.AllowedCredentialIDs.value().cend(), 
+                                          [&parsedResponse](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponse.RawID; });
 
             if (!credentialFound) {
                 return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own the credential returned"));
@@ -214,22 +202,16 @@ namespace WebAuthN::WebAuthN {
 
         // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
         // for your use case), look up the corresponding credential public key.
-        CredentialType credential{};
-        credentialFound = false;
+        auto credIter = std::find_if(userCredentials.cbegin(), 
+                                     userCredentials.cend(), 
+                                     [&parsedResponse](const std::vector<uint8_t>& userCredential) { return userCredential.ID == parsedResponse.RawID; });
 
-        for (const auto& cred : userCredentials) {
-
-            if (cred.ID == parsedResponse.RawID) {
-
-                credential = cred;
-                credentialFound = true;
-                break;
-            }
-        }
+        credentialFound = credIter != userCredentials.cend();
 
         if (!credentialFound) {
             return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));
         }
+        CredentialType& credential = *credIter;
 
         auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
 
