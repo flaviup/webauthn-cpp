@@ -33,7 +33,6 @@ project "webauthn-cpp"
         "cbor",
         "crypto",
         "fmt",
-        "icuuc",
         "sodium",
         "ssl",
         "uuid"
@@ -65,5 +64,11 @@ project "webauthn-cpp"
         defines { "NDEBUG" }
         optimize "On"
 
+    filter { "system:not macosx" }
+        links { "icu" }
+
     filter { "system:macosx" }
-        links { "Cocoa.framework" }
+        links {
+            "icuuc"
+            "Cocoa.framework"
+        }
