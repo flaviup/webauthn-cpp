@@ -23,7 +23,7 @@ project "webauthn-cpp"
 
     removefiles { "**/test/**" }
 
-    includedirs {
+    externalincludedirs {
         "/usr/include",
         "/usr/local/include"
     }
@@ -38,9 +38,10 @@ project "webauthn-cpp"
         "uuid"
     }
 
-    libdirs {
+    syslibdirs {
         "/usr/lib",
-        "/usr/local/lib"
+        "/usr/local/lib",
+        "/usr/local/opt/icu4c/lib"
     }
     
     filter "configurations:StaticLib-Debug"
