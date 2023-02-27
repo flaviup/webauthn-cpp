@@ -79,9 +79,9 @@ namespace WebAuthN::Util::Crypto {
             auto entry = X509_NAME_get_entry(name, position);
 
             ASN1_STRING* asn1Data = X509_NAME_ENTRY_get_data(entry);
-            auto entryString = ASN1_STRING_data(asn1Data);
-            std::string s(reinterpret_cast<char*>(entryString));
-            //free(entryString);
+            auto entryString = ASN1_STRING_get0_data(asn1Data);
+            std::string s(reinterpret_cast<const char*>(entryString));
+
             ASN1_STRING_clear_free(asn1Data);
             X509_NAME_ENTRY_free(entry);
 
