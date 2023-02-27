@@ -22,7 +22,7 @@
 
 namespace WebAuthN::Util::Crypto {
 
-    std::vector<uint8_t> SHA1(const std::string& str) {
+    inline std::vector<uint8_t> SHA1(const std::string& str) {
 
         const constexpr auto HASH_SIZE_BYTES = 20U;
         unsigned char out[HASH_SIZE_BYTES];
@@ -36,7 +36,7 @@ namespace WebAuthN::Util::Crypto {
         return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
     }
 
-    std::vector<uint8_t> SHA256(const std::string& str) {
+    inline std::vector<uint8_t> SHA256(const std::string& str) {
 
         unsigned char out[crypto_hash_sha256_BYTES];
         crypto_hash_sha256(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
@@ -44,7 +44,7 @@ namespace WebAuthN::Util::Crypto {
         return std::vector<uint8_t>(out, out + crypto_hash_sha256_BYTES);
     }
 
-    std::vector<uint8_t> SHA384(const std::string& str) {
+    inline std::vector<uint8_t> SHA384(const std::string& str) {
 
         const constexpr auto HASH_SIZE_BYTES = 48U;
         unsigned char out[HASH_SIZE_BYTES];
@@ -58,7 +58,7 @@ namespace WebAuthN::Util::Crypto {
         return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
     }
 
-    std::vector<uint8_t> SHA512(const std::string& str) {
+    inline std::vector<uint8_t> SHA512(const std::string& str) {
 
         unsigned char out[crypto_hash_sha512_BYTES];
         crypto_hash_sha512(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
@@ -91,7 +91,7 @@ namespace WebAuthN::Util::Crypto {
 
 #pragma GCC visibility pop
 
-    bool GetNamesX509(const std::vector<uint8_t>& data, std::pair<std::string, std::string>& names) {
+    inline bool GetNamesX509(const std::vector<uint8_t>& data, std::pair<std::string, std::string>& names) {
 
         auto bio = BIO_new(BIO_s_mem());
         BIO_puts(bio, reinterpret_cast<const char*>(data.data()));

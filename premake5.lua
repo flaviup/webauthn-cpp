@@ -24,6 +24,7 @@ project "webauthn-cpp"
     removefiles { "**/test/**" }
 
     externalincludedirs {
+        "/usr/local/opt/icu4c/include",
         "/usr/include",
         "/usr/local/include"
     }
@@ -32,16 +33,16 @@ project "webauthn-cpp"
         "cbor",
         "crypto",
         "fmt",
-        "icu",
+        "icuuc",
         "sodium",
         "ssl",
         "uuid"
     }
 
     syslibdirs {
+        "/usr/local/opt/icu4c/lib",
         "/usr/lib",
-        "/usr/local/lib",
-        "/usr/local/opt/icu4c/lib"
+        "/usr/local/lib"
     }
     
     filter "configurations:StaticLib-Debug"

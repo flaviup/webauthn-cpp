@@ -26,6 +26,7 @@ namespace WebAuthN::Util::StringCompare {
 
             const auto us1 = Util::Convert::Utf8ToUcs2(utf8Str1);
             const auto us2 = Util::Convert::Utf8ToUcs2(utf8Str2);
+            //return u_strcasecmp(reinterpret_cast<const UChar*>(us1.data()), reinterpret_cast<const UChar*>(us2.data()), U_FOLD_CASE_DEFAULT) == 0;
             return u_strcasecmp(us1.data(), us2.data(), U_FOLD_CASE_DEFAULT) == 0;
         } catch (const std::exception& e) {
         }
@@ -33,7 +34,7 @@ namespace WebAuthN::Util::StringCompare {
         return false;
     }
 
-    bool ConstantTimeEqual(const std::string& s1, const std::string& s2) noexcept {
+    inline bool ConstantTimeEqual(const std::string& s1, const std::string& s2) noexcept {
 
         assert(s1.size() == s2.size());
         

@@ -67,7 +67,7 @@ namespace WebAuthN::Protocol {
         std::string DevInfo;
     };
 
-    void to_json(json& j, const ErrorType& error) {
+    inline void to_json(json& j, const ErrorType& error) {
 
         j = json{
             { "type",     error.Type },
@@ -76,7 +76,7 @@ namespace WebAuthN::Protocol {
         };
     }
 
-    void from_json(const json& j, ErrorType& error) {
+    inline void from_json(const json& j, ErrorType& error) {
 
         j.at("type").get_to(error.Type);
         j.at("error").get_to(error.Details);
