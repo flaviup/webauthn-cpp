@@ -174,7 +174,7 @@ namespace WebAuthN::WebAuthN {
 
                 auto credentialsOwned = std::any_of(userCredentials.cbegin(), 
                                                     userCredentials.cend(), 
-                                                    [&allowedCredentialID](const std::vector<uint8_t>& userCredential) { return userCredential == allowedCredentialID; });
+                                                    [&allowedCredentialID](const CredentialType& userCredential) { return userCredential.ID == allowedCredentialID; });
 
                 if (!credentialsOwned) {
                     return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
@@ -205,7 +205,7 @@ namespace WebAuthN::WebAuthN {
         // for your use case), look up the corresponding credential public key.
         auto credIter = std::find_if(userCredentials.begin(),
                                      userCredentials.end(),
-                                     [&parsedResponseRawID](const std::vector<uint8_t>& userCredential) { return userCredential == parsedResponseRawID; });
+                                     [&parsedResponseRawID](const CredentialType& userCredential) { return userCredential.ID == parsedResponseRawID; });
 
         credentialFound = credIter != userCredentials.end();
 
