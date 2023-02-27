@@ -362,22 +362,22 @@ namespace WebAuthN::Metadata {
     namespace {
 
         inline const auto _MAPPING = std::map<AuthenticationAlgorithmType, AlgKeyCose>{
-            { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P256 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_DER, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P256 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_DER,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey, Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K, Curve: WebAuthNCOSE::COSEEllipticCurveType::Secp256k1 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_SECP256K1_ECDSA_SHA256_DER, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey, Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K, Curve: WebAuthNCOSE::COSEEllipticCurveType::Secp256k1 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA384_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS384 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA512_RAW,      { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS512 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW,  { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS256 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW,  { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS384 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW,  { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,       Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS512 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW,    { KeyType: WebAuthNCOSE::COSEKeyType::RSAKey,         Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS1 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES384,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P384 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW, { KeyType: WebAuthNCOSE::COSEKeyType::EllipticKey,  Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES512,      Curve: WebAuthNCOSE::COSEEllipticCurveType::P521 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_ED25519_EDDSA_SHA512_RAW,   { KeyType: WebAuthNCOSE::COSEKeyType::OctetKey,     Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,   Curve: WebAuthNCOSE::COSEEllipticCurveType::Ed25519 } },
-            { AuthenticationAlgorithmType::ALG_SIGN_ED448_EDDSA_SHA512_RAW,     { KeyType: WebAuthNCOSE::COSEKeyType::OctetKey,     Algorithm: WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,     Curve: WebAuthNCOSE::COSEEllipticCurveType::Ed448 } }
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::P256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_DER, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::P256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_RAW,      { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_DER,      { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K, .Curve = WebAuthNCOSE::COSEEllipticCurveType::Secp256k1 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP256K1_ECDSA_SHA256_DER, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K, .Curve = WebAuthNCOSE::COSEEllipticCurveType::Secp256k1 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA384_RAW,      { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS384 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA512_RAW,      { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS512 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW,  { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS256 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW,  { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS384 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW,  { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS512 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW,    { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS1 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES384,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::P384 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES512,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::P521 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_ED25519_EDDSA_SHA512_RAW,   { .KeyType = WebAuthNCOSE::COSEKeyType::OctetKey,    .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::Ed25519 } },
+            { AuthenticationAlgorithmType::ALG_SIGN_ED448_EDDSA_SHA512_RAW,     { .KeyType = WebAuthNCOSE::COSEKeyType::OctetKey,    .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::Ed448 } }
         };
 
         inline const AlgKeyCose& _AlgKeyCoseMappingFunction(AuthenticationAlgorithmType authAlgorithm) noexcept {

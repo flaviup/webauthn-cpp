@@ -48,20 +48,20 @@ namespace WebAuthN::WebAuthN {
         inline static CredentialType Create(const Protocol::ParsedCredentialCreationDataType& c) noexcept {
 
             return CredentialType{
-                ID:              c.Response.AttestationObject.AuthData.AttData.CredentialID,
-                PublicKey:       c.Response.AttestationObject.AuthData.AttData.CredentialPublicKey,
-                AttestationType: c.Response.AttestationObject.Format,
-                Transports:      c.Response.Transports,
-                Flags: CredentialFlagsType{
-                    UserPresent:    Protocol::HasUserPresent(c.Response.AttestationObject.AuthData.Flags),
-                    UserVerified:   Protocol::HasUserVerified(c.Response.AttestationObject.AuthData.Flags),
-                    BackupEligible: Protocol::HasBackupEligible(c.Response.AttestationObject.AuthData.Flags),
-                    BackupState:    Protocol::HasBackupState(c.Response.AttestationObject.AuthData.Flags)
+                .ID              = c.Response.AttestationObject.AuthData.AttData.CredentialID,
+                .PublicKey       = c.Response.AttestationObject.AuthData.AttData.CredentialPublicKey,
+                .AttestationType = c.Response.AttestationObject.Format,
+                .Transports      = c.Response.Transports,
+                .Flags           = CredentialFlagsType{
+                    .UserPresent    = Protocol::HasUserPresent(c.Response.AttestationObject.AuthData.Flags),
+                    .UserVerified   = Protocol::HasUserVerified(c.Response.AttestationObject.AuthData.Flags),
+                    .BackupEligible = Protocol::HasBackupEligible(c.Response.AttestationObject.AuthData.Flags),
+                    .BackupState    = Protocol::HasBackupState(c.Response.AttestationObject.AuthData.Flags)
                 },
-                Authenticator: AuthenticatorType{
-                    AAGUID:     c.Response.AttestationObject.AuthData.AttData.AAGUID,
-                    SignCount:  c.Response.AttestationObject.AuthData.Counter,
-                    Attachment: c.AuthenticatorAttachment
+                .Authenticator   = AuthenticatorType{
+                    .AAGUID      = c.Response.AttestationObject.AuthData.AttData.AAGUID,
+                    .SignCount   = c.Response.AttestationObject.AuthData.Counter,
+                    .Attachment  = c.AuthenticatorAttachment
                 }
             };
         }

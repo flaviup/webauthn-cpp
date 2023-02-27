@@ -202,11 +202,11 @@ namespace WebAuthN::WebAuthN {
 
         // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
         // for your use case), look up the corresponding credential public key.
-        auto credIter = std::find_if(userCredentials.cbegin(), 
-                                     userCredentials.cend(), 
+        auto credIter = std::find_if(userCredentials.begin(),
+                                     userCredentials.end(),
                                      [&parsedResponse](const std::vector<uint8_t>& userCredential) { return userCredential.ID == parsedResponse.RawID; });
 
-        credentialFound = credIter != userCredentials.cend();
+        credentialFound = credIter != userCredentials.end();
 
         if (!credentialFound) {
             return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));

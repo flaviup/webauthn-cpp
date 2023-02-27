@@ -42,8 +42,8 @@ namespace WebAuthN::Util::StringCompare {
         volatile const char* p1 = s1.data();
         volatile const char* p2 = s2.data();
 
-        for (volatile auto i = 0; i < n; ++i) {
-            c |= p1[i] ^ p2[i];
+        for (volatile auto i = 0; i < n; i = i + 1) {
+            c = c | (p1[i] ^ p2[i]);
         }
 
         return (c == 0);

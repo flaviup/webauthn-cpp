@@ -93,8 +93,10 @@ namespace WebAuthN::WebAuthN {
         Protocol::URLEncodedBase64Type entityUserID{};
 
         if (_config.EncodeUserIDAsString) {
-            entityUserID = std::string(user.GetWebAuthNID());
+
+            entityUserID = std::string(reinterpret_cast<const char*>(user.GetWebAuthNID().data()));
         } else {
+
             auto idEncodingResult = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID());
 
             if (!idEncodingResult) {
@@ -152,7 +154,7 @@ namespace WebAuthN::WebAuthN {
             challenge,
             user.GetWebAuthNID(),
             "",
-            _config.Timeouts.Registration.Enforce ? _Timestamp() + creation.Response.Timeout.value() : 0,
+            _config.Timeouts.Registration.Enforce ? Util::Time::Timestamp() + creation.Response.Timeout.value() : 0,
             creation.Response.AuthenticatorSelection.value().UserVerification.value()
         };
 
