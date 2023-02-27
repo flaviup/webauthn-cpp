@@ -15,6 +15,9 @@
 #include "SessionData.ipp"
 #include "Credential.ipp"
 #include "../Protocol/Assertion.ipp"
+#include "../Protocol/Challenge.ipp"
+#include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
+#include "../Util/Time.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -58,7 +61,9 @@ namespace WebAuthN::WebAuthN {
             return _config;
         }
 
-        // Registration
+        // REGISTRATION
+        // These objects help us create the CredentialCreationOptionsType
+        // that will be passed to the authenticator via the user client.
 
         // RegistrationOptionHandlerType describes a function which modifies the registration Protocol::PublicKeyCredentialCreationOptionsType
         // values.
@@ -66,14 +71,108 @@ namespace WebAuthN::WebAuthN {
         using RegistrationOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialCreationOptionsType&)>;
 
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
-        template<size_t N>
+        template<size_t N = 0>
         Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = {}) noexcept;
+        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = {}) noexcept {
+
+            auto err = _config.Validate();
+
+            if (err) {
+
+                return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
+            }
+
+            auto challengeCreationResult = Protocol::CreateChallenge();
+
+            if (!challengeCreationResult) {
+                return Protocol::unexpected(challengeCreationResult.error());
+            }
+            Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
+
+            Protocol::URLEncodedBase64Type entityUserID{};
+
+            if (_config.EncodeUserIDAsString) {
+
+                entityUserID = std::string(reinterpret_cast<const char*>(user.GetWebAuthNID().data()));
+            } else {
+
+                auto idEncodingResult = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID());
+
+                if (!idEncodingResult) {
+                    return Protocol::unexpected(idEncodingResult.error());
+                }
+                entityUserID = idEncodingResult.value();
+            }
+
+            auto entityUser = Protocol::UserEntityType{
+                entityUserID,
+                user.GetWebAuthNName(),
+                user.GetWebAuthNDisplayName(),
+                user.GetWebAuthNIcon()
+            };
+
+            auto entityRelyingParty = Protocol::RelyingPartyEntityType{
+                _config.RPID,
+                _config.RPDisplayName,
+                _config.RPIcon
+            };
+
+            std::vector<Protocol::CredentialParameterType> credentialParams = _GetDefaultRegistrationCredentialParameters();
+
+            auto creation = Protocol::CredentialCreationType{
+                Protocol::PublicKeyCredentialCreationOptionsType{
+                    entityRelyingParty,
+                    entityUser,
+                    challenge,
+                    credentialParams,
+                    std::nullopt,
+                    std::nullopt,
+                    _config.AuthenticatorSelection,
+                    _config.AttestationPreference
+                }
+            };
+
+            for (int i = 0; i < N; ++i) {
+                opts[i](creation.Response);
+            }
+
+            if (creation.Response.Timeout == 0) {
+
+                switch (creation.Response.AuthenticatorSelection.value().UserVerification.value()) {
+                    case Protocol::UserVerificationRequirementType::Discouraged:
+                        creation.Response.Timeout = _config.Timeouts.Registration.Timeout.count();
+                        break;
+
+                    default:
+                        creation.Response.Timeout = _config.Timeouts.Registration.Timeout.count();
+                        break;
+                }
+            }
+
+            auto session = SessionDataType{
+                challenge,
+                user.GetWebAuthNID(),
+                "",
+                _config.Timeouts.Registration.Enforce ? Util::Time::Timestamp() + creation.Response.Timeout.value() : 0,
+                creation.Response.AuthenticatorSelection.value().UserVerification.value()
+            };
+
+            return std::make_pair(creation, session);
+        }
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
         // credentials and session data.
         Protocol::expected<CredentialType>
-        FinishRegistration(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept;
+        FinishRegistration(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept {
+            
+            auto parsedResponse = Protocol::ParseCredentialCreationResponse(response);
+
+            if (!parsedResponse) {
+                return Protocol::unexpected(parsedResponse.error());
+            }
+
+            return _CreateCredential(user, sessionData, parsedResponse.value());
+        }
 
         // WithAuthenticatorSelection adjusts the non-default parameters regarding the authenticator to select during
         // registration.
@@ -166,7 +265,7 @@ namespace WebAuthN::WebAuthN {
             };
         }
 
-        // Login
+        // LOGIN
 
         // LoginOptionHandlerType is used to provide parameters that modify the default Credential Assertion Payload that is sent to the user.
         //using LoginOptionHandlerType = void (*)(Protocol::PublicKeyCredentialRequestOptionsType&);
@@ -186,12 +285,12 @@ namespace WebAuthN::WebAuthN {
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
-                   const LoginOptionHandlerType (&opts)[N] = {}) noexcept;
+                   const LoginOptionHandlerType (&opts)[N]) noexcept;
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = {}) noexcept;
+        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N]) noexcept;
 
         // FinishLogin takes the response from the client and validate it against the user credentials and stored session data.
         Protocol::expected<CredentialType>
@@ -268,10 +367,77 @@ namespace WebAuthN::WebAuthN {
 
     private:
 
+        inline static std::vector<Protocol::CredentialParameterType> _GetDefaultRegistrationCredentialParameters() noexcept {
+            
+            namespace WebAuthNCOSE = Protocol::WebAuthNCOSE;
+
+            return std::vector<Protocol::CredentialParameterType>{
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES384
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES512
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS256
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS384
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgRS512
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS384
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS512
+                },
+                {
+                    Protocol::CredentialTypeType::PublicKey,
+                    WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA
+                }
+            };
+        }
+
+        // CreateCredential verifies a parsed response against the user's credentials and session data.
         Protocol::expected<CredentialType>
-        _CreateCredential(const IUser& user, 
-                          const SessionDataType& sessionData, 
-                          const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept;
+        _CreateCredential(const IUser& user,
+                          const SessionDataType& sessionData,
+                          const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
+            
+            if (user.GetWebAuthNID() != sessionData.UserID) {
+                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
+            }
+
+            if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
+                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
+            }
+
+            auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
+            auto verificationResultError = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
+
+            if (verificationResultError) {
+                return Protocol::unexpected(verificationResultError.value());
+            }
+
+            return CredentialType::Create(parsedResponse);
+        }
 
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
