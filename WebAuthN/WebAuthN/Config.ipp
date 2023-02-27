@@ -109,7 +109,7 @@ namespace WebAuthN::WebAuthN {
         std::string  RPDisplayName;
         // RPOrigins configures the list of Relying Party Server Origins that are permitted. These should be fully
         // qualified origins.
-        std::vector<std::string > RPOrigins;
+        std::vector<std::string> RPOrigins;
         // AttestationPreference sets the default attestation conveyance preferences.
         Protocol::ConveyancePreferenceType AttestationPreference;
         // AuthenticatorSelection sets the default authenticator selection options.
