@@ -286,10 +286,10 @@ namespace WebAuthN::WebAuthN {
         // the ownership of the credential being retrieved.
         //
         // Specification: §5.5. Options for Assertion Generation (https://www.w3.org/TR/webauthn/#dictionary-assertion-options)
-        template<size_t N>
+        template<size_t N = 0>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
-                   const LoginOptionHandlerType (&opts)[N]) noexcept {
+                   const LoginOptionHandlerType (&opts)[N] = {}) noexcept {
 
             auto credentials = user.GetWebAuthNCredentials();
 
@@ -307,9 +307,9 @@ namespace WebAuthN::WebAuthN {
         }
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
-        template<size_t N>
+        template<size_t N = 0>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N]) noexcept {
+        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = {}) noexcept {
 
             return _BeginLogin(std::nullopt, std::nullopt, opts);
         }
