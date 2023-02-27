@@ -553,6 +553,20 @@ namespace WebAuthN::Protocol {
 
         PublicKeyCredentialRequestOptionsType() noexcept = default;
 
+        PublicKeyCredentialRequestOptionsType(const URLEncodedBase64Type& challenge,
+            const std::optional<int>& timeout = std::nullopt,
+            const std::optional<std::string>& relyingPartyID = std::nullopt,
+            const std::optional<std::vector<CredentialDescriptorType>>& allowedCredentials = std::nullopt,
+            const std::optional<UserVerificationRequirementType>& userVerification = std::nullopt,
+            const std::optional<AuthenticationExtensionsType>& extensions = std::nullopt) noexcept : 
+            Challenge(challenge), 
+            Timeout(timeout),
+            RelyingPartyID(relyingPartyID), 
+            AllowedCredentials(allowedCredentials), 
+            UserVerification(userVerification),
+            Extensions(extensions) {
+        }
+
         PublicKeyCredentialRequestOptionsType(const json& j) :
             Challenge(j["challenge"].get<URLEncodedBase64Type>()) {
 

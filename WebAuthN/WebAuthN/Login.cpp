@@ -8,7 +8,7 @@
 
 #include "WebAuthN.hpp"
 #include "../Protocol/Challenge.ipp"
-#include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
+#include "../Protocol/Options.ipp"
 #include "../Util/Time.ipp"
 
 namespace WebAuthN::WebAuthN {
@@ -65,11 +65,12 @@ namespace WebAuthN::WebAuthN {
         Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
 
         auto assertion = Protocol::CredentialAssertionType{
-            Response: Protocol::PublicKeyCredentialRequestOptionsType{
-                Challenge:          challenge,
-                RelyingPartyID:     _config.RPID,
-                UserVerification:   _config.AuthenticatorSelection.UserVerification,
-                AllowedCredentials: allowedCredentials
+            Protocol::PublicKeyCredentialRequestOptionsType{
+                challenge,
+                std::nullopt,
+                _config.RPID,
+                allowedCredentials,
+                _config.AuthenticatorSelection.UserVerification
             }
         };
 
@@ -111,7 +112,7 @@ namespace WebAuthN::WebAuthN {
         auto parsedResponse = Protocol::ParseCredentialRequestResponse(response);   
 
         if (!parsedResponse) {
-            return parsedResponse;
+            return Protocol::unexpected(parsedResponse.error());
         }
 
         return ValidateLogin(user, sessionData, parsedResponse.value());
@@ -166,6 +167,7 @@ namespace WebAuthN::WebAuthN {
         // NON-NORMATIVE Prior Step: Verify that the allowCredentials for the session are owned by the user provided.
         auto userCredentials = user.GetWebAuthNCredentials();
         auto credentialFound = false;
+        auto parsedResponseRawID = parsedResponse.RawID;
 
         if (sessionData.AllowedCredentialIDs && !sessionData.AllowedCredentialIDs.value().empty()) {
 
@@ -182,7 +184,7 @@ namespace WebAuthN::WebAuthN {
 
             credentialFound = std::any_of(sessionData.AllowedCredentialIDs.value().cbegin(), 
                                           sessionData.AllowedCredentialIDs.value().cend(), 
-                                          [&parsedResponse](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponse.RawID; });
+                                          [&parsedResponseRawID](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponseRawID; });
 
             if (!credentialFound) {
                 return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own the credential returned"));
@@ -204,7 +206,7 @@ namespace WebAuthN::WebAuthN {
         // for your use case), look up the corresponding credential public key.
         auto credIter = std::find_if(userCredentials.begin(),
                                      userCredentials.end(),
-                                     [&parsedResponse](const std::vector<uint8_t>& userCredential) { return userCredential.ID == parsedResponse.RawID; });
+                                     [&parsedResponseRawID](const std::vector<uint8_t>& userCredential) { return userCredential == parsedResponseRawID; });
 
         credentialFound = credIter != userCredentials.end();
 
