@@ -10,6 +10,6 @@
 #define WEBAUTHN_HPP
 
 #include "Version.ipp"
-#include "WebAuthN/WebAuthN/WebAuthN.hpp"
+#include "WebAuthN/WebAuthN/WebAuthN.ipp"
 
 #endif /* WEBAUTHN_HPP */

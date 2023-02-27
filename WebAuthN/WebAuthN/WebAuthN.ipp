@@ -1,13 +1,13 @@
 //
-//  WebAuthN.hpp
+//  WebAuthN.ipp
 //  webauthn-cpp
 //
 //  Created by Flaviu Pasca on 02/23/23.
 //  flaviup on gmail com
 //
 
-#ifndef WEBAUTHN_WEBAUTHN_WEBAUTHN_HPP
-#define WEBAUTHN_WEBAUTHN_WEBAUTHN_HPP
+#ifndef WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
+#define WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
 
 #include <functional>
 #include "IUser.ipp"
@@ -655,4 +655,4 @@ namespace WebAuthN::WebAuthN {
 
 #pragma GCC visibility pop
 
-#endif /* WEBAUTHN_WEBAUTHN_WEBAUTHN_HPP */
+#endif /* WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP */
