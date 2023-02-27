@@ -163,7 +163,8 @@ namespace WebAuthN::WebAuthN {
             auto session = SessionDataType{
                 challenge,
                 user.GetWebAuthNID(),
-                "",
+                user.GetWebAuthNName(),
+                user.GetWebAuthNDisplayName(),
                 _config.Timeouts.Registration.Enforce ? Util::Time::Timestamp() + creation.Response.Timeout.value() : 0,
                 creation.Response.AuthenticatorSelection.value().UserVerification.value()
             };
@@ -323,7 +324,7 @@ namespace WebAuthN::WebAuthN {
                 allowedCredentials.push_back(credential.ToDescriptorType());
             }
 
-            return _BeginLogin(user.GetWebAuthNID(), allowedCredentials, opts);
+            return _BeginLogin(user.GetWebAuthNID(), user.GetWebAuthNName(), user.GetWebAuthNDisplayName(), allowedCredentials, opts);
         }
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
@@ -331,7 +332,7 @@ namespace WebAuthN::WebAuthN {
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
-            return _BeginLogin(std::nullopt, std::nullopt, opts);
+            return _BeginLogin(std::nullopt, std::nullopt, std::nullopt, std::nullopt, opts);
         }
 
         // FinishLogin takes the response from the client and validate it against the user credentials and stored session data.
@@ -520,6 +521,8 @@ namespace WebAuthN::WebAuthN {
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         _BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
+                    const std::optional<std::string>& userName, 
+                    const std::optional<std::string>& userDisplayName, 
                     const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
                     const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
     
@@ -566,7 +569,8 @@ namespace WebAuthN::WebAuthN {
             auto session = SessionDataType{
                 challenge,
                 userID,
-                "",
+                userName,
+                userDisplayName,
                 _config.Timeouts.Login.Enforce ? Util::Time::Timestamp() + assertion.Response.Timeout.value() : 0,
                 assertion.Response.UserVerification.value(),
                 assertion.Response.GetAllowedCredentialIDs(),
