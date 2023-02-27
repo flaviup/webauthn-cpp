@@ -68,7 +68,7 @@ namespace WebAuthN::WebAuthN {
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = RegistrationOptionHandlerType[]{}) noexcept;
+        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = {}) noexcept;
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
         // credentials and session data.
@@ -186,12 +186,12 @@ namespace WebAuthN::WebAuthN {
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
-                   const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
+                   const LoginOptionHandlerType (&opts)[N] = {}) noexcept;
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
         template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
+        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = {}) noexcept;
 
         // FinishLogin takes the response from the client and validate it against the user credentials and stored session data.
         Protocol::expected<CredentialType>
@@ -277,7 +277,7 @@ namespace WebAuthN::WebAuthN {
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         _BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
                     const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
-                    const LoginOptionHandlerType (&opts)[N] = LoginOptionHandlerType[]{}) noexcept;
+                    const LoginOptionHandlerType (&opts)[N] = {}) noexcept;
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.
         Protocol::expected<CredentialType>
         _ValidateLogin(const IUser& user, 

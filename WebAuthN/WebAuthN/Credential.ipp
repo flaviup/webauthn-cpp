@@ -34,7 +34,7 @@ namespace WebAuthN::WebAuthN {
     struct CredentialType {
 
         // ToDescriptorType converts the CredentialType into a Protocol::CredentialDescriptorType.
-        inline Protocol::CredentialDescriptorType ToDescriptorType() noexcept {
+        inline Protocol::CredentialDescriptorType ToDescriptorType() const noexcept {
 
             return Protocol::CredentialDescriptorType{
                 Protocol::PublicKeyCredentialType(),

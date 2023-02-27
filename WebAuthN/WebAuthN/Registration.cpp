@@ -64,30 +64,6 @@ namespace WebAuthN::WebAuthN {
                 }
             };
         }
-
-        // CreateCredential verifies a parsed response against the user's credentials and session data.
-        Protocol::expected<CredentialType>
-        WebAuthNType::_CreateCredential(const IUser& user,
-                                        const SessionDataType& sessionData, 
-                                        const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
-            
-            if (user.GetWebAuthNID() != sessionData.UserID) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
-            }
-
-            if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
-            }
-
-            auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
-            auto verificationResultError = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
-
-            if (verificationResultError) {
-                return Protocol::unexpected(verificationResultError.value());
-            }
-
-            return CredentialType::Create(parsedResponse);
-        }
     } // namespace
 
 #pragma GCC visibility pop
@@ -98,7 +74,7 @@ namespace WebAuthN::WebAuthN {
 
     template<size_t N>
     Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-    WebAuthNType::BeginRegistration(const IUser& user, const WebAuthNType::RegistrationOptionHandlerType (&opts)[N] = WebAuthNType::RegistrationOptionHandlerType[]{}) noexcept {
+    WebAuthNType::BeginRegistration(const IUser& user, const WebAuthNType::RegistrationOptionHandlerType (&opts)[N]) noexcept {
         
         auto validationResult = _config.Validate();
 
@@ -193,5 +169,29 @@ namespace WebAuthN::WebAuthN {
         }
 
         return _CreateCredential(user, sessionData, parsedResponse.value());
+    }
+
+    // CreateCredential verifies a parsed response against the user's credentials and session data.
+    Protocol::expected<CredentialType>
+    WebAuthNType::_CreateCredential(const IUser& user,
+                                    const SessionDataType& sessionData,
+                                    const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
+        
+        if (user.GetWebAuthNID() != sessionData.UserID) {
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
+        }
+
+        if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
+            return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
+        }
+
+        auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
+        auto verificationResultError = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
+
+        if (verificationResultError) {
+            return Protocol::unexpected(verificationResultError.value());
+        }
+
+        return CredentialType::Create(parsedResponse);
     }
 } // namespace WebAuthN::WebAuthN

@@ -20,7 +20,7 @@ namespace WebAuthN::WebAuthN {
     template<size_t N>
     Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
     WebAuthNType::BeginLogin(const IUser& user,
-                             const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
+                             const WebAuthNType::LoginOptionHandlerType (&opts)[N]) noexcept {
 
         auto credentials = user.GetWebAuthNCredentials();
 
@@ -31,7 +31,7 @@ namespace WebAuthN::WebAuthN {
         std::vector<Protocol::CredentialDescriptorType> allowedCredentials(credentials.size());
 
         for (const auto& credential : credentials) {
-            allowedCredentials.push_back(credential.Descriptor());
+            allowedCredentials.push_back(credential.ToDescriptorType());
         }
 
         return _BeginLogin(user.GetWebAuthNID(), allowedCredentials, opts);
@@ -39,7 +39,7 @@ namespace WebAuthN::WebAuthN {
 
     template<size_t N>
     Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-    WebAuthNType::BeginDiscoverableLogin(const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
+    WebAuthNType::BeginDiscoverableLogin(const WebAuthNType::LoginOptionHandlerType (&opts)[N]) noexcept {
 
         return _BeginLogin(std::nullopt, std::nullopt, opts);
     }
@@ -48,7 +48,7 @@ namespace WebAuthN::WebAuthN {
     Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
     WebAuthNType::_BeginLogin(const std::optional<std::vector<uint8_t>>& userID,
                               const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
-                              const WebAuthNType::LoginOptionHandlerType (&opts)[N] = WebAuthNType::LoginOptionHandlerType[]{}) noexcept {
+                              const WebAuthNType::LoginOptionHandlerType (&opts)[N]) noexcept {
 
         auto validationResult = _config.Validate();
 
@@ -94,7 +94,7 @@ namespace WebAuthN::WebAuthN {
             challenge,
             userID,
             "",
-            _config.Timeouts.Login.Enforce ? _Timestamp() + assertion.Response.Timeout.value() : 0,
+            _config.Timeouts.Login.Enforce ? Util::Time::Timestamp() + assertion.Response.Timeout.value() : 0,
             assertion.Response.UserVerification.value(),
             assertion.Response.GetAllowedCredentialIDs(),
             assertion.Response.Extensions.value()

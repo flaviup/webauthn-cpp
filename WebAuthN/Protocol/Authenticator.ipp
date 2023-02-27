@@ -578,6 +578,7 @@ namespace WebAuthN::Protocol {
         inline static expected<std::vector<uint8_t>> _UnmarshalCredentialPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
 
             auto m = WebAuthNCBOR::Unmarshal(keyBytes);
+
             if (!m) {
                 return unexpected(m.error());
             }
