@@ -62,8 +62,7 @@ namespace WebAuthN::WebAuthN {
         if (!challengeCreationResult) {
             return Protocol::unexpected(challengeCreationResult.error());
         }
-        Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
-
+        auto challenge = challengeCreationResult.value();
         auto assertion = Protocol::CredentialAssertionType{
             Protocol::PublicKeyCredentialRequestOptionsType{
                 challenge,
@@ -98,7 +97,7 @@ namespace WebAuthN::WebAuthN {
             _config.Timeouts.Login.Enforce ? Util::Time::Timestamp() + assertion.Response.Timeout.value() : 0,
             assertion.Response.UserVerification.value(),
             assertion.Response.GetAllowedCredentialIDs(),
-            assertion.Response.Extensions.value()
+            assertion.Response.Extensions
         };
 
         return std::make_pair(assertion, session);
@@ -138,7 +137,7 @@ namespace WebAuthN::WebAuthN {
     WebAuthNType::ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType handler, 
                                             const SessionDataType& sessionData, 
                                             const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
-        if (!sessionData.UserID.empty()) {
+        if (sessionData.UserID && !sessionData.UserID.value().empty()) {
             return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login"));
         }
 

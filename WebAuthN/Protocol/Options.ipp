@@ -231,7 +231,7 @@ namespace WebAuthN::Protocol {
         CredentialDescriptorType() noexcept = default;
 
         CredentialDescriptorType(const CredentialType& type,
-            const URLEncodedBase64Type& credentialID,
+            const std::vector<uint8_t>& credentialID,
             const std::optional<std::vector<AuthenticatorTransportType>>& transports,
             const std::string& attestationType
             ) noexcept : 
@@ -242,8 +242,10 @@ namespace WebAuthN::Protocol {
         }
 
         CredentialDescriptorType(const json& j) :
-            Type(j["type"].get<CredentialType>()),
-            CredentialID(j["id"].get<URLEncodedBase64Type>()) {
+            Type(j["type"].get<CredentialType>()) {
+            
+            auto id = j["id"].get<URLEncodedBase64Type>();
+            CredentialID = URLEncodedBase64_DecodeAsBinary(id).value();
 
             if (j.find("transports") != j.end()) {
                 Transports.emplace(j["transports"].get<std::vector<AuthenticatorTransportType>>());
@@ -261,7 +263,7 @@ namespace WebAuthN::Protocol {
         CredentialType Type;
 
         // CredentialID The ID of a credential to allow/disallow.
-        URLEncodedBase64Type CredentialID;
+        std::vector<uint8_t> CredentialID;
 
         // The authenticator transports that can be used.
         std::optional<std::vector<AuthenticatorTransportType>> Transports;
@@ -273,8 +275,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialDescriptorType& credentialDescriptor) {
 
         j = json{
-            { "type",       credentialDescriptor.Type },
-            { "id", credentialDescriptor.CredentialID }
+            { "type",                                        credentialDescriptor.Type },
+            { "id", URLEncodedBase64_Encode(credentialDescriptor.CredentialID).value() }
         };
 
         if (credentialDescriptor.Transports) {
@@ -285,7 +287,9 @@ namespace WebAuthN::Protocol {
     inline void from_json(const json& j, CredentialDescriptorType& credentialDescriptor) {
 
         j.at("type").get_to(credentialDescriptor.Type);
-        j.at("id").get_to(credentialDescriptor.CredentialID);
+
+        auto id = j["id"].get<URLEncodedBase64Type>();
+        credentialDescriptor.CredentialID = URLEncodedBase64_DecodeAsBinary(id).value();
 
         if (j.find("transports") != j.end()) {
             credentialDescriptor.Transports.emplace(j["transports"].get<std::vector<AuthenticatorTransportType>>());
@@ -598,10 +602,10 @@ namespace WebAuthN::Protocol {
         PublicKeyCredentialRequestOptionsType& operator =(const PublicKeyCredentialRequestOptionsType& other) noexcept = default;
         PublicKeyCredentialRequestOptionsType& operator =(PublicKeyCredentialRequestOptionsType&& other) noexcept = default;
 
-        inline std::vector<URLEncodedBase64Type> GetAllowedCredentialIDs() const noexcept {
+        inline std::vector<std::vector<uint8_t>> GetAllowedCredentialIDs() const noexcept {
 
             if (AllowedCredentials) {
-                std::vector<URLEncodedBase64Type> allowedCredentialIDs(AllowedCredentials.value().size());
+                std::vector<std::vector<uint8_t>> allowedCredentialIDs(AllowedCredentials.value().size());
 
                 for (const auto& credential : AllowedCredentials.value()) {
                     allowedCredentialIDs.push_back(credential.CredentialID);
@@ -610,7 +614,7 @@ namespace WebAuthN::Protocol {
                 return allowedCredentialIDs;
             }
 
-            return std::vector<URLEncodedBase64Type>(0);
+            return std::vector<std::vector<uint8_t>>(0);
         }
 
         URLEncodedBase64Type Challenge;

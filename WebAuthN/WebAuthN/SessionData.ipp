@@ -24,7 +24,7 @@ namespace WebAuthN::WebAuthN {
         SessionDataType() noexcept = default;
 
         SessionDataType(const std::string& challenge,
-            const std::vector<uint8_t>& userID,
+            const std::optional<std::vector<uint8_t>>& userID,
             const std::string& userDisplayName,
             const int64_t expires,
             const Protocol::UserVerificationRequirementType userVerification,
@@ -42,10 +42,13 @@ namespace WebAuthN::WebAuthN {
 
         SessionDataType(const json& j) :
             Challenge(j["challenge"].get<std::string>()),
-            UserID(j["user_id"].get<std::vector<uint8_t>>()),
             UserDisplayName(j["user_display_name"].get<std::string>()),
             Expires(j["expires"].get<int64_t>()),
             UserVerification(j["userVerification"].get<Protocol::UserVerificationRequirementType>()) {
+
+            if (j.find("user_id") != j.end()) {
+                UserID.emplace(j["user_id"].get<std::vector<uint8_t>>());
+            }
 
             if (j.find("allowed_credentials") != j.end()) {
                 AllowedCredentialIDs.emplace(j["allowed_credentials"].get<std::vector<std::vector<uint8_t>>>());
@@ -64,7 +67,7 @@ namespace WebAuthN::WebAuthN {
         SessionDataType& operator =(SessionDataType&& other) noexcept = default;
 
         std::string Challenge;
-        std::vector<uint8_t> UserID;
+        std::optional<std::vector<uint8_t>> UserID;
         std::string UserDisplayName;
         std::optional<std::vector<std::vector<uint8_t>>> AllowedCredentialIDs;
         int64_t Expires;
@@ -76,9 +79,12 @@ namespace WebAuthN::WebAuthN {
 
         j = json{
             { "challenge",               sessionData.Challenge },
-            { "user_id",                    sessionData.UserID },
             { "user_display_name", sessionData.UserDisplayName }
         };
+
+        if (sessionData.UserID) {
+            j["user_id"] = sessionData.UserID.value();
+        }
 
         if (sessionData.AllowedCredentialIDs) {
             j["allowed_credentials"] = sessionData.AllowedCredentialIDs.value();
@@ -95,10 +101,13 @@ namespace WebAuthN::WebAuthN {
     inline void from_json(const json& j, SessionDataType& sessionData) {
 
         j.at("challenge").get_to(sessionData.Challenge);
-        j.at("user_id").get_to(sessionData.UserID);
         j.at("user_display_name").get_to(sessionData.UserDisplayName);
         j.at("expires").get_to(sessionData.Expires);
         j.at("userVerification").get_to(sessionData.UserVerification);
+
+        if (j.find("user_id") != j.end()) {
+            sessionData.UserID.emplace(j["user_id"].get<std::vector<uint8_t>>());
+        }
 
         if (j.find("allowed_credentials") != j.end()) {
             sessionData.AllowedCredentialIDs.emplace(j["allowed_credentials"].get<std::vector<std::vector<uint8_t>>>());

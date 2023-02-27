@@ -11,7 +11,6 @@
 
 #include "Authenticator.ipp"
 #include "../Protocol/Credential.ipp"
-#include "../Util/Convert.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -38,7 +37,7 @@ namespace WebAuthN::WebAuthN {
 
             return Protocol::CredentialDescriptorType{
                 Protocol::PublicKeyCredentialType(),
-                Util::Convert::ToString(this->ID),
+                this->ID,
                 this->Transports,
                 this->AttestationType
             };
