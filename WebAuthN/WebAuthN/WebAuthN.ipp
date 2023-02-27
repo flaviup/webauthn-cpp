@@ -71,10 +71,20 @@ namespace WebAuthN::WebAuthN {
         //using RegistrationOptionHandlerType = void (*)(Protocol::PublicKeyCredentialCreationOptionsType&);
         using RegistrationOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialCreationOptionsType&)>;
 
+        inline static RegistrationOptionHandlerType WithDefaultRegistrationOptions() noexcept {
+
+            return [](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+            };
+        }
+
+        inline static const RegistrationOptionHandlerType DEFAULT_REGISTRATION_OPTIONS[]{
+            WithDefaultRegistrationOptions()
+        };
+
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
-        template<size_t N = 0>
+        template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
-        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = {}) noexcept {
+        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = DEFAULT_REGISTRATION_OPTIONS) noexcept {
 
             auto err = _config.Validate();
 
@@ -275,6 +285,16 @@ namespace WebAuthN::WebAuthN {
         //using LoginOptionHandlerType = void (*)(Protocol::PublicKeyCredentialRequestOptionsType&);
         using LoginOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialRequestOptionsType&)>;
 
+        inline static LoginOptionHandlerType WithDefaultLoginOptions() noexcept {
+
+            return [](Protocol::PublicKeyCredentialRequestOptionsType& cco) {
+            };
+        }
+
+        inline static const LoginOptionHandlerType DEFAULT_LOGIN_OPTIONS[]{
+            WithDefaultLoginOptions()
+        };
+
         // DiscoverableUserHandlerType returns a *User given the provided userHandle.
         //using DiscoverableUserHandlerType = Protocol::expected<IUser> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&);
         using DiscoverableUserHandlerType = std::function<Protocol::expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
@@ -286,10 +306,10 @@ namespace WebAuthN::WebAuthN {
         // the ownership of the credential being retrieved.
         //
         // Specification: §5.5. Options for Assertion Generation (https://www.w3.org/TR/webauthn/#dictionary-assertion-options)
-        template<size_t N = 0>
+        template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
-                   const LoginOptionHandlerType (&opts)[N] = {}) noexcept {
+                   const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             auto credentials = user.GetWebAuthNCredentials();
 
@@ -307,9 +327,9 @@ namespace WebAuthN::WebAuthN {
         }
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
-        template<size_t N = 0>
+        template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = {}) noexcept {
+        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             return _BeginLogin(std::nullopt, std::nullopt, opts);
         }
@@ -497,11 +517,11 @@ namespace WebAuthN::WebAuthN {
             return CredentialType::Create(parsedResponse);
         }
 
-        template<size_t N = 0>
+        template<size_t N>
         Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         _BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
                     const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
-                    const LoginOptionHandlerType (&opts)[N] = {}) noexcept {
+                    const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
     
             auto validationResult = _config.Validate();
 
