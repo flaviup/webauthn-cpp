@@ -30,9 +30,9 @@ project "webauthn-cpp"
 
     links {
         "cbor",
+        "crypto",
         "fmt",
         "icu",
-        "nlohmann-json",
         "sodium",
         "ssl",
         "uuid"
