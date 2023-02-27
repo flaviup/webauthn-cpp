@@ -154,7 +154,9 @@ namespace WebAuthN::Protocol {
             if (Type != ceremony) {
 
                 return ErrVerification().WithDetails("Error validating ceremony type")
-                                        .WithInfo(fmt::format("Expected Value: {}, Received: {}", ceremony, Type));
+                                        .WithInfo(fmt::format("Expected Value: {}, Received: {}",
+                                                              json(ceremony).get<std::string>(),
+                                                              json(Type).get<std::string>()));
             }
 
             // Registration Step 4. Verify that the value of Challenge matches the challenge
@@ -187,7 +189,9 @@ namespace WebAuthN::Protocol {
             if (!found) {
 
                 return ErrVerification().WithDetails("Error validating origin")
-                                        .WithInfo(fmt::format("Expected Values: {}, Received: {}", rpOrigins, fqOrigin));
+                                        .WithInfo(fmt::format("Expected Values: {}, Received: {}",
+                                                              fmt::join(rpOrigins, ", "),
+                                                              fqOrigin));
             }
 
             // Registration Step 6 and Assertion Step 10. Verify that the value of C.tokenBinding.status
@@ -206,7 +210,8 @@ namespace WebAuthN::Protocol {
                     TokenBinding.value().Status != TokenBindingStatusType::NotSupported) {
 
                     return ErrParsingData().WithDetails("Error decoding clientData, token binding present with invalid status")
-                                           .WithInfo(fmt::format("Got: {}", TokenBinding.value().Status));
+                                           .WithInfo(fmt::format("Got: {}",
+                                                                 json(TokenBinding.value().Status).get<std::string>()));
                 }
             }
 

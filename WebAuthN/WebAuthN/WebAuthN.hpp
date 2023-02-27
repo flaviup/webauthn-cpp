@@ -43,11 +43,11 @@ namespace WebAuthN::WebAuthN {
          // New creates a new WebAuthNType object given the proper config.
         static inline Protocol::expected<WebAuthNType> New(const ConfigType& config) noexcept {
 
-            auto validationResult = config.Validate();
+            auto err = config.Validate();
 
-            if (validationResult) {
+            if (err) {
 
-                return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
+                return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
             }
 
             return WebAuthNType(config);
@@ -174,7 +174,7 @@ namespace WebAuthN::WebAuthN {
 
         // DiscoverableUserHandlerType returns a *User given the provided userHandle.
         //using DiscoverableUserHandlerType = Protocol::expected<IUser> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&);
-        using DiscoverableUserHandlerType = std::function<Protocol::expected<IUser>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
+        using DiscoverableUserHandlerType = std::function<Protocol::expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
 
         // BeginLogin creates the Protocol::CredentialAssertionType data payload that should be sent to the user agent for beginning
         // the login/assertion process. The format of this data can be seen in §5.5 of the WebAuthn specification. These default

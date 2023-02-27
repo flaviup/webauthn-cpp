@@ -509,7 +509,9 @@ namespace WebAuthN::Protocol {
             // Verify that the RP ID hash in authData is indeed the SHA-256
             // hash of the RP ID expected by the RP.
             if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
-                return ErrVerification().WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}", RPIDHash, rpIdHash));
+                return ErrVerification().WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}",
+                                                              fmt::join(RPIDHash, ", "),
+                                                              fmt::join(rpIdHash, ", ")));
             }
 
             // Registration Step 10 & Assertion Step 12
@@ -567,7 +569,7 @@ namespace WebAuthN::Protocol {
 
             auto data = _UnmarshalCredentialPublicKey(lastChunk);
             if (!data) {
-                return ErrBadRequest().WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", data.error()));
+                return ErrBadRequest().WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", std::string(data.error())));
             }
             AttData.CredentialPublicKey = data.value();
 

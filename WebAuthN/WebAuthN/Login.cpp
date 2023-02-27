@@ -147,16 +147,16 @@ namespace WebAuthN::WebAuthN {
 
         auto handlerResult = handler(parsedResponse.RawID, parsedResponse.Response.UserHandle);
 
-        if (!handlerResult) {
+        if (!handlerResult || handlerResult.value() == nullptr) {
             return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
         }
 
-        return _ValidateLogin(handlerResult.value(), sessionData, parsedResponse);
+        return _ValidateLogin(*handlerResult.value(), sessionData, parsedResponse);
     }
 
     Protocol::expected<CredentialType>
-    WebAuthNType::_ValidateLogin(const IUser& user, 
-                                 const SessionDataType& sessionData, 
+    WebAuthNType::_ValidateLogin(const IUser& user,
+                                 const SessionDataType& sessionData,
                                  const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
         // Step 1. If the allowCredentials option was given when this authentication ceremony was initiated,

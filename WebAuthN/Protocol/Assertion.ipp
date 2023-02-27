@@ -228,7 +228,9 @@ namespace WebAuthN::Protocol {
             }
 
             if (json(credentialAssertionResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo(fmt::format("Type not {}", json(CredentialTypeType::PublicKey))));
+                return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion")
+                                                 .WithInfo(fmt::format("Type not {}",
+                                                                       json(CredentialTypeType::PublicKey).get<std::string>())));
             }
 
             auto responseParseResult = credentialAssertionResponse.AssertionResponse.Parse();
@@ -329,7 +331,7 @@ namespace WebAuthN::Protocol {
             }
 
             if (err) {
-                return ErrAssertionSignature().WithDetails(fmt::format("Error parsing the assertion public key: {}", err.value()));
+                return ErrAssertionSignature().WithDetails(fmt::format("Error parsing the assertion public key: {}", std::string(err.value())));
             }
 
             auto errSig = WebAuthNCOSE::VerifySignature(key, sigData, Response.Signature);

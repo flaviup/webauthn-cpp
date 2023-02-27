@@ -344,7 +344,9 @@ namespace WebAuthN::Protocol {
             }
 
             if (json(credentialCreationResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(fmt::format("Type not {}", json(CredentialTypeType::PublicKey))));
+                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration")
+                                                 .WithInfo(fmt::format("Type not {}",
+                                                                       json(CredentialTypeType::PublicKey).get<std::string>())));
             }
 
             auto responseParseResult = credentialCreationResponse.AttestationResponse.Parse();

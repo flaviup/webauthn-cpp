@@ -134,7 +134,8 @@ namespace WebAuthN::Protocol {
             uuid_parse(reinterpret_cast<const char*>(AuthData.AttData.AAGUID.data()), aaguid);
             
             if (uuid_parse(reinterpret_cast<const char*>(AuthData.AttData.AAGUID.data()), aaguid) != 0) {
-                return ErrAttestationFormat().WithInfo(fmt::format("Attestation AAGUID could not be parsed: {}", AuthData.AttData.AAGUID));
+                return ErrAttestationFormat().WithInfo(fmt::format("Attestation AAGUID could not be parsed: {}",
+                                                                   fmt::join(AuthData.AttData.AAGUID, ", ")));
             }
             auto metaIter = Metadata::METADATA.find(aaguid);
 
@@ -302,7 +303,7 @@ namespace WebAuthN::Protocol {
             // the attestation statement attStmt.
             auto err = attestationObject.AuthData.Unmarshal(attestationObject.RawAuthData);
             if (err) {
-                return unexpected(fmt::format("error decoding auth data: {}", err));
+                return unexpected(fmt::format("error decoding auth data: {}", std::string(err.value())));
             }
 
             if (!HasAttestedCredentialData(attestationObject.AuthData.Flags)) {
