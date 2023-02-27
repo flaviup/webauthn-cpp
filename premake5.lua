@@ -69,6 +69,6 @@ project "webauthn-cpp"
 
     filter { "system:macosx" }
         links {
-            "icuuc"
+            "icuuc",
             "Cocoa.framework"
         }
