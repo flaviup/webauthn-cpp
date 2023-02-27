@@ -27,6 +27,18 @@ namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
 
+    // Attestation Registry
+
+    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, json::object_t>> (*)(const struct AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
+    inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
+
+    // RegisterAttestationFormat is a function to register attestation formats with the library. Generally using one of the
+    // locally registered attestation formats is sufficient.
+    inline void RegisterAttestationFormat(const std::string& format, AttestationFormatValidationHandlerType handler) {
+
+        ATTESTATION_REGISTRY[format] = handler;
+    }
+
     // Structs
 
     // AttestationObjectType is the raw attestationObject.
@@ -348,18 +360,6 @@ namespace WebAuthN::Protocol {
         if (j.find("transports") != j.end()) {
             authenticatorAttestationResponse.Transports.emplace(j["transports"].get<std::vector<std::string>>());
         }
-    }
-
-    // Attestation Registry
-
-    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, json::object_t>> (*)(const AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
-    inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
-
-    // RegisterAttestationFormat is a function to register attestation formats with the library. Generally using one of the
-    // locally registered attestation formats is sufficient.
-    inline void RegisterAttestationFormat(const std::string& format, AttestationFormatValidationHandlerType handler) {
-
-        ATTESTATION_REGISTRY[format] = handler;
     }
 } // namespace WebAuthN::Protocol
 

@@ -16,6 +16,7 @@
 #include <optional>
 #include <nlohmann/json.hpp>
 #include "../Core.ipp"
+#include "../../Util/Crypto.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -217,17 +218,17 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         std::string name;
         HasherHandlerType hasher;
     } SIGNATURE_ALGORITHM_DETAILS[] {
-        { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA",   crypto.SHA1.New },
-        { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA", crypto.SHA256.New },
-        { SignatureAlgorithmType::SHA384WithRSA,             COSEAlgorithmIdentifierType::AlgRS384,    "SHA384-RSA", crypto.SHA384.New },
-        { SignatureAlgorithmType::SHA512WithRSA,             COSEAlgorithmIdentifierType::AlgRS512,    "SHA512-RSA", crypto.SHA512.New },
-        { SignatureAlgorithmType::SHA256WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS256, "SHA256-RSAPSS", crypto.SHA256.New },
-        { SignatureAlgorithmType::SHA384WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS384, "SHA384-RSAPSS", crypto.SHA384.New },
-        { SignatureAlgorithmType::SHA512WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS512, "SHA512-RSAPSS", crypto.SHA512.New },
-        { SignatureAlgorithmType::ECDSAWithSHA256,           COSEAlgorithmIdentifierType::AlgES256,  "ECDSA-SHA256", crypto.SHA256.New },
-        { SignatureAlgorithmType::ECDSAWithSHA384,           COSEAlgorithmIdentifierType::AlgES384,  "ECDSA-SHA384", crypto.SHA384.New },
-        { SignatureAlgorithmType::ECDSAWithSHA512,           COSEAlgorithmIdentifierType::AlgES512,  "ECDSA-SHA512", crypto.SHA512.New },
-        { SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA,         "EdDSA", crypto.SHA512.New }
+        { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA",   Util::Crypto::SHA1 },
+        { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA", Util::Crypto::SHA256 },
+        { SignatureAlgorithmType::SHA384WithRSA,             COSEAlgorithmIdentifierType::AlgRS384,    "SHA384-RSA", Util::Crypto::SHA384 },
+        { SignatureAlgorithmType::SHA512WithRSA,             COSEAlgorithmIdentifierType::AlgRS512,    "SHA512-RSA", Util::Crypto::SHA512 },
+        { SignatureAlgorithmType::SHA256WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS256, "SHA256-RSAPSS", Util::Crypto::SHA256 },
+        { SignatureAlgorithmType::SHA384WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS384, "SHA384-RSAPSS", Util::Crypto::SHA384 },
+        { SignatureAlgorithmType::SHA512WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS512, "SHA512-RSAPSS", Util::Crypto::SHA512 },
+        { SignatureAlgorithmType::ECDSAWithSHA256,           COSEAlgorithmIdentifierType::AlgES256,  "ECDSA-SHA256", Util::Crypto::SHA256 },
+        { SignatureAlgorithmType::ECDSAWithSHA384,           COSEAlgorithmIdentifierType::AlgES384,  "ECDSA-SHA384", Util::Crypto::SHA384 },
+        { SignatureAlgorithmType::ECDSAWithSHA512,           COSEAlgorithmIdentifierType::AlgES512,  "ECDSA-SHA512", Util::Crypto::SHA512 },
+        { SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA,         "EdDSA", Util::Crypto::SHA512 }
     };
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated
@@ -586,8 +587,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }
 
     // ParsePublicKey figures out what kind of COSE material was provided and create the data for the new key.
-    inline expected<PublicKeyDataType&> ParsePublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
-        auto pk = PublicKeyDataType{};
+    inline expected<PublicKeyDataType> ParsePublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
+        PublicKeyDataType pk{};
         return pk;
         /*WebAuthNCBOR::Unmarshal(keyBytes, &pk);
 
@@ -619,7 +620,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // ParseFIDOPublicKey is only used when the appID extension is configured by the assertion response.
     inline expected<EC2PublicKeyDataType> ParseFIDOPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
-        return true;
+        EC2PublicKeyDataType ec2Pk{};
+        return ec2Pk;
         /*x, y := elliptic.Unmarshal(elliptic.P256(), keyBytes)
 
         if x == nil || y == nil {

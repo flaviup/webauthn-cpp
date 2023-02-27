@@ -39,7 +39,6 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
     // (https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#message-encoding)
     inline expected<json> JsonUnmarshal(const std::vector<uint8_t>& data) {
 
-        json v;
         //ctap2CBORDecMode.Unmarshal(data, v);
 
         return json::from_cbor(data);
@@ -68,13 +67,14 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
         TagsMd:          cbor.TagsForbidden,
     }.DecMode()
 
-    var ctap2CBOREncMode, _ = cbor.CTAP2EncOptions().EncMode()
+    var ctap2CBOREncMode, _ = cbor.CTAP2EncOptions().EncMode()*/
 
     // Unmarshal parses the CBOR-encoded data into the value pointed to by v
     // following the CTAP2 canonical CBOR encoding form.
     // (https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#message-encoding)
     inline expected<std::any> Unmarshal(const std::vector<uint8_t>& data) {
-        return ctap2CBORDecMode.Unmarshal(data, v);
+        //return ctap2CBORDecMode.Unmarshal(data, v);
+        return json::from_cbor(data);
     }
 
     // Marshal encodes the value pointed to by v
@@ -82,8 +82,10 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
     // (https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#message-encoding)
     inline expected<std::vector<uint8_t>> Marshal(std::any& v) {
         
-        return ctap2CBOREncMode.Marshal(v);
-    }*/
+        //return ctap2CBOREncMode.Marshal(v);
+        auto val = json::to_cbor(v);
+        return val;
+    }
 } // namespace WebAuthN::Protocol::WebAuthNCBOR
 
 #pragma GCC visibility pop

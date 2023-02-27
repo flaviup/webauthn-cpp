@@ -13,7 +13,7 @@
 #include <fmt/format.h>
 #include "Core.ipp"
 #include "WebAuthNCBOR/WebAuthNCBOR.ipp"
-#include "Util/Endianness.ipp"
+#include "../Util/Endianness.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -233,12 +233,12 @@ namespace WebAuthN::Protocol {
         return static_cast<enum AuthenticatorFlagsType>(static_cast<uint8_t>(selfValue) & static_cast<uint8_t>(inValue));
     }
 
-    inline constexpr enum AuthenticatorFlagsType& operator |=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
+    inline enum AuthenticatorFlagsType& operator |=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
 
         return reinterpret_cast<enum AuthenticatorFlagsType&>(reinterpret_cast<uint8_t&>(selfValue) |= static_cast<uint8_t>(inValue));
     }
 
-    inline constexpr enum AuthenticatorFlagsType& operator &=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
+    inline enum AuthenticatorFlagsType& operator &=(enum AuthenticatorFlagsType& selfValue, const enum AuthenticatorFlagsType inValue) noexcept {
 
         return reinterpret_cast<enum AuthenticatorFlagsType&>(reinterpret_cast<uint8_t&>(selfValue) &= static_cast<uint8_t>(inValue));
     }
@@ -329,6 +329,46 @@ namespace WebAuthN::Protocol {
     }
 
     // Structs
+
+    struct AttestedCredentialDataType {
+
+        AttestedCredentialDataType() noexcept = default;
+
+        AttestedCredentialDataType(const json& j) :
+            AAGUID(j["aaguid"].get<std::vector<uint8_t>>()),
+            CredentialID(j["credential_id"].get<std::vector<uint8_t>>()),
+            CredentialPublicKey(j["public_key"].get<std::vector<uint8_t>>()) {
+        }
+
+        AttestedCredentialDataType(const AttestedCredentialDataType& attestedCredentialData) noexcept = default;
+        AttestedCredentialDataType(AttestedCredentialDataType&& attestedCredentialData) noexcept = default;
+        ~AttestedCredentialDataType() noexcept = default;
+
+        AttestedCredentialDataType& operator =(const AttestedCredentialDataType& other) noexcept = default;
+        AttestedCredentialDataType& operator =(AttestedCredentialDataType&& other) noexcept = default;
+
+        std::vector<uint8_t> AAGUID;
+        std::vector<uint8_t> CredentialID;
+
+        // The raw credential public key bytes received from the attestation data.
+        std::vector<uint8_t> CredentialPublicKey;
+    };
+
+    inline void to_json(json& j, const AttestedCredentialDataType& attestedCredentialData) {
+
+        j = json{
+            { "aaguid",                  attestedCredentialData.AAGUID },
+            { "credential_id",     attestedCredentialData.CredentialID },
+            { "public_key", attestedCredentialData.CredentialPublicKey }
+        };
+    }
+
+    inline void from_json(const json& j, AttestedCredentialDataType& attestedCredentialData) {
+
+        j.at("aaguid").get_to(attestedCredentialData.AAGUID);
+        j.at("credential_id").get_to(attestedCredentialData.CredentialID);
+        j.at("public_key").get_to(attestedCredentialData.CredentialPublicKey);
+    }
 
     // AuthenticatorResponseType represents the IDL with the same name.
     //
@@ -564,46 +604,6 @@ namespace WebAuthN::Protocol {
         j.at("sign_count").get_to(authenticatorData.Counter);
         j.at("att_data").get_to(authenticatorData.AttData);
         j.at("ext_data").get_to(authenticatorData.ExtData);
-    }
-
-    struct AttestedCredentialDataType {
-
-        AttestedCredentialDataType() noexcept = default;
-
-        AttestedCredentialDataType(const json& j) :
-            AAGUID(j["aaguid"].get<std::vector<uint8_t>>()),
-            CredentialID(j["credential_id"].get<std::vector<uint8_t>>()),
-            CredentialPublicKey(j["public_key"].get<std::vector<uint8_t>>()) {
-        }
-
-        AttestedCredentialDataType(const AttestedCredentialDataType& attestedCredentialData) noexcept = default;
-        AttestedCredentialDataType(AttestedCredentialDataType&& attestedCredentialData) noexcept = default;
-        ~AttestedCredentialDataType() noexcept = default;
-
-        AttestedCredentialDataType& operator =(const AttestedCredentialDataType& other) noexcept = default;
-        AttestedCredentialDataType& operator =(AttestedCredentialDataType&& other) noexcept = default;
-
-        std::vector<uint8_t> AAGUID;
-        std::vector<uint8_t> CredentialID;
-
-        // The raw credential public key bytes received from the attestation data.
-        std::vector<uint8_t> CredentialPublicKey;
-    };
-
-    inline void to_json(json& j, const AttestedCredentialDataType& attestedCredentialData) {
-
-        j = json{
-            { "aaguid",                  attestedCredentialData.AAGUID },
-            { "credential_id",     attestedCredentialData.CredentialID },
-            { "public_key", attestedCredentialData.CredentialPublicKey }
-        };
-    }
-
-    inline void from_json(const json& j, AttestedCredentialDataType& attestedCredentialData) {
-
-        j.at("aaguid").get_to(attestedCredentialData.AAGUID);
-        j.at("credential_id").get_to(attestedCredentialData.CredentialID);
-        j.at("public_key").get_to(attestedCredentialData.CredentialPublicKey);
     }
 
     // Functions

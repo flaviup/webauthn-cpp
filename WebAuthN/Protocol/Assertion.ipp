@@ -305,6 +305,8 @@ namespace WebAuthN::Protocol {
 
             // If the Session Data does not contain the appID extension or it wasn't reported as used by the Client/RP then we
             // use the standard CTAP2 public key parser.
+            std::vector<uint8_t> data{};
+            std::any key;
 
             if (appID.empty()) {
 
@@ -312,6 +314,8 @@ namespace WebAuthN::Protocol {
 
                 if (!result) {
                     err = result.error();
+                } else {
+                    key = result.value();
                 }
             } else {
 
@@ -319,6 +323,8 @@ namespace WebAuthN::Protocol {
 
                 if (!result) {
                     err = result.error();
+                } else {
+                    key = result.value();
                 }
             }
 
@@ -326,10 +332,10 @@ namespace WebAuthN::Protocol {
                 return ErrAssertionSignature().WithDetails(fmt::format("Error parsing the assertion public key: {}", err.value()));
             }
 
-            err = WebAuthNCOSE::VerifySignature(result.value(), sigData, Response.Signature);
+            auto errSig = WebAuthNCOSE::VerifySignature(key, sigData, Response.Signature);
 
-            if (err) {
-                return ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", err.value()));
+            if (errSig) {
+                return ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", errSig.value()));
             }
 
             return std::nullopt;

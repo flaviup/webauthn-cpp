@@ -14,13 +14,27 @@
 #include <vector>
 #include <sodium.h>
 
-#include <openssl/asn1.h>>
+#include <openssl/asn1.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 
 #pragma GCC visibility push(default)
 
 namespace WebAuthN::Util::Crypto {
+
+    std::vector<uint8_t> SHA1(const std::string& str) {
+
+        const constexpr auto HASH_SIZE_BYTES = 20U;
+        unsigned char out[HASH_SIZE_BYTES];
+
+        crypto_generichash(out,
+                           HASH_SIZE_BYTES,
+                           reinterpret_cast<const unsigned char*>(str.data()), str.size(),
+                           nullptr, 
+                           0);
+
+        return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
+    }
 
     std::vector<uint8_t> SHA256(const std::string& str) {
 
@@ -29,6 +43,29 @@ namespace WebAuthN::Util::Crypto {
 
         return std::vector<uint8_t>(out, out + crypto_hash_sha256_BYTES);
     }
+
+    std::vector<uint8_t> SHA384(const std::string& str) {
+
+        const constexpr auto HASH_SIZE_BYTES = 48U;
+        unsigned char out[HASH_SIZE_BYTES];
+
+        crypto_generichash(out,
+                           HASH_SIZE_BYTES,
+                           reinterpret_cast<const unsigned char*>(str.data()), str.size(),
+                           nullptr, 
+                           0);
+
+        return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
+    }
+
+    std::vector<uint8_t> SHA512(const std::string& str) {
+
+        unsigned char out[crypto_hash_sha512_BYTES];
+        crypto_hash_sha512(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
+
+        return std::vector<uint8_t>(out, out + crypto_hash_sha512_BYTES);
+    }
+
 
 #pragma GCC visibility push(hidden)
 

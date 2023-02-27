@@ -11,7 +11,7 @@
 
 #include "Core.ipp"
 #include "Attestation.ipp"
-#include "Client.ipp"
+#include "Options.ipp"
 #include "../Util/Crypto.ipp"
 
 #pragma GCC visibility push(default)
