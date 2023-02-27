@@ -38,28 +38,28 @@ namespace WebAuthN::WebAuthN {
         // It's recommended this value is completely random and uses the entire 64 bytes.
         //
         // Specification: §5.4.3. User Account Parameters for Credential Generation (https://w3c.github.io/webauthn/#dom-publickeycredentialuserentity-id)
-        virtual const std::vector<uint8_t>& GetWebAuthNID() const noexcept = 0;
+        virtual std::vector<uint8_t> GetWebAuthNID() const noexcept = 0;
 
         // GetWebAuthNName provides the name attribute of the user account during registration and is a human-palatable name for the user
         // account, intended only for display. For example, "Alex Müller" or "田中倫". The Relying Party SHOULD let the user
         // choose this, and SHOULD NOT restrict the choice more than necessary.
         //
         // Specification: §5.4.3. User Account Parameters for Credential Generation (https://w3c.github.io/webauthn/#dictdef-publickeycredentialuserentity)
-        virtual const std::string& GetWebAuthNName() const noexcept = 0;
+        virtual std::string GetWebAuthNName() const noexcept = 0;
 
         // GetWebAuthNDisplayName provides the name attribute of the user account during registration and is a human-palatable
         // name for the user account, intended only for display. For example, "Alex Müller" or "田中倫". The Relying Party
         // SHOULD let the user choose this, and SHOULD NOT restrict the choice more than necessary.
         //
         // Specification: §5.4.3. User Account Parameters for Credential Generation (https://www.w3.org/TR/webauthn/#dom-publickeycredentialuserentity-displayname)
-        virtual const std::string& GetWebAuthNDisplayName() const noexcept = 0;
+        virtual std::string GetWebAuthNDisplayName() const noexcept = 0;
 
         // GetWebAuthNCredentials provides the list of Credential objects owned by the user.
-        virtual const std::vector<CredentialType>& GetWebAuthNCredentials() const noexcept = 0;
+        virtual std::vector<CredentialType> GetWebAuthNCredentials() const noexcept = 0;
 
         // GetWebAuthNIcon is a deprecated option.
         // Deprecated: this has been removed from the specification recommendation. Suggest a blank string.
-        virtual const std::string& GetWebAuthNIcon() const noexcept = 0;
+        virtual std::string GetWebAuthNIcon() const noexcept = 0;
     };
 } // namespace WebAuthN::WebAuthN
 
