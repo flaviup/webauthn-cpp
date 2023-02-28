@@ -404,9 +404,9 @@ namespace WebAuthN::WebAuthN {
         // Specification: §5.4.4. Authenticator Selection Criteria (https://www.w3.org/TR/webauthn/#dom-authenticatorselectioncriteria-userverification)
         inline static LoginOptionHandlerType WithAllowedCredentials(const std::vector<Protocol::CredentialDescriptorType>& allowList) noexcept {
 
-            return [&allowList](Protocol::PublicKeyCredentialRequestOptionsType& pkcro) {
+            return [&allowList](Protocol::PublicKeyCredentialRequestOptionsType& cro) {
 
-                pkcro.AllowedCredentials = allowList;
+                cro.AllowedCredentials = allowList;
             };
         }
 
@@ -415,18 +415,18 @@ namespace WebAuthN::WebAuthN {
         // Specification: §5.4.4. Authenticator Selection Criteria (https://www.w3.org/TR/webauthn/#dom-authenticatorselectioncriteria-userverification)
         inline static LoginOptionHandlerType WithUserVerification(const Protocol::UserVerificationRequirementType& userVerification) noexcept {
 
-            return [&userVerification](Protocol::PublicKeyCredentialRequestOptionsType& pkcro) {
+            return [&userVerification](Protocol::PublicKeyCredentialRequestOptionsType& cro) {
 
-                pkcro.UserVerification = userVerification;
+                cro.UserVerification = userVerification;
             };
         }
 
         // WithAssertionExtensions adjusts the requested extensions.
         inline static LoginOptionHandlerType WithAssertionExtensions(const Protocol::AuthenticationExtensionsType& extensions) noexcept {
 
-            return [&extensions](Protocol::PublicKeyCredentialRequestOptionsType& pkcro) {
+            return [&extensions](Protocol::PublicKeyCredentialRequestOptionsType& cro) {
 
-                pkcro.Extensions = extensions;
+                cro.Extensions = extensions;
             };
         }
 
@@ -434,18 +434,18 @@ namespace WebAuthN::WebAuthN {
         // with the type `fido-u2f`.
         inline static LoginOptionHandlerType WithAppIdExtension(const std::string& appid) noexcept {
 
-            return [&appid](Protocol::PublicKeyCredentialRequestOptionsType& pkcro) {
+            return [&appid](Protocol::PublicKeyCredentialRequestOptionsType& cro) {
 
-                if (!pkcro.AllowedCredentials) return;
+                if (!cro.AllowedCredentials) return;
 
-                for (const auto& credential : pkcro.AllowedCredentials.value()) {
+                for (const auto& credential : cro.AllowedCredentials.value()) {
 
                     if (credential.AttestationType == Protocol::CREDENTIAL_TYPE_FIDO_U2F) {
                         
-                        if (!pkcro.Extensions) {
-                            pkcro.Extensions = Protocol::AuthenticationExtensionsType{};
+                        if (!cro.Extensions) {
+                            cro.Extensions = Protocol::AuthenticationExtensionsType{};
                         }
-                        pkcro.Extensions.value()[Protocol::EXTENSION_APPID] = appid;
+                        cro.Extensions.value()[Protocol::EXTENSION_APPID] = appid;
                     }
                 }
             };
