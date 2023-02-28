@@ -20,10 +20,10 @@
 namespace WebAuthN::Protocol {
 
     // CHALLENGE_LENGTH - Length of bytes to generate for a challenge.
-    inline constexpr const size_t CHALLENGE_LENGTH = 37;
+    inline constexpr const size_t CHALLENGE_LENGTH = 33;
 
     // CreateChallenge creates a new challenge that should be signed and returned by the authenticator. The spec recommends
-    // using at least 16 bytes with 100 bits of entropy. We use 37 bytes.
+    // using at least 16 bytes with 100 bits of entropy. We use 33 bytes.
     inline expected<URLEncodedBase64Type> CreateChallenge() noexcept {
         
         unsigned char challenge[CHALLENGE_LENGTH]{0};
