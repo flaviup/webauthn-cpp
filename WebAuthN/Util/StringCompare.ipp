@@ -12,6 +12,7 @@
 #define UCHAR_TYPE char16_t
 
 #include <cassert>
+#include <sodium.h>
 #include <unicode/uchar.h>
 #include <unicode/ustring.h>
 #include "Convert.ipp"
@@ -38,7 +39,7 @@ namespace WebAuthN::Util::StringCompare {
 
         assert(s1.size() == s2.size());
         
-        volatile char c = 0;
+        /*volatile char c = 0;
         volatile auto n = s1.size();
         volatile const char* p1 = s1.data();
         volatile const char* p2 = s2.data();
@@ -47,7 +48,8 @@ namespace WebAuthN::Util::StringCompare {
             c = c | (p1[i] ^ p2[i]);
         }
 
-        return (c == 0);
+        return (c == 0);*/
+        return s1.empty() || (sodium_memcmp(s1.data(), s2.data(), s1.size()) == 0);
     }
 } // namespace WebAuthN::Util::StringCompare
 

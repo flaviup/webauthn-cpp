@@ -9,8 +9,8 @@
 #ifndef WEBAUTHN_PROTOCOL_BASE64_IPP
 #define WEBAUTHN_PROTOCOL_BASE64_IPP
 
-#include <string>
-#include "../../cpp-base64/base64.h"
+#include <sodium.h>
+//#include "../../cpp-base64/base64.h"
 #include "Core.ipp"
 
 #pragma GCC visibility push(default)
@@ -21,12 +21,20 @@ namespace WebAuthN::Protocol {
 
     inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const unsigned char* str, size_t length) noexcept {
 
-        try {
+        /*try {
 
             return base64_encode(str, length, true);
         } catch (const std::exception& e) {
             return unexpected(ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding."));
-        }
+        }*/
+
+        constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+        const auto encodedLength = sodium_base64_encoded_len(length, encodingVariant) * 2;
+        char encodedString[encodedLength];
+        sodium_memzero(encodedString, encodedLength);
+        sodium_bin2base64(encodedString, encodedLength, str, length, encodingVariant);
+        
+        return std::string(encodedString);
     }
 
     inline expected<URLEncodedBase64Type> URLEncodedBase64_Encode(const char* str) noexcept {
@@ -46,23 +54,53 @@ namespace WebAuthN::Protocol {
 
     inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded) noexcept {
 
-        try {
+        /*try {
 
             return base64_decode(encoded, true);
         } catch (const std::exception& e) {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+        }*/
+
+        constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+        const size_t decodedMaxLength = encoded.size() * 4 / 3 + 2;
+        size_t decodedLength = 0;
+        unsigned char decodedData[decodedMaxLength];
+        sodium_memzero(decodedData, decodedMaxLength);
+
+        if (sodium_base642bin(decodedData, decodedMaxLength, 
+                              encoded.data(), encoded.size(),
+                              nullptr, &decodedLength,
+                              nullptr, encodingVariant) != 0) {
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }
+
+        return std::string(reinterpret_cast<const char*>(decodedData));
     }
 
     inline expected<std::vector<uint8_t>> URLEncodedBase64_DecodeAsBinary(const URLEncodedBase64Type& encoded) noexcept {
 
-        try {
+        /*try {
 
             auto decodedStr = base64_decode(encoded, true);
             return std::vector<uint8_t>(decodedStr.begin(), decodedStr.end());
         } catch (const std::exception& e) {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+        }*/
+
+        constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+        const size_t decodedMaxLength = encoded.size() * 4 / 3 + 2;
+        size_t decodedLength = 0;
+        unsigned char decodedData[decodedMaxLength];
+        sodium_memzero(decodedData, decodedMaxLength);
+
+        if (sodium_base642bin(decodedData, decodedMaxLength, 
+                              encoded.data(), encoded.size(),
+                              nullptr, &decodedLength,
+                              nullptr, encodingVariant) != 0) {
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }
+
+        return std::vector<uint8_t>(decodedData, decodedData + decodedLength);
     }
 } // namespace WebAuthN::Protocol
 
