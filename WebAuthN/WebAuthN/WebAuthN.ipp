@@ -217,7 +217,7 @@ namespace WebAuthN::WebAuthN {
         // credential.
         inline static RegistrationOptionHandlerType WithConveyancePreference(const Protocol::ConveyancePreferenceType preference) noexcept {
 
-            return [&preference](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+            return [preference](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
 
                 cco.Attestation = preference;
             };
@@ -265,7 +265,7 @@ namespace WebAuthN::WebAuthN {
         // WithResidentKeyRequirement sets both the resident key and require resident key protocol options.
         inline static RegistrationOptionHandlerType WithResidentKeyRequirement(const Protocol::ResidentKeyRequirementType requirement) noexcept {
 
-            return [&requirement](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
+            return [requirement](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
 
                 if (!cco.AuthenticatorSelection) {
                     cco.AuthenticatorSelection = Protocol::AuthenticatorSelectionType{};
@@ -413,9 +413,9 @@ namespace WebAuthN::WebAuthN {
         // WithUserVerification adjusts the user verification preference.
         //
         // Specification: §5.4.4. Authenticator Selection Criteria (https://www.w3.org/TR/webauthn/#dom-authenticatorselectioncriteria-userverification)
-        inline static LoginOptionHandlerType WithUserVerification(const Protocol::UserVerificationRequirementType& userVerification) noexcept {
+        inline static LoginOptionHandlerType WithUserVerification(const Protocol::UserVerificationRequirementType userVerification) noexcept {
 
-            return [&userVerification](Protocol::PublicKeyCredentialRequestOptionsType& cro) {
+            return [userVerification](Protocol::PublicKeyCredentialRequestOptionsType& cro) {
 
                 cro.UserVerification = userVerification;
             };
