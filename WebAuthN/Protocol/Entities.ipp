@@ -186,7 +186,7 @@ namespace WebAuthN::Protocol {
         _j["id"] = userEntity.ID;
 
         if (userEntity.DisplayName) {
-            _j["icon"] = userEntity.DisplayName.value();
+            _j["displayName"] = userEntity.DisplayName.value();
         }
         j = _j;
     }
