@@ -10,6 +10,7 @@
 #define WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
 
 #include <functional>
+#include <sodium.h>
 #include "IUser.ipp"
 #include "Config.ipp"
 #include "SessionData.ipp"
@@ -52,6 +53,12 @@ namespace WebAuthN::WebAuthN {
             if (err) {
 
                 return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
+            }
+            auto sodiumInit = sodium_init();
+
+            if (sodiumInit != 0) {
+
+                return Protocol::unexpected(fmt::format("Could not initialize sodium: error {}.", sodiumInit));
             }
 
             return WebAuthNType(config);
@@ -147,7 +154,7 @@ namespace WebAuthN::WebAuthN {
                 opts[i](creation.Response);
             }
 
-            if (creation.Response.Timeout == 0) {
+            if (!creation.Response.Timeout || creation.Response.Timeout.value() == 0) {
 
                 switch (creation.Response.AuthenticatorSelection.value().UserVerification.value()) {
                     case Protocol::UserVerificationRequirementType::Discouraged:
@@ -553,7 +560,7 @@ namespace WebAuthN::WebAuthN {
                 opts[i](assertion.Response);
             }
 
-            if (assertion.Response.Timeout == 0) {
+            if (!assertion.Response.Timeout || assertion.Response.Timeout.value() == 0) {
 
                 switch (assertion.Response.UserVerification.value()) {
                     case Protocol::UserVerificationRequirementType::Discouraged:
