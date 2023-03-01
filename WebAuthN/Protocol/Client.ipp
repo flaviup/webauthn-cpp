@@ -123,6 +123,10 @@ namespace WebAuthN::Protocol {
             Challenge(j["challenge"].get<std::string>()),
             Origin(j["origin"].get<std::string>()) {
 
+            if (j.find("crossOrigin") != j.end()) {
+                CrossOrigin.emplace(j["crossOrigin"].get<bool>());
+            }
+
             if (j.find("tokenBinding") != j.end()) {
                 TokenBinding.emplace(j["tokenBinding"].get<TokenBindingType>());
             }
@@ -227,6 +231,7 @@ namespace WebAuthN::Protocol {
         CeremonyType Type;
         std::string Challenge;
         std::string Origin;
+        std::optional<bool> CrossOrigin;
         std::optional<TokenBindingType> TokenBinding; //*TokenBinding
 
         // Chromium (Chrome) returns a hint sometimes about how to handle clientDataJSON in a safe manner.
@@ -240,6 +245,10 @@ namespace WebAuthN::Protocol {
             { "challenge", collectedClientData.Challenge },
             { "origin",       collectedClientData.Origin }
         };
+        
+        if (collectedClientData.CrossOrigin) {
+            j["crossOrigin"] = collectedClientData.CrossOrigin.value();
+        }
 
         if (collectedClientData.TokenBinding) {
             j["tokenBinding"] = collectedClientData.TokenBinding.value();
@@ -255,6 +264,10 @@ namespace WebAuthN::Protocol {
         j.at("type").get_to(collectedClientData.Type);
         j.at("challenge").get_to(collectedClientData.Challenge);
         j.at("origin").get_to(collectedClientData.Origin);
+        
+        if (j.find("crossOrigin") != j.end()) {
+            collectedClientData.CrossOrigin.emplace(j["crossOrigin"].get<bool>());
+        }
 
         if (j.find("tokenBinding") != j.end()) {
             collectedClientData.TokenBinding.emplace(j["tokenBinding"].get<TokenBindingType>());

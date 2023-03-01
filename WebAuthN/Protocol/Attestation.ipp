@@ -59,11 +59,11 @@ namespace WebAuthN::Protocol {
         AttestationObjectType() noexcept = default;
 
         AttestationObjectType(const json& j) :
-            RawAuthData(j["authData"].get<std::vector<uint8_t>>()),
+            RawAuthData(j["authData"].get_binary()),
             Format(j["fmt"].get<std::string>()) {
 
             if (j.find("attStmt") != j.end()) {
-                AttStatement.emplace(j["attStmt"].get<json::object_t>());
+                AttStatement.emplace(j["attStmt"].get<json>());
             }
         }
 
@@ -195,7 +195,7 @@ namespace WebAuthN::Protocol {
         // The format of the Attestation data.
         std::string Format;
         // The attestation statement data sent back if attestation is requested.
-        std::optional<json::object_t> AttStatement;
+        std::optional<json> AttStatement;
     };
 
     inline void to_json(json& j, const AttestationObjectType& attestationObject) {
@@ -212,11 +212,11 @@ namespace WebAuthN::Protocol {
 
     inline void from_json(const json& j, AttestationObjectType& attestationObject) {
 
-        j.at("authData").get_to(attestationObject.RawAuthData);
+        attestationObject.RawAuthData = j.at("authData").get_binary();
         j.at("fmt").get_to(attestationObject.Format);
 
         if (j.find("attStmt") != j.end()) {
-            attestationObject.AttStatement.emplace(j["attStmt"].get<json::object_t>());
+            attestationObject.AttStatement.emplace(j["attStmt"].get<json>());
         }
     }
 
@@ -276,16 +276,12 @@ namespace WebAuthN::Protocol {
         // used to verify the user and credential that was created.
         inline expected<ParsedAttestationResponseType> Parse() const noexcept {
 
-            auto decodedClientData = URLEncodedBase64_DecodeAsBinary(ClientDataJSON);
+            auto decodedClientData = URLEncodedBase64_Decode(ClientDataJSON);
 
             if (!decodedClientData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
-            auto collectedClientData = WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
-
-            if (!collectedClientData) {
-                return unexpected(collectedClientData.error());
-            }
+            auto collectedClientData = decodedClientData.value(); //WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
             auto decodedAttestationData = URLEncodedBase64_DecodeAsBinary(AttestationObject);
 
             if (!decodedAttestationData) {
@@ -296,7 +292,7 @@ namespace WebAuthN::Protocol {
             if (!attestationData) {
                 return unexpected(attestationData.error());
             }
-            auto attestationObject = AttestationObjectType(attestationData.value());
+            auto attestationObject = attestationData.value().get<AttestationObjectType>();
 
             // Step 8. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse
             // structure to obtain the attestation statement format fmt, the authenticator data authData, and
@@ -321,7 +317,7 @@ namespace WebAuthN::Protocol {
             }
 
             return ParsedAttestationResponseType{
-                CollectedClientDataType(collectedClientData.value()),
+                json::parse(collectedClientData).get<CollectedClientDataType>(),
                 attestationObject,
                 transports
             };
