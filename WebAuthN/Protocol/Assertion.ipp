@@ -227,7 +227,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing type"));
             }
 
-            if (json(credentialAssertionResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
+            if (json::parse(credentialAssertionResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion")
                                                  .WithInfo(fmt::format("Type not {}",
                                                                        json(CredentialTypeType::PublicKey).get<std::string>())));
@@ -240,8 +240,6 @@ namespace WebAuthN::Protocol {
             }
             auto response = responseParseResult.value();
 
-            auto attachment = json(credentialAssertionResponse.AuthenticatorAttachment.value()).get<AuthenticatorAttachmentType>();
-
             return ParsedCredentialAssertionDataType{
                 ParsedPublicKeyCredentialType{
                     ParsedCredentialType{
@@ -250,7 +248,7 @@ namespace WebAuthN::Protocol {
                     },
                     std::vector<uint8_t>(credentialAssertionResponse.RawID.begin(), credentialAssertionResponse.RawID.end()),
                     credentialAssertionResponse.ClientExtensionResults,
-                    std::optional<AuthenticatorAttachmentType>(attachment)
+                    credentialAssertionResponse.AuthenticatorAttachment
                 },
                 response,
                 credentialAssertionResponse
