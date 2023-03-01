@@ -227,7 +227,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing type"));
             }
 
-            if (json::parse(credentialAssertionResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
+            if (json(credentialAssertionResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion")
                                                  .WithInfo(fmt::format("Type not {}",
                                                                        json(CredentialTypeType::PublicKey).get<std::string>())));

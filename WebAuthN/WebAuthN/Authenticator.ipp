@@ -66,10 +66,10 @@ namespace WebAuthN::WebAuthN {
     inline Protocol::AuthenticatorSelectionType SelectAuthenticator(const std::string& att, const bool rrk, const std::string& uv) {
 
         return Protocol::AuthenticatorSelectionType{
-            json::parse(att).get<Protocol::AuthenticatorAttachmentType>(),
+            json(att).get<Protocol::AuthenticatorAttachmentType>(),
             rrk,
             std::nullopt,
-            json::parse(uv).get<Protocol::UserVerificationRequirementType>()
+            json(uv).get<Protocol::UserVerificationRequirementType>()
         };
     }
 } // namespace WebAuthN::WebAuthN

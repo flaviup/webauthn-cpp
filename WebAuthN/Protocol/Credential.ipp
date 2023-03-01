@@ -343,7 +343,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing type"));
             }
 
-            if (json::parse(credentialCreationResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
+            if (json(credentialCreationResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration")
                                                  .WithInfo(fmt::format("Type not {}",
                                                                        json(CredentialTypeType::PublicKey).get<std::string>())));
@@ -361,7 +361,7 @@ namespace WebAuthN::Protocol {
 
                 for (const auto& t : credentialCreationResponse.Transports.value()) {
 
-                    auto authT = json::parse(t).get<AuthenticatorTransportType>();
+                    auto authT = json(t).get<AuthenticatorTransportType>();
 
                     if (authT == AuthenticatorTransportType::Invalid) {
                         return unexpected(ErrParsingData().WithDetails("Error parsing authenticator transport type " + t));

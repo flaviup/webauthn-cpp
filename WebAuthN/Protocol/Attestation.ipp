@@ -315,7 +315,7 @@ namespace WebAuthN::Protocol {
             if (Transports) {
 
                 for (const auto& t : Transports.value()) {
-                    auto authT = json::parse(t).get<AuthenticatorTransportType>();
+                    auto authT = json(t).get<AuthenticatorTransportType>();
                     transports.push_back(authT);
                 }
             }
