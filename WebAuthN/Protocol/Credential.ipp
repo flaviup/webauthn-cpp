@@ -361,7 +361,7 @@ namespace WebAuthN::Protocol {
 
                 for (const auto& t : credentialCreationResponse.Transports.value()) {
 
-                    auto authT = json(t).get<AuthenticatorTransportType>();
+                    auto authT = json::parse(t).get<AuthenticatorTransportType>();
 
                     if (authT == AuthenticatorTransportType::Invalid) {
                         return unexpected(ErrParsingData().WithDetails("Error parsing authenticator transport type " + t));
@@ -369,7 +369,6 @@ namespace WebAuthN::Protocol {
                     response.Transports.push_back(authT);
                 }
             }
-            auto attachment = json(credentialCreationResponse.AuthenticatorAttachment.value()).get<AuthenticatorAttachmentType>();
 
             return ParsedCredentialCreationDataType{
                 ParsedPublicKeyCredentialType{
@@ -379,7 +378,7 @@ namespace WebAuthN::Protocol {
                     },
                     std::vector<uint8_t>(credentialCreationResponse.RawID.begin(), credentialCreationResponse.RawID.end()),
                     credentialCreationResponse.ClientExtensionResults,
-                    std::optional<AuthenticatorAttachmentType>(attachment)
+                    credentialCreationResponse.AuthenticatorAttachment
                 },
                 response,
                 credentialCreationResponse
@@ -480,7 +479,7 @@ namespace WebAuthN::Protocol {
 
         try {
 
-            auto credentialCreationResponse = json(response).get<CredentialCreationResponseType>();
+            auto credentialCreationResponse = json::parse(response).get<CredentialCreationResponseType>();
             return ParsedCredentialCreationDataType::Parse(credentialCreationResponse);
         } catch(const std::exception& e) {
             return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(e.what()));

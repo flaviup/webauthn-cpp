@@ -367,7 +367,7 @@ namespace WebAuthN::Protocol {
 
         try {
 
-            auto credentialAssertionResponse = json(response).get<CredentialAssertionResponseType>();
+            auto credentialAssertionResponse = json::parse(response).get<CredentialAssertionResponseType>();
             return ParsedCredentialAssertionDataType::Parse(credentialAssertionResponse);
         } catch(const std::exception& e) {
             return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo(e.what()));
