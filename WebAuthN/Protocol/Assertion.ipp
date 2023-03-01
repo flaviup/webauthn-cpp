@@ -81,17 +81,12 @@ namespace WebAuthN::Protocol {
 
             // Step 5. Let JSONtext be the result of running UTF-8 decode on the value of cData.
             // We don't call it cData but this is Step 5 in the spec.
-            auto decodedClientData = URLEncodedBase64_DecodeAsBinary(ClientDataJSON);
+            auto decodedClientData = URLEncodedBase64_Decode(ClientDataJSON);
 
             if (!decodedClientData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
-            auto collectedClientData = WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
-
-            if (!collectedClientData) {
-                return unexpected(collectedClientData.error());
-            }
-
+            auto collectedClientData = decodedClientData.value(); // WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
             AuthenticatorDataType auth{};
             auto binaryData = URLEncodedBase64_DecodeAsBinary(AuthenticatorData);
 
@@ -116,7 +111,7 @@ namespace WebAuthN::Protocol {
             }
 
             return ParsedAssertionResponseType{
-                CollectedClientDataType(collectedClientData.value()),
+                json::parse(collectedClientData).get<CollectedClientDataType>(),
                 auth,
                 signature,
                 userHandle
