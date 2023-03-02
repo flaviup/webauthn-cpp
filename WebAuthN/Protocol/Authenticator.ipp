@@ -579,13 +579,7 @@ namespace WebAuthN::Protocol {
         // Unmarshall the credential's Public Key into CBOR encoding.
         inline static expected<std::vector<uint8_t>> _UnmarshalCredentialPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
 
-            auto m = WebAuthNCBOR::Unmarshal(keyBytes);
-
-            if (!m) {
-                return unexpected(m.error());
-            }
-
-            return WebAuthNCBOR::Marshal(m.value());
+            return WebAuthNCBOR::Remarshal(keyBytes);
         }
     };
 
