@@ -132,12 +132,7 @@ namespace WebAuthN::Protocol {
             auto x5c = result.value().second;
 
             uuid_t aaguid;
-            uuid_parse(reinterpret_cast<const char*>(AuthData.AttData.AAGUID.data()), aaguid);
-            
-            if (uuid_parse(reinterpret_cast<const char*>(AuthData.AttData.AAGUID.data()), aaguid) != 0) {
-                return ErrAttestationFormat().WithInfo(fmt::format("Attestation AAGUID could not be parsed: {}",
-                                                                   fmt::join(AuthData.AttData.AAGUID, ", ")));
-            }
+            std::memcpy(aaguid, AuthData.AttData.AAGUID.data(), AuthData.AttData.AAGUID.size());
             auto metaIter = Metadata::METADATA.find(aaguid);
 
             if (metaIter != Metadata::METADATA.cend()) {
