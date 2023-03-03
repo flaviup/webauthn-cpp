@@ -310,24 +310,26 @@ namespace WebAuthN::Protocol {
             // used to generate the attestation signature.
 
             if (att.AttStatement) {
+                
+                auto atts = att.AttStatement.value();
 
-                if (att.AttStatement.value().find("alg") == att.AttStatement.value().cend()) {
+                if (atts.find("alg") == atts.cend()) {
 
                     return unexpected(ErrAttestationFormat().WithDetails("Error retrieving alg value"));
                 }
-                auto alg = att.AttStatement.value()["alg"].get<int64_t>();
+                auto alg = atts["alg"].get<int64_t>();
 
                 // Get the sig value - A byte string containing the attestation signature.
-                if (att.AttStatement.value().find("sig") == att.AttStatement.value().cend() || !att.AttStatement.value()["sig"].is_binary()) {
+                if (atts.find("sig") == atts.cend() || !atts["sig"].is_binary()) {
 
                     return unexpected(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
                 }
-                auto sig = att.AttStatement.value()["sig"].get_binary();
+                auto sig = atts["sig"].get_binary();
 
                 // Step 2. If x5c is present, this indicates that the attestation type is not ECDAA.
-                if (att.AttStatement.value().find("x5c") != att.AttStatement.value().cend()) {
+                if (atts.find("x5c") != atts.cend()) {
 
-                    auto x5c = att.AttStatement.value()["x5c"];
+                    auto x5c = atts["x5c"];
 
                     // Handle Basic Attestation steps for the x509 Certificate
                     return _HandleBasicAttestation(sig, clientDataHash, att.RawAuthData, att.AuthData.AttData.AAGUID, alg, x5c);
@@ -335,9 +337,9 @@ namespace WebAuthN::Protocol {
 
                 // Step 3. If ecdaaKeyId is present, then the attestation type is ECDAA.
                 // Also make sure the we did not have an x509 then
-                if (att.AttStatement.value().find("ecdaaKeyId") != att.AttStatement.value().cend()) {
+                if (atts.find("ecdaaKeyId") != atts.cend()) {
 
-                    auto ecdaaKeyID = att.AttStatement.value()["ecdaaKeyId"];
+                    auto ecdaaKeyID = atts["ecdaaKeyId"];
                     // Handle ECDAA Attestation steps for the x509 Certificate
                     return _HandleECDAAAttestation(sig, clientDataHash, ecdaaKeyID);
                 }
