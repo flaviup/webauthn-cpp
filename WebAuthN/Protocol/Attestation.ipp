@@ -147,6 +147,7 @@ namespace WebAuthN::Protocol {
                 for (const auto& s : meta.StatusReports) {
                     
                     if (Metadata::IsUndesiredAuthenticatorStatus(s.Status)) {
+
                         return ErrInvalidAttestation().WithDetails("Authenticator with undesirable status encountered");
                     }
                 }
@@ -156,6 +157,7 @@ namespace WebAuthN::Protocol {
                     auto namesResult = Util::Crypto::GetNamesX509(x5c.value().begin()->second);
                     
                     if (!namesResult) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
+
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
                     auto names = namesResult.value();
@@ -169,6 +171,7 @@ namespace WebAuthN::Protocol {
                             for (const auto& a : meta.MetadataStatement.value().AttestationTypes) {
                                 
                                 if (a == Metadata::AuthenticatorAttestationType::BasicFull) {
+
                                     hasBasicFull = true;
                                 }
                             }

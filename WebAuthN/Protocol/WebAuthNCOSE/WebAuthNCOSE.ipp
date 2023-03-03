@@ -208,6 +208,30 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         };
     }
 
+    inline std::string SignatureAlgorithmTypeToString(const SignatureAlgorithmType signatureAlgorithm) noexcept {
+
+        switch (signatureAlgorithm) {
+
+            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return "unknownSignatureAlgorithm";
+            case SignatureAlgorithmType::MD2WithRSA:       return "md2WithRSA";
+            case SignatureAlgorithmType::MD5WithRSA:       return "md5WithRSA";
+            case SignatureAlgorithmType::SHA1WithRSA:      return "sha1WithRSA";
+            case SignatureAlgorithmType::SHA256WithRSA:    return "sha256WithRSA";
+            case SignatureAlgorithmType::SHA384WithRSA:    return "sha384WithRSA";
+            case SignatureAlgorithmType::SHA512WithRSA:    return "sha512WithRSA";
+            case SignatureAlgorithmType::DSAWithSHA1:      return "dsaWithSHA1";
+            case SignatureAlgorithmType::DSAWithSHA256:    return "dsaWithSHA256";
+            case SignatureAlgorithmType::ECDSAWithSHA1:    return "ecdsaWithSHA1";
+            case SignatureAlgorithmType::ECDSAWithSHA256:  return "ecdsaWithSHA256";
+            case SignatureAlgorithmType::ECDSAWithSHA384:  return "ecdsaWithSHA384";
+            case SignatureAlgorithmType::ECDSAWithSHA512:  return "ecdsaWithSHA512";
+            case SignatureAlgorithmType::SHA256WithRSAPSS: return "sha256WithRSAPSS";
+            case SignatureAlgorithmType::SHA384WithRSAPSS: return "sha384WithRSAPSS";
+            case SignatureAlgorithmType::SHA512WithRSAPSS: return "sha512WithRSAPSS";
+            default: return "";
+        }
+    }
+
     // Structs
 
     using HasherHandlerType = std::vector<uint8_t> (*)(const std::string& str);

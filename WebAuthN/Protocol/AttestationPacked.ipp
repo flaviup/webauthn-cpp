@@ -13,6 +13,7 @@
 #include "Attestation.ipp"
 #include "../Metadata/Metadata.ipp"
 #include "../Util/Crypto.ipp"
+#include "../Util/Time.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
 #pragma GCC visibility push(default)
@@ -36,7 +37,8 @@ namespace WebAuthN::Protocol {
                                 const int64_t alg,
                                 const json::array_t& x5c) noexcept {
 
-            return std::make_pair("", std::nullopt);
+            // Step 2.1. Verify that sig is a valid signature over the concatenation of authenticatorData
+            // and clientDataHash using the attestation public key in attestnCert with the algorithm specified in alg.
 
             for (const auto& c : x5c) {
 
@@ -50,7 +52,28 @@ namespace WebAuthN::Protocol {
                     return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
 
-                auto cert = Util::Crypto::ParseCertificate(cb);
+                auto certParsingResult = Util::Crypto::ParseCertificate(cb);
+
+                if (!certParsingResult) {
+
+                    return unexpected(ErrAttestationFormat().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", certParsingResult.error()));
+                }
+                auto ct = certParsingResult.value();
+                auto notBeforeResult = Util::Time::ParseISO8601(ct.NotBefore);
+                auto notAfterResult = Util::Time::ParseISO8601(ct.NotAfter);
+
+                if (!notBeforeResult || !notAfterResult) {
+
+                    return unexpected(ErrAttestationFormat().WithDetails("Cert in chain has no valid date times"));
+                }
+                auto notBefore = notBeforeResult.value();
+                auto notAfter = notAfterResult.value();
+                auto now = Util::Time::Timestamp();
+
+                if (notBefore > now || notAfter < now) {
+
+                    return unexpected(ErrAttestationFormat().WithDetails("Cert in chain not time valid"));
+                }
             }
 
             if (x5c.empty()) {
@@ -69,51 +92,30 @@ namespace WebAuthN::Protocol {
             std::vector<uint8_t> signatureData{0};
             std::copy(authData.cbegin(), authData.cend(), std::back_inserter(signatureData));
             std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(signatureData));
-            auto attCert = Util::Crypto::ParseCertificate(attCertBytes);
+            auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
 
-            // Step 2.1. Verify that sig is a valid signature over the concatenation of authenticatorData
-            // and clientDataHash using the attestation public key in attestnCert with the algorithm specified in alg.
-            /*for _, c := range x5c {
-                cb, cv := c.([]byte)
-                if !cv {
-                    return "", x5c, ErrAttestation.WithDetails("Error getting certificate from x5c cert chain")
-                }
+            if (!attCertResult) {
 
-                ct, err := x509.ParseCertificate(cb)
-                if err != nil {
-                    return "", x5c, ErrAttestationFormat.WithDetails(fmt.Sprintf("Error parsing certificate from ASN.1 data: %+v", err))
-                }
-
-                if ct.NotBefore.After(time.Now()) || ct.NotAfter.Before(time.Now()) {
-                    return "", x5c, ErrAttestationFormat.WithDetails("Cert in chain not time valid")
-                }
+                return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", attCertResult.error())));
             }
+            auto attCert = attCertResult.value();
 
-            attCertBytes, valid := x5c[0].([]byte)
-            if !valid {
-                return "", x5c, ErrAttestation.WithDetails("Error getting certificate from x5c cert chain")
-            }
+            auto coseAlg = static_cast<WebAuthNCOSE::COSEAlgorithmIdentifierType>(alg);
+            auto sigAlg = WebAuthNCOSE::SigAlgFromCOSEAlg(coseAlg);
+            auto signatureCheckResult = attCert.CheckSignature(WebAuthNCOSE::SignatureAlgorithmTypeToString(sigAlg), signatureData, signature);
 
-            signatureData := append(authData, clientDataHash...)
+            if (!signatureCheckResult || !signatureCheckResult.value()) {
 
-            attCert, err := x509.ParseCertificate(attCertBytes)
-            if err != nil {
-                return "", x5c, ErrAttestationFormat.WithDetails(fmt.Sprintf("Error parsing certificate from ASN.1 data: %+v", err))
-            }
-
-            coseAlg := webauthncose.COSEAlgorithmIdentifier(alg)
-            sigAlg := webauthncose.SigAlgFromCOSEAlg(coseAlg)
-
-            if err = attCert.CheckSignature(x509.SignatureAlgorithm(sigAlg), signatureData, signature); err != nil {
-                return "", x5c, ErrInvalidAttestation.WithDetails(fmt.Sprintf("Signature validation error: %+v\n", err))
+                return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", signatureCheckResult.error())));
             }
 
             // Step 2.2 Verify that attestnCert meets the requirements in §8.2.1 Packed attestation statement certificate requirements.
             // §8.2.1 can be found here https://www.w3.org/TR/webauthn/#packed-attestation-cert-requirements
 
             // Step 2.2.1 (from §8.2.1) Version MUST be set to 3 (which is indicated by an ASN.1 INTEGER with value 2).
-            if attCert.Version != 3 {
-                return "", x5c, ErrAttestationCertificate.WithDetails("Attestation Certificate is incorrect version")
+            if (attCert.Version != 3) {
+
+                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate is incorrect version"));
             }
 
             // Step 2.2.2 (from §8.2.1) Subject field MUST be set to:
@@ -122,47 +124,51 @@ namespace WebAuthN::Protocol {
             // 	ISO 3166 code specifying the country where the Authenticator vendor is incorporated (PrintableString)
 
             //  TODO: Find a good, useable, country code library. For now, check stringy-ness
-            subjectString := strings.Join(attCert.Subject.Country, "")
-            if subjectString == "" {
-                return "", x5c, ErrAttestationCertificate.WithDetails("Attestation Certificate Country Code is invalid")
+            if (attCert.Subject.Country.empty()) {
+
+                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Country Code is invalid"));
             }
 
             // 	Subject-O
             // 	Legal name of the Authenticator vendor (UTF8String)
-            subjectString = strings.Join(attCert.Subject.Organization, "")
-            if subjectString == "" {
-                return "", x5c, ErrAttestationCertificate.WithDetails("Attestation Certificate Organization is invalid")
+            if (attCert.Subject.Organization.empty()) {
+
+                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Organization is invalid"));
             }
 
             // 	Subject-OU
             // 	Literal string “Authenticator Attestation” (UTF8String)
-            subjectString = strings.Join(attCert.Subject.OrganizationalUnit, " ")
-            if subjectString != "Authenticator Attestation" {
+            if (attCert.Subject.OrganizationalUnit != "Authenticator Attestation") {
+
                 // TODO: Implement a return error when I'm more certain this is general practice
+                //return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate OrganizationalUnit is invalid"));
             }
 
             // 	Subject-CN
             //  A UTF8String of the vendor’s choosing
-            subjectString = attCert.Subject.CommonName
-            if subjectString == "" {
-                return "", x5c, ErrAttestationCertificate.WithDetails("Attestation Certificate Common Name not set")
+            if (attCert.Subject.CommonName.empty()) {
+
+                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Common Name is invalid"));
             }
+
             // TODO: And then what
 
             // Step 2.2.3 (from §8.2.1) If the related attestation root certificate is used for multiple authenticator models,
             // the Extension OID 1.3.6.1.4.1.45724.1.1.4 (id-fido-gen-ce-aaguid) MUST be present, containing the
             // AAGUID as a 16-byte OCTET STRING. The extension MUST NOT be marked as critical.
-            idFido := asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 45724, 1, 1, 4}
+            const auto ID_FIDO = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 45724, 1, 1, 4};
+            std::vector<uint8_t> foundAAGUID{};
 
-            var foundAAGUID []byte
+            for (const auto& extension : attCert.Extensions) {
 
-            for _, extension := range attCert.Extensions {
-                if extension.Id.Equal(idFido) {
-                    if extension.Critical {
-                        return "", x5c, ErrInvalidAttestation.WithDetails("Attestation certificate FIDO extension marked as critical")
+                if (extension.Id == ID_FIDO) {
+
+                    if (extension.IsCritical) {
+                        
+                        return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
                     }
 
-                    foundAAGUID = extension.Value
+                    foundAAGUID = extension.Value;
                 }
             }
 
@@ -171,19 +177,21 @@ namespace WebAuthN::Protocol {
             // and make sure it matches the auth data AAGUID
             // Note that an X.509 Extension encodes the DER-encoding of the value in an OCTET STRING. Thus, the
             // AAGUID MUST be wrapped in two OCTET STRINGS to be valid.
-            if len(foundAAGUID) > 0 {
-                unMarshalledAAGUID := []byte{}
+            if (!foundAAGUID.empty()) {
 
-                asn1.Unmarshal(foundAAGUID, &unMarshalledAAGUID)
+                std::vector<uint8_t> unmarshalledAAGUID{};
+                asn1.Unmarshal(foundAAGUID, &unmarshalledAAGUID);
 
-                if !bytes.Equal(aaguid, unMarshalledAAGUID) {
-                    return "", x5c, ErrInvalidAttestation.WithDetails("Certificate AAGUID does not match Auth Data certificate")
+                if (aaguid != unmarshalledAAGUID) {
+
+                    return unexpected(ErrInvalidAttestation().WithDetails("Certificate AAGUID does not match Auth Data certificate"));
                 }
             }
 
             // Step 2.2.4 The Basic Constraints extension MUST have the CA component set to false.
-            if attCert.IsCA {
-                return "", x5c, ErrInvalidAttestation.WithDetails("Attestation certificate's Basic Constraints marked as CA")
+            if (attCert.IsCA) {
+
+                return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate's Basic Constraints marked as CA"));
             }
 
             // Note for 2.2.5 An Authority Information Access (AIA) extension with entry id-ad-ocsp and a CRL
@@ -194,7 +202,8 @@ namespace WebAuthN::Protocol {
 
             // Step 2.4 If successful, return attestation type Basic and attestation trust path x5c.
             // We don't handle trust paths yet but we're done
-            return string(metadata.BasicFull), x5c, nil*/
+
+            return std::make_pair(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), x5c);
         }
 
         inline expected<std::pair<std::string, std::optional<json::object_t>>>
