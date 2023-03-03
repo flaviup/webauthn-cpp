@@ -11,5 +11,6 @@
 
 #include "Version.ipp"
 #include "WebAuthN/WebAuthN/WebAuthN.ipp"
+#include "WebAuthN/Protocol/AttestationPacked.ipp"
 
 #endif /* WEBAUTHN_HPP */

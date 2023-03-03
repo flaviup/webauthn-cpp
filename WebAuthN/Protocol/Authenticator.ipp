@@ -501,9 +501,10 @@ namespace WebAuthN::Protocol {
 
         // Verify on AuthenticatorData handles Steps 9 through 12 for Registration
         // and Steps 11 through 14 for Assertion.
-        inline std::optional<ErrorType> Verify(const std::vector<uint8_t>& rpIdHash, 
-            const std::vector<uint8_t>& appIDHash, 
-            bool userVerificationRequired) const noexcept {
+        inline std::optional<ErrorType>
+        Verify(const std::vector<uint8_t>& rpIdHash, 
+               const std::vector<uint8_t>& appIDHash, 
+               bool userVerificationRequired) const noexcept {
 
             // Registration Step 9 & Assertion Step 11
             // Verify that the RP ID hash in authData is indeed the SHA-256
@@ -550,7 +551,8 @@ namespace WebAuthN::Protocol {
 
     private:
         // If Attestation Data is present, unmarshall that into the appropriate public key structure.
-        inline std::optional<ErrorType> _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
+        inline std::optional<ErrorType>
+        _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
 
             AttData.AAGUID = std::vector<uint8_t>(rawAuthData.cbegin() + 37, rawAuthData.cbegin() + 53);
 

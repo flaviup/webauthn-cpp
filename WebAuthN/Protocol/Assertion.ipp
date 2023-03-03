@@ -254,12 +254,13 @@ namespace WebAuthN::Protocol {
         // documentation.
         //
         // Specification: §7.2 Verifying an Authentication Assertion (https://www.w3.org/TR/webauthn/#sctn-verifying-assertion)
-        inline std::optional<ErrorType> Verify(const std::string& storedChallenge, 
-            const std::string& relyingPartyID, 
-            const std::vector<std::string>& relyingPartyOrigins, 
-            const std::string& appID,
-            bool verifyUser, 
-            const std::vector<uint8_t>& credentialBytes) const noexcept {
+        inline std::optional<ErrorType>
+        Verify(const std::string& storedChallenge, 
+               const std::string& relyingPartyID, 
+               const std::vector<std::string>& relyingPartyOrigins, 
+               const std::string& appID,
+               bool verifyUser, 
+               const std::vector<uint8_t>& credentialBytes) const noexcept {
 
             // Steps 4 through 6 in verifying the assertion data (https://www.w3.org/TR/webauthn/#verifying-assertion) are
             // "assertive" steps, i.e "Let JSONtext be the result of running UTF-8 decode on the value of cData."
@@ -295,8 +296,8 @@ namespace WebAuthN::Protocol {
             // a valid signature over the binary concatenation of authData and hash.
 
             std::vector<uint8_t> sigData{0};
-            std::copy(Raw.AssertionResponse.AuthenticatorData.begin(), Raw.AssertionResponse.AuthenticatorData.end(), std::back_inserter(sigData));
-            std::copy(clientDataHash.begin(), clientDataHash.end(), std::back_inserter(sigData));
+            std::copy(Raw.AssertionResponse.AuthenticatorData.cbegin(), Raw.AssertionResponse.AuthenticatorData.cend(), std::back_inserter(sigData));
+            std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(sigData));
 
             // If the Session Data does not contain the appID extension or it wasn't reported as used by the Client/RP then we
             // use the standard CTAP2 public key parser.

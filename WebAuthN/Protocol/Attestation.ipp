@@ -29,7 +29,7 @@ namespace WebAuthN::Protocol {
 
     // Attestation Registry
 
-    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, json::object_t>> (*)(const struct AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
+    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::optional<json::object_t>>> (*)(const struct AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
 
     // RegisterAttestationFormat is a function to register attestation formats with the library. Generally using one of the
@@ -78,9 +78,10 @@ namespace WebAuthN::Protocol {
         //
         // Steps 9 through 12 are verified against the auth data. These steps are identical to 11 through 14 for assertion so we
         // handle them with AuthData.
-        inline std::optional<ErrorType> Verify(const std::string& relyingPartyID, 
-            const std::vector<uint8_t>& clientDataHash, 
-            bool verificationRequired) const noexcept {
+        inline std::optional<ErrorType>
+        Verify(const std::string& relyingPartyID, 
+               const std::vector<uint8_t>& clientDataHash, 
+               bool verificationRequired) const noexcept {
 
             auto rpIDHash = Util::Crypto::SHA256(relyingPartyID);
 
@@ -150,11 +151,11 @@ namespace WebAuthN::Protocol {
                     }
                 }
 
-                if (!x5c.empty()) {
+                if (x5c && !x5c.value().empty()) {
 
                     std::pair<std::string, std::string> names;
                     
-                    if (!Util::Crypto::GetNamesX509(x5c.begin()->second, names)) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
+                    if (!Util::Crypto::GetNamesX509(x5c.value().begin()->second, names)) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
                     
