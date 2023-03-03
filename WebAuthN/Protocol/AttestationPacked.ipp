@@ -56,7 +56,8 @@ namespace WebAuthN::Protocol {
 
                 if (!certParsingResult) {
 
-                    return unexpected(ErrAttestationFormat().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", certParsingResult.error()));
+                    return unexpected(ErrAttestationFormat().
+                        WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", certParsingResult.error())));
                 }
                 auto ct = certParsingResult.value();
                 auto notBeforeResult = Util::Time::ParseISO8601(ct.NotBefore);
@@ -102,7 +103,10 @@ namespace WebAuthN::Protocol {
 
             auto coseAlg = static_cast<WebAuthNCOSE::COSEAlgorithmIdentifierType>(alg);
             auto sigAlg = WebAuthNCOSE::SigAlgFromCOSEAlg(coseAlg);
-            auto signatureCheckResult = attCert.CheckSignature(WebAuthNCOSE::SignatureAlgorithmTypeToString(sigAlg), signatureData, signature);
+            auto signatureCheckResult = Util::Crypto::CheckSignature(attCertBytes, 
+                                                                     WebAuthNCOSE::SignatureAlgorithmTypeToString(sigAlg), 
+                                                                     signatureData, 
+                                                                     signature);
 
             if (!signatureCheckResult || !signatureCheckResult.value()) {
 
@@ -156,18 +160,17 @@ namespace WebAuthN::Protocol {
             // Step 2.2.3 (from §8.2.1) If the related attestation root certificate is used for multiple authenticator models,
             // the Extension OID 1.3.6.1.4.1.45724.1.1.4 (id-fido-gen-ce-aaguid) MUST be present, containing the
             // AAGUID as a 16-byte OCTET STRING. The extension MUST NOT be marked as critical.
-            const auto ID_FIDO = asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 45724, 1, 1, 4};
+            constexpr auto ID_FIDO = "1.3.6.1.4.1.45724.1.1.4"; //asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 45724, 1, 1, 4};
             std::vector<uint8_t> foundAAGUID{};
 
             for (const auto& extension : attCert.Extensions) {
 
-                if (extension.Id == ID_FIDO) {
+                if (extension.ID == ID_FIDO) {
 
                     if (extension.IsCritical) {
                         
                         return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
                     }
-
                     foundAAGUID = extension.Value;
                 }
             }
@@ -179,10 +182,11 @@ namespace WebAuthN::Protocol {
             // AAGUID MUST be wrapped in two OCTET STRINGS to be valid.
             if (!foundAAGUID.empty()) {
 
-                std::vector<uint8_t> unmarshalledAAGUID{};
-                asn1.Unmarshal(foundAAGUID, &unmarshalledAAGUID);
+                //std::vector<uint8_t> unmarshalledAAGUID{};
+                //asn1.Unmarshal(foundAAGUID, &unmarshalledAAGUID);
 
-                if (aaguid != unmarshalledAAGUID) {
+                //if (aaguid != unmarshalledAAGUID) {
+                if (aaguid != foundAAGUID) {
 
                     return unexpected(ErrInvalidAttestation().WithDetails("Certificate AAGUID does not match Auth Data certificate"));
                 }
@@ -203,7 +207,7 @@ namespace WebAuthN::Protocol {
             // Step 2.4 If successful, return attestation type Basic and attestation trust path x5c.
             // We don't handle trust paths yet but we're done
 
-            return std::make_pair(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), x5c);
+            return std::make_pair(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
         }
 
         inline expected<std::pair<std::string, std::optional<json::object_t>>>

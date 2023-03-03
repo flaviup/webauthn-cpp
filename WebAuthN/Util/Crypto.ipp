@@ -15,6 +15,7 @@
 #include <sodium.h>
 
 #include <openssl/asn1.h>
+#include <openssl/err.h>
 #include <openssl/x509v3.h>
 
 #include "../Core.ipp"
@@ -22,6 +23,8 @@
 #pragma GCC visibility push(default)
 
 namespace WebAuthN::Util::Crypto {
+
+    using namespace std::string_literals;
 
     inline std::vector<uint8_t> SHA1(const std::string& str) {
 
@@ -69,14 +72,6 @@ namespace WebAuthN::Util::Crypto {
 
     struct X509CertificateType {
 
-        inline expected<bool>
-        CheckSignature(const std::string& algorithm,
-                       const std::vector<uint8_t>& data, 
-                       const std::vector<uint8_t>& signature) const noexcept {
-            
-            return true;
-        }
-
         struct SubjectType {
 
             std::string Country;
@@ -87,12 +82,14 @@ namespace WebAuthN::Util::Crypto {
 
         struct ExtensionType {
 
-            std::vector<uint8_t> Id;
+            std::string ID;
             std::vector<uint8_t> Value;
             bool IsCritical;
         };
 
         std::vector<ExtensionType> Extensions;
+
+        std::string SignatureAlgorithm;
 
         std::string NotBefore;
         std::string NotAfter;
@@ -107,11 +104,11 @@ namespace WebAuthN::Util::Crypto {
 
         // Obtains an entry from a X509 name (i.e. either
         // the certificate’s issuer or subject)
-        inline expected<std::string> _ExtractNameEntry(X509_NAME* name, int nid) noexcept {
+        inline expected<std::string> _ExtractNameEntry(const X509_NAME* name, int nid) noexcept {
 
             if (name == nullptr) {
 
-                return unexpected(std::string("Null X509_NAME"));
+                return unexpected("Null X509_NAME"s);
             }
 
             auto position = X509_NAME_get_index_by_NID(name, nid, -1);
@@ -119,14 +116,14 @@ namespace WebAuthN::Util::Crypto {
 
             if (entry == nullptr) {
 
-                return unexpected(std::string("Null X509_NAME_ENTRY"));
+                return unexpected("Null X509_NAME_ENTRY"s);
             }
             auto asn1Data = X509_NAME_ENTRY_get_data(entry);
             
             if (asn1Data == nullptr) {
 
                 X509_NAME_ENTRY_free(entry);
-                return unexpected(std::string("Null ASN1_STRING"));
+                return unexpected("Null ASN1_STRING"s);
             }
             auto entryString = ASN1_STRING_get0_data(asn1Data);
             std::string s(reinterpret_cast<const char*>(entryString));
@@ -141,21 +138,21 @@ namespace WebAuthN::Util::Crypto {
 
             if (t == nullptr) {
 
-                return unexpected(std::string("Null ASN1_TIME"));
+                return unexpected("Null ASN1_TIME"s);
             }
 
             auto bio = BIO_new(BIO_s_mem());
 
             if (bio == nullptr) {
 
-                return unexpected(std::string("Null BIO"));
+                return unexpected("Null BIO"s);
             }
             auto rc = ASN1_TIME_print(bio, t);
             
             if (rc <= 0) {
 
-                BIO_free(bio);
-                return unexpected(std::string("ASN1_TIME_print failed or wrote no data"));
+                BIO_free_all(bio);
+                return unexpected("ASN1_TIME_print failed or wrote no data"s);
             }
             constexpr auto DATE_LEN = 128;
             char buf[DATE_LEN]{};
@@ -163,10 +160,10 @@ namespace WebAuthN::Util::Crypto {
 
             if (rc <= 0) {
 
-                BIO_free(bio);
-                return unexpected(std::string("BIO_gets call failed to transfer contents to buf"));
+                BIO_free_all(bio);
+                return unexpected("BIO_gets call failed to transfer contents to buf"s);
             }
-            BIO_free(bio);
+            BIO_free_all(bio);
 
             return std::string(buf);
         }
@@ -175,78 +172,42 @@ namespace WebAuthN::Util::Crypto {
 
             if (extensions == nullptr) {
 
-                return unexpected(std::string("Null stack_st_X509_EXTENSION"));
+                return unexpected("Null stack_st_X509_EXTENSION"s);
             }
             auto extension = sk_X509_EXTENSION_value(extensions, index);
 
             if (extension == nullptr) {
 
-                return unexpected("Unable to extract extension from stack");
+                return unexpected("Unable to extract extension from stack"s);
             }
             auto obj = X509_EXTENSION_get_object(extension);
 
             if (obj == nullptr) {
 
                 X509_EXTENSION_free(extension);
-                return unexpected("Unable to extract ASN1 object from extension");
+                return unexpected("Unable to extract ASN1 object from extension"s);
             }
             X509CertificateType::ExtensionType parsedExtension{};
             parsedExtension.IsCritical = X509_EXTENSION_get_critical(extension) != 0;
 
-            auto ex = reinterpret_cast<ASN1_OCTET_STRING*>(X509V3_EXT_d2i(extension));
-
-            if (ex != nullptr) {
-
-                parsedExtension.Id = std::vector<uint8_t>(ex->data, ex->data + ex->length);
-                ASN1_OCTET_STRING_free(ex);
-            } else {
-
-                ASN1_OBJECT_free(obj);
-                X509_EXTENSION_free(extension);
-                return unexpected(std::string("Could not parse X509_EXTENSION: X509V3_EXT_d2i failure"));
-            }
-            /*auto bio = BIO_new(BIO_s_mem());
-
-            if (bio == nullptr) {
-
-                ASN1_OBJECT_free(obj);
-                X509_EXTENSION_free(extension);
-                return unexpected("Unable to allocate memory for extension value BIO");
-            }
-
-            if (!X509V3_EXT_print(bio, extension, 0, 0)) {
-
-                
-                ASN1_OCTET_STRING_print(bio, extension->value);
-            }
-            BUF_MEM* bptr = nullptr;
-            BIO_get_mem_ptr(bio, &bptr);
-            BIO_set_close(bio, BIO_NOCLOSE);
-
-            // remove newlines
-            auto lastChar = bptr->length;
-
-            if (lastChar > 1 && (bptr->data[lastChar - 1] == '\n' || bptr->data[lastChar - 1] == '\r')) {
-
-                bptr->data[lastChar - 1] = static_cast<char>(0);
-            }
-
-            if (lastChar > 0 && (bptr->data[lastChar] == '\n' || bptr->data[lastChar] == '\r')) {
-
-                bptr->data[lastChar] = static_cast<char>(0);
-            }
-
-            BIO_free(bio);*/
             auto nid = OBJ_obj2nid(obj);
 
             if (nid == NID_undef) {
 
                 // no lookup found for the provided OID so nid came back as undefined.
-                char extensionName[EXTNAME_LEN];
-                OBJ_obj2txt(extensionName, EXTNAME_LEN, obj, 1);
+                const auto size = OBJ_obj2txt(nullptr, 0, obj, 0);
 
-                ASN1_OBJECT_free(obj);
-                X509_EXTENSION_free(extension);
+                if (size < 0) {
+
+                    ASN1_OBJECT_free(obj);
+                    X509_EXTENSION_free(extension);
+                    OBJ_cleanup();
+                    return unexpected("Invalid extension name length"s);
+                }
+                char* extensionName = new char[size + 2]{0};
+                OBJ_obj2txt(extensionName, size, obj, 0);
+                parsedExtension.ID = extensionName;
+                delete [] extensionName;
             } else {
 
                 // the OID translated to a NID which implies that the OID has a known sn/ln
@@ -256,11 +217,77 @@ namespace WebAuthN::Util::Crypto {
 
                     ASN1_OBJECT_free(obj);
                     X509_EXTENSION_free(extension);
-                    return unexpected(std::string("Invalid X509v3 extension name"));
+                    OBJ_cleanup();
+
+                    return unexpected("Invalid X509v3 extension name"s);
                 }
+                parsedExtension.ID = extensionName;
+            }
+            auto ex = reinterpret_cast<ASN1_OCTET_STRING*>(X509V3_EXT_d2i(extension));
+
+            if (ex != nullptr) {
+
+                parsedExtension.Value = std::vector<uint8_t>(ex->data, ex->data + ex->length);
+                ASN1_OCTET_STRING_free(ex);
+            } else {
+
+                ASN1_OBJECT_free(obj);
+                X509_EXTENSION_free(extension);
+                OBJ_cleanup();
+
+                return unexpected("Could not parse X509_EXTENSION: X509V3_EXT_d2i failure"s);
             }
 
+            ASN1_OBJECT_free(obj);
+            X509_EXTENSION_free(extension);
+            OBJ_cleanup();
+
             return parsedExtension;
+        }
+
+        inline expected<bool>
+        _CheckSignature(const X509* certificate,
+                        const std::string& algorithm,
+                        const std::vector<uint8_t>& data,
+                        const std::vector<uint8_t>& signature) noexcept {
+
+            if (certificate == nullptr) {
+
+                return unexpected("Null X509 certificate"s);
+            }
+
+            auto pKey = X509_get0_pubkey(certificate);
+            
+            if (pKey == nullptr) {
+
+                return unexpected("Could not get the public key from certificate"s);
+            }
+            auto mdCtx = EVP_MD_CTX_new();
+
+            if (mdCtx == nullptr) {
+
+                EVP_PKEY_free(pKey);
+                return unexpected("Could not create MD context"s);
+            }
+            auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithm.c_str(), nullptr, nullptr, pKey, nullptr);
+
+            if (result != 1) {
+
+                EVP_MD_CTX_free(mdCtx);
+                EVP_PKEY_free(pKey);
+                return unexpected("Unable to init signature checking"s);
+            }
+            result = EVP_DigestVerify(mdCtx, signature.data(), signature.size(), data.data(), data.size());
+            EVP_MD_CTX_free(mdCtx);
+            EVP_PKEY_free(pKey);
+
+            if (result == 0 || result == 1) {
+
+                return result == 1;
+            } else {
+
+                return unexpected("Could not check signature");
+            }
         }
     }
 
@@ -268,11 +295,15 @@ namespace WebAuthN::Util::Crypto {
 
     inline expected<std::pair<std::string, std::string>> GetNamesX509(const std::vector<uint8_t>& data) noexcept {
 
+        OpenSSL_add_all_algorithms();
+        ERR_load_BIO_strings();
+        ERR_load_crypto_strings();
+
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
 
-            return unexpected(std::string("Null BIO"));
+            return unexpected("Null BIO"s);
         }
         BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
         X509* certificate = nullptr;
@@ -280,8 +311,8 @@ namespace WebAuthN::Util::Crypto {
 
         if (certificate == nullptr) {
 
-            BIO_free(bio);
-            return unexpected(std::string("Could not get names from X509 certificate"));
+            BIO_free_all(bio);
+            return unexpected("Could not get names from X509 certificate"s);
         }
 
         auto subject = X509_get_subject_name(certificate);
@@ -301,7 +332,7 @@ namespace WebAuthN::Util::Crypto {
         }
 
         X509_free(certificate);
-        BIO_free(bio);
+        BIO_free_all(bio);
 
         if (!subjectNameResult) {
 
@@ -316,13 +347,17 @@ namespace WebAuthN::Util::Crypto {
         return std::make_pair(subjectNameResult.value(), issuerNameResult.value());
     }
 
-    inline expected<X509CertificateType> ParseCertificate(const std::vector<uint8_t> data) noexcept {
+    inline expected<X509CertificateType> ParseCertificate(const std::vector<uint8_t>& data) noexcept {
+
+        OpenSSL_add_all_algorithms();
+        ERR_load_BIO_strings();
+        ERR_load_crypto_strings();
 
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
 
-            return unexpected(std::string("Null BIO"));
+            return unexpected("Null BIO"s);
         }
         BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
         X509* certificate = nullptr;
@@ -330,8 +365,8 @@ namespace WebAuthN::Util::Crypto {
 
         if (certificate == nullptr) {
 
-            BIO_free(bio);
-            return unexpected(std::string("Could not parse X509 certificate"));
+            BIO_free_all(bio);
+            return unexpected("Could not parse X509 certificate"s);
         }
         X509CertificateType parsedCertificate{};
 
@@ -359,8 +394,8 @@ namespace WebAuthN::Util::Crypto {
         if (extCount < 0) {
 
             X509_free(certificate);
-            BIO_free(bio);
-            return unexpected(std::string("Could not parse X509 certificate: invalid number of extensions"));
+            BIO_free_all(bio);
+            return unexpected("Could not parse X509 certificate: invalid number of extensions"s);
         }
 
         for (int i = 0; i < extCount; ++i) {
@@ -383,7 +418,7 @@ namespace WebAuthN::Util::Crypto {
             if (!conversionResult) {
 
                 X509_free(certificate);
-                BIO_free(bio);
+                BIO_free_all(bio);
                 return unexpected(conversionResult.error());
             }
             parsedCertificate.NotBefore = conversionResult.value();
@@ -396,7 +431,7 @@ namespace WebAuthN::Util::Crypto {
             if (!conversionResult) {
 
                 X509_free(certificate);
-                BIO_free(bio);
+                BIO_free_all(bio);
                 return unexpected(conversionResult.error());
             }
             parsedCertificate.NotAfter = conversionResult.value();
@@ -406,10 +441,43 @@ namespace WebAuthN::Util::Crypto {
         parsedCertificate.IsCA = X509_check_ca(certificate) > 0;
 
         X509_free(certificate);
-        BIO_free(bio);
+        BIO_free_all(bio);
 
         return parsedCertificate;
+    }
 
+    inline expected<bool>
+    CheckSignature(const std::vector<uint8_t>& certData,
+                   const std::string& algorithm,
+                   const std::vector<uint8_t>& data,
+                   const std::vector<uint8_t>& signature) noexcept {
+
+        OpenSSL_add_all_algorithms();
+        ERR_load_BIO_strings();
+        ERR_load_crypto_strings();
+
+        auto bio = BIO_new(BIO_s_mem());
+
+        if (bio == nullptr) {
+
+            return unexpected("Null BIO"s);
+        }
+        BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
+        X509* certificate = nullptr;
+        d2i_X509_bio(bio, &certificate);
+
+        if (certificate == nullptr) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not parse X509 certificate"s);
+        }
+
+        auto result = _CheckSignature(certificate, algorithm, data, signature);
+        
+        X509_free(certificate);
+        BIO_free_all(bio);
+
+        return result;
     }
 } // namespace WebAuthN::Util::Crypto
 
