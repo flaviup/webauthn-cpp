@@ -12,7 +12,7 @@
 #include <optional>
 #include <nlohmann/json.hpp>
 #include "Base64.ipp"
-#include "Core.ipp"
+#include "../Core.ipp"
 
 #pragma GCC visibility push(default)
 

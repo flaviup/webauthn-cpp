@@ -9,7 +9,7 @@
 #ifndef WEBAUTHN_PROTOCOL_CREDENTIAL_IPP
 #define WEBAUTHN_PROTOCOL_CREDENTIAL_IPP
 
-#include "Core.ipp"
+#include "../Core.ipp"
 #include "Attestation.ipp"
 #include "Options.ipp"
 #include "../Util/Crypto.ipp"
@@ -203,7 +203,7 @@ namespace WebAuthN::Protocol {
 
             try {
                 enableAppID = (itCer->second).get<bool>();
-            } catch(const std::exception& e) {
+            } catch (const std::exception&) {
                 return unexpected(ErrBadRequest().WithDetails("Client Output appid did not have the expected type"));
             }
 
@@ -218,7 +218,7 @@ namespace WebAuthN::Protocol {
 
             try {
                 return (it->second).get<std::string>();
-            } catch(const std::exception& e) {
+            } catch (const std::exception&) {
                 return unexpected(ErrBadRequest().WithDetails("Session Data appid did not have the expected type"));
             }
         }
@@ -481,7 +481,7 @@ namespace WebAuthN::Protocol {
 
             auto credentialCreationResponse = json::parse(response).get<CredentialCreationResponseType>();
             return ParsedCredentialCreationDataType::Parse(credentialCreationResponse);
-        } catch(const std::exception& e) {
+        } catch (const std::exception& e) {
             return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(e.what()));
         }
     }

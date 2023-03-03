@@ -11,7 +11,7 @@
 
 #include <sodium.h>
 //#include "../../cpp-base64/base64.h"
-#include "Core.ipp"
+#include "../Core.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -24,7 +24,7 @@ namespace WebAuthN::Protocol {
         /*try {
 
             return base64_encode(str, length, true);
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return unexpected(ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding."));
         }*/
 
@@ -57,7 +57,7 @@ namespace WebAuthN::Protocol {
         /*try {
 
             return base64_decode(encoded, true);
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }*/
 
@@ -83,7 +83,7 @@ namespace WebAuthN::Protocol {
 
             auto decodedStr = base64_decode(encoded, true);
             return std::vector<uint8_t>(decodedStr.begin(), decodedStr.end());
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }*/
 

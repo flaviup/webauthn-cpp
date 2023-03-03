@@ -34,7 +34,7 @@ namespace WebAuthN::Util::Convert {
         
         try {
             return convert.from_bytes(input);
-        } catch (const std::range_error& e) {
+        } catch (const std::range_error&) {
             throw std::range_error("Failed UCS-2 conversion of message body. Check all "
                                    "characters are valid GSM-7, GSM 8-bit text, or UCS-2 "
                                    "characters."

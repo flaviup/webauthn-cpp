@@ -17,7 +17,7 @@
 #include <cbor.h>
 
 #include <nlohmann/json.hpp>
-#include "../Core.ipp"
+#include "../../Core.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -59,7 +59,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
             //std::clog << std::endl << VectorUint8ToHexString(data);
 
             return json::from_cbor(data);
-        } catch(const std::exception& e) {
+        } catch (const std::exception&) {
 
             return unexpected(std::string("JSON Unmarshal error"));
         }
@@ -73,7 +73,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
         try {
 
             return json::to_cbor(v);
-        } catch(const std::exception& e) {
+        } catch (const std::exception&) {
 
             return unexpected(std::string("JSON Marshal error"));
         }

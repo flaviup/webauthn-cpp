@@ -15,7 +15,7 @@
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
-#include "../Core.ipp"
+#include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
 
 #pragma GCC visibility push(default)

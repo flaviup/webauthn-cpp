@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 #include "Attestation.ipp"
 #include "../Metadata/Metadata.ipp"
+#include "../Util/Crypto.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
 #pragma GCC visibility push(default)
@@ -22,6 +23,8 @@ namespace WebAuthN::Protocol {
     
     inline const std::string PACKED_ATTESTATION_KEY = "packed";
 
+#pragma GCC visibility push(hidden)
+
     namespace {
 
         // Handle the attestation steps laid out in
@@ -31,9 +34,42 @@ namespace WebAuthN::Protocol {
                                 const std::vector<uint8_t>& authData,
                                 const std::vector<uint8_t>& aaguid,
                                 const int64_t alg,
-                                const json& x5c) noexcept {
+                                const json::array_t& x5c) noexcept {
 
             return std::make_pair("", std::nullopt);
+
+            for (const auto& c : x5c) {
+
+                std::vector<uint8_t> cb;
+
+                try {
+
+                    cb = c.get_binary();
+                } catch (const std::exception&) {
+
+                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                }
+
+                auto cert = Util::Crypto::ParseCertificate(cb);
+            }
+
+            if (x5c.empty()) {
+
+                return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+            }
+            std::vector<uint8_t> attCertBytes{};
+
+            try {
+
+                attCertBytes = x5c[0].get_binary();
+            } catch (const std::exception&) {
+
+                return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+            }
+            std::vector<uint8_t> signatureData{0};
+            std::copy(authData.cbegin(), authData.cend(), std::back_inserter(signatureData));
+            std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(signatureData));
+            auto attCert = Util::Crypto::ParseCertificate(attCertBytes);
 
             // Step 2.1. Verify that sig is a valid signature over the concatenation of authenticatorData
             // and clientDataHash using the attestation public key in attestnCert with the algorithm specified in alg.
@@ -292,6 +328,7 @@ namespace WebAuthN::Protocol {
                 if (att.AttStatement.value().find("x5c") != att.AttStatement.value().end()) {
 
                     auto x5c = att.AttStatement.value()["x5c"];
+
                     // Handle Basic Attestation steps for the x509 Certificate
                     return _HandleBasicAttestation(sig, clientDataHash, att.RawAuthData, att.AuthData.AttData.AAGUID, alg, x5c);
                 }
@@ -313,6 +350,8 @@ namespace WebAuthN::Protocol {
             }
         }
     } // namespace
+
+#pragma GCC visibility pop
 
     inline void RegisterPackedAttestation() noexcept {
 

@@ -46,19 +46,19 @@ namespace WebAuthN::WebAuthN {
         WebAuthNType& operator =(WebAuthNType&&) noexcept = default;
 
          // New creates a new WebAuthNType object given the proper config.
-        static inline Protocol::expected<WebAuthNType> New(const ConfigType& config) noexcept {
+        static inline expected<WebAuthNType> New(const ConfigType& config) noexcept {
 
             auto err = config.Validate();
 
             if (err) {
 
-                return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
+                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
             }
             auto sodiumInit = sodium_init();
 
             if (sodiumInit != 0) {
 
-                return Protocol::unexpected(fmt::format("Could not initialize sodium: error {}.", sodiumInit));
+                return unexpected(fmt::format("Could not initialize sodium: error {}.", sodiumInit));
             }
 
             return WebAuthNType(config);
@@ -90,20 +90,20 @@ namespace WebAuthN::WebAuthN {
 
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
+        expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
         BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = DEFAULT_REGISTRATION_OPTIONS) noexcept {
 
             auto err = _config.Validate();
 
             if (err) {
 
-                return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
+                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
             }
 
             auto challengeCreationResult = Protocol::CreateChallenge();
 
             if (!challengeCreationResult) {
-                return Protocol::unexpected(challengeCreationResult.error());
+                return unexpected(challengeCreationResult.error());
             }
             Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
 
@@ -117,7 +117,7 @@ namespace WebAuthN::WebAuthN {
                 auto idEncodingResult = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID());
 
                 if (!idEncodingResult) {
-                    return Protocol::unexpected(idEncodingResult.error());
+                    return unexpected(idEncodingResult.error());
                 }
                 entityUserID = idEncodingResult.value();
             }
@@ -181,13 +181,14 @@ namespace WebAuthN::WebAuthN {
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
         // credentials and session data.
-        Protocol::expected<CredentialType>
+        expected<CredentialType>
         FinishRegistration(const IUser& user, const SessionDataType& sessionData, const std::string& response) noexcept {
             
             auto parsedResponse = Protocol::ParseCredentialCreationResponse(response);
 
             if (!parsedResponse) {
-                return Protocol::unexpected(parsedResponse.error());
+
+                return unexpected(parsedResponse.error());
             }
 
             return _CreateCredential(user, sessionData, parsedResponse.value());
@@ -305,7 +306,7 @@ namespace WebAuthN::WebAuthN {
 
         // DiscoverableUserHandlerType returns a *User given the provided userHandle.
         //using DiscoverableUserHandlerType = Protocol::expected<IUser> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&);
-        using DiscoverableUserHandlerType = std::function<Protocol::expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
+        using DiscoverableUserHandlerType = std::function<expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
 
         // BeginLogin creates the Protocol::CredentialAssertionType data payload that should be sent to the user agent for beginning
         // the login/assertion process. The format of this data can be seen in §5.5 of the WebAuthn specification. These default
@@ -315,14 +316,15 @@ namespace WebAuthN::WebAuthN {
         //
         // Specification: §5.5. Options for Assertion Generation (https://www.w3.org/TR/webauthn/#dictionary-assertion-options)
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
                    const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             auto credentials = user.GetWebAuthNCredentials();
 
             if (credentials.empty()) { // If the user does not have any credentials, we cannot perform an assertion.
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Found no credentials for user"));
+
+                return unexpected(ErrBadRequest().WithDetails("Found no credentials for user"));
             }
 
             std::vector<Protocol::CredentialDescriptorType> allowedCredentials(credentials.size());
@@ -336,61 +338,67 @@ namespace WebAuthN::WebAuthN {
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             return _BeginLogin(std::nullopt, std::nullopt, std::nullopt, std::nullopt, opts);
         }
 
         // FinishLogin takes the response from the client and validate it against the user credentials and stored session data.
-        Protocol::expected<CredentialType>
+        expected<CredentialType>
         FinishLogin(const IUser& user, 
                     const SessionDataType& sessionData,
                     const std::string& response) noexcept {
             auto parsedResponse = Protocol::ParseCredentialRequestResponse(response);   
 
             if (!parsedResponse) {
-                return Protocol::unexpected(parsedResponse.error());
+
+                return unexpected(parsedResponse.error());
             }
 
             return ValidateLogin(user, sessionData, parsedResponse.value());
         }
 
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.
-        Protocol::expected<CredentialType>
+        expected<CredentialType>
         ValidateLogin(const IUser& user, 
                       const SessionDataType& sessionData, 
                       const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
         
             if (user.GetWebAuthNID() != sessionData.UserID) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
+
+                return unexpected(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
 
             if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
+
+                return unexpected(ErrBadRequest().WithDetails("Session has Expired"));
             }
 
             return _ValidateLogin(user, sessionData, parsedResponse);
         }
 
         // ValidateDiscoverableLogin is an overloaded version of ValidateLogin that allows for discoverable credentials.
-        Protocol::expected<CredentialType>
+        expected<CredentialType>
         ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType handler, 
                                   const SessionDataType& sessionData, 
                                   const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
             if (sessionData.UserID && !sessionData.UserID.value().empty()) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login"));
+
+                return unexpected(ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login"));
             }
 
             if (parsedResponse.Response.UserHandle.empty()) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle"));
+
+                return unexpected(ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle"));
             }
 
             auto handlerResult = handler(parsedResponse.RawID, parsedResponse.Response.UserHandle);
 
             if (!handlerResult || handlerResult.value() == nullptr) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
+
+                return unexpected(ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
             }
 
             return _ValidateLogin(*handlerResult.value(), sessionData, parsedResponse);
@@ -502,31 +510,34 @@ namespace WebAuthN::WebAuthN {
         }
 
         // CreateCredential verifies a parsed response against the user's credentials and session data.
-        Protocol::expected<CredentialType>
+        expected<CredentialType>
         _CreateCredential(const IUser& user,
                           const SessionDataType& sessionData,
                           const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
             
             if (user.GetWebAuthNID() != sessionData.UserID) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("ID mismatch for User and Session"));
+
+                return unexpected(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
 
             if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Session has Expired"));
+
+                return unexpected(ErrBadRequest().WithDetails("Session has Expired"));
             }
 
             auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
             auto verificationResultError = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
 
             if (verificationResultError) {
-                return Protocol::unexpected(verificationResultError.value());
+
+                return unexpected(verificationResultError.value());
             }
 
             return CredentialType::Create(parsedResponse);
         }
 
         template<size_t N>
-        Protocol::expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
         _BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
                     const std::optional<std::string>& userName, 
                     const std::optional<std::string>& userDisplayName, 
@@ -537,13 +548,14 @@ namespace WebAuthN::WebAuthN {
 
             if (validationResult) {
 
-                return Protocol::unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
+                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
             }
 
             auto challengeCreationResult = Protocol::CreateChallenge();
 
             if (!challengeCreationResult) {
-                return Protocol::unexpected(challengeCreationResult.error());
+
+                return unexpected(challengeCreationResult.error());
             }
             auto challenge = challengeCreationResult.value();
             auto assertion = Protocol::CredentialAssertionType{
@@ -588,7 +600,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.
-        Protocol::expected<CredentialType>
+        expected<CredentialType>
         _ValidateLogin(const IUser& user, 
                        const SessionDataType& sessionData, 
                        const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
@@ -611,7 +623,8 @@ namespace WebAuthN::WebAuthN {
                                                         [&allowedCredentialID](const CredentialType& userCredential) { return userCredential.ID == allowedCredentialID; });
 
                     if (!credentialsOwned) {
-                        return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
+
+                        return unexpected(ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
                     }
                 }
 
@@ -620,7 +633,8 @@ namespace WebAuthN::WebAuthN {
                                             [&parsedResponseRawID](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponseRawID; });
 
                 if (!credentialFound) {
-                    return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("User does not own the credential returned"));
+
+                    return unexpected(ErrBadRequest().WithDetails("User does not own the credential returned"));
                 }
             }
 
@@ -632,7 +646,8 @@ namespace WebAuthN::WebAuthN {
             auto userHandle = parsedResponse.Response.UserHandle;
             
             if (!userHandle.empty() && userHandle != user.GetWebAuthNID()) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("userHandle and User ID do not match"));
+
+                return unexpected(ErrBadRequest().WithDetails("userHandle and User ID do not match"));
             }
 
             // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
@@ -644,7 +659,8 @@ namespace WebAuthN::WebAuthN {
             credentialFound = credIter != userCredentials.end();
 
             if (!credentialFound) {
-                return Protocol::unexpected(Protocol::ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));
+
+                return unexpected(ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));
             }
             CredentialType& credential = *credIter;
 
@@ -656,7 +672,8 @@ namespace WebAuthN::WebAuthN {
             auto appIDResult = parsedResponse.GetAppID(sessionData.Extensions, credential.AttestationType);
 
             if (!appIDResult) {
-                return Protocol::unexpected(appIDResult.error());
+
+                return unexpected(appIDResult.error());
             }
             auto appID = appIDResult.value();
 
@@ -664,7 +681,8 @@ namespace WebAuthN::WebAuthN {
             auto validError = parsedResponse.Verify(sessionData.Challenge, rpID, rpOrigins, appID, shouldVerifyUser, credential.PublicKey);
 
             if (validError) {
-                return Protocol::unexpected(validError.value());
+
+                return unexpected(validError.value());
             }
 
             // Handle step 17.

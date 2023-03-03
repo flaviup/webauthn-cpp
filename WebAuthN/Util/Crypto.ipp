@@ -18,6 +18,8 @@
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 
+#include "../Core.ipp"
+
 #pragma GCC visibility push(default)
 
 namespace WebAuthN::Util::Crypto {
@@ -118,6 +120,14 @@ namespace WebAuthN::Util::Crypto {
         BIO_free(bio);
 
         return true;
+    }
+
+    struct X509CertificateType {
+
+    };
+
+    inline expected<X509CertificateType> ParseCertificate(const std::vector<uint8_t> data) {
+
     }
 } // namespace WebAuthN::Util::Crypto
 

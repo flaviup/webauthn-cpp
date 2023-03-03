@@ -18,7 +18,7 @@
 #include <optional>
 #include <nlohmann/json.hpp>
 #include <uuid/uuid.h>
-#include "../Protocol/Core.ipp"
+#include "../Core.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
 
 #pragma GCC visibility push(default)
@@ -2200,14 +2200,14 @@ namespace WebAuthN::Metadata {
 
     // Metadata Errors
 
-    struct MetadataError : public ::WebAuthN::Protocol::ErrorType {
+    struct MetadataError : public ErrorType {
 
         MetadataError() noexcept :
-            ::WebAuthN::Protocol::ErrorType() {
+            ErrorType() {
         }
 
         MetadataError(std::string&& type, std::string&& details) noexcept :
-            ::WebAuthN::Protocol::ErrorType(
+            ErrorType(
                 std::move(type),
                 std::move(details)) {
         }

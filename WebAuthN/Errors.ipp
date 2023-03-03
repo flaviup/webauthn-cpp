@@ -6,17 +6,16 @@
 //  flaviup on gmail com
 //
 
-#ifndef WEBAUTHN_PROTOCOL_ERRORS_IPP
-#define WEBAUTHN_PROTOCOL_ERRORS_IPP
+#ifndef WEBAUTHN_ERRORS_IPP
+#define WEBAUTHN_ERRORS_IPP
 
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
-#include "Extensions.ipp"
 
 #pragma GCC visibility push(default)
 
-namespace WebAuthN::Protocol {
+namespace WebAuthN {
 
     using json = nlohmann::json;
 
@@ -225,4 +224,4 @@ namespace WebAuthN::Protocol {
 
 #pragma GCC visibility pop
 
-#endif /* WEBAUTHN_PROTOCOL_ERRORS_IPP */
+#endif /* WEBAUTHN_ERRORS_IPP */

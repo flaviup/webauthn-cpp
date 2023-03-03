@@ -29,7 +29,7 @@ namespace WebAuthN::Util::StringCompare {
             const auto us2 = Util::Convert::Utf8ToUcs2(utf8Str2);
             //return u_strcasecmp(reinterpret_cast<const UChar*>(us1.data()), reinterpret_cast<const UChar*>(us2.data()), U_FOLD_CASE_DEFAULT) == 0;
             return u_strcasecmp(us1.data(), us2.data(), U_FOLD_CASE_DEFAULT) == 0;
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
         }
 
         return false;

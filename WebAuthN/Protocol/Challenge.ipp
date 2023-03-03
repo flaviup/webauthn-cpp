@@ -13,7 +13,7 @@
 #include <string>
 #include <sodium.h>
 #include "Base64.ipp"
-#include "Core.ipp"
+#include "../Core.ipp"
 
 #pragma GCC visibility push(default)
 

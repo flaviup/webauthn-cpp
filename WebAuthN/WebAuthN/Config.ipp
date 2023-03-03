@@ -42,28 +42,28 @@ namespace WebAuthN::WebAuthN {
     struct ConfigType {
 
         // Validate that the config flags in Config are properly set
-        inline std::optional<Protocol::ErrorType> Validate() const noexcept {
+        inline std::optional<ErrorType> Validate() const noexcept {
 
             if (Validated) {
                 return std::nullopt;
             }
 
             if (RPDisplayName.empty()) {
-                return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPDisplayName"));
+                return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPDisplayName"));
             }
 
             if (RPID.empty()) {
-                return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPID"));
+                return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPID"));
             }
 
             if (!Util::Url::Parse(RPID)) {
-                return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", RPID));
+                return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", RPID));
             }
 
             if (!RPIcon.empty()) {
 
                 if (!Util::Url::Parse(RPIcon)) {
-                    return Protocol::ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon));
+                    return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon));
                 }
             }
 
@@ -87,7 +87,7 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (RPOrigins.empty()) {
-                return Protocol::ErrorType().WithDetails("must provide at least one value to the 'RPOrigins' field");
+                return ErrorType().WithDetails("must provide at least one value to the 'RPOrigins' field");
             }
 
             if (!AuthenticatorSelection.RequireResidentKey.has_value()) {

@@ -6,17 +6,17 @@
 //  flaviup on gmail com
 //
 
-#ifndef WEBAUTHN_PROTOCOL_CORE_IPP
-#define WEBAUTHN_PROTOCOL_CORE_IPP
+#ifndef WEBAUTHN_CORE_IPP
+#define WEBAUTHN_CORE_IPP
 
 #define JSON_DISABLE_ENUM_SERIALIZATION 1
 
-#include "../Util/expected.hh"
+#include "Util/expected.hh"
 #include "Errors.ipp"
 
 #pragma GCC visibility push(default)
 
-namespace WebAuthN::Protocol {
+namespace WebAuthN {
 
     template<typename T>
     using expected = tl::expected<T, ErrorType>;
@@ -25,4 +25,4 @@ namespace WebAuthN::Protocol {
 
 #pragma GCC visibility pop
 
-#endif /* WEBAUTHN_PROTOCOL_CORE_IPP */
+#endif /* WEBAUTHN_CORE_IPP */

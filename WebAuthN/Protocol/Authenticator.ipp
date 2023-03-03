@@ -11,7 +11,7 @@
 
 #include <cstddef>
 #include <fmt/format.h>
-#include "Core.ipp"
+#include "../Core.ipp"
 #include "WebAuthNCBOR/WebAuthNCBOR.ipp"
 #include "../Util/Endianness.ipp"
 
