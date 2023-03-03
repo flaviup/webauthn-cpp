@@ -252,14 +252,15 @@ namespace WebAuthN::Protocol {
             }
             auto key = ok.value();
             std::optional<ErrorType> err = std::nullopt;
+            auto success = false;
+            auto vpk = WebAuthNCOSE::KeyCast(key, success);
 
-            try {
+            if (success) {
 
-                auto k = std::any_cast<const WebAuthNCOSE::PublicKeyDataType&>(key);
-                auto err = _VerifyKeyAlgorithm(k.Algorithm, alg);
-            } catch (const std::exception&) {
-
-                return unexpected(ErrInvalidAttestation().WithDetails("Error verifying the public key data"));
+                err = _VerifyKeyAlgorithm(vpk.Value.Algorithm, alg);
+            } else {
+                
+                err = ErrUnsupportedKey();
             }
 
             if (err) {

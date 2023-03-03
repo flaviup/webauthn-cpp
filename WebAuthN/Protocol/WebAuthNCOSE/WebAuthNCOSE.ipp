@@ -23,11 +23,12 @@
 
 namespace WebAuthN::Protocol::WebAuthNCOSE {
 
+    using namespace std::string_literals;
     using json = nlohmann::json;
 
     // Consts
 
-    inline const std::string KEY_CANNOT_DISPLAY = "Cannot display key";
+    inline const auto KEY_CANNOT_DISPLAY = "Cannot display key"s;
 
     // Enums
 
@@ -213,22 +214,22 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         switch (signatureAlgorithm) {
 
-            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return "unknownSignatureAlgorithm";
-            case SignatureAlgorithmType::MD2WithRSA:       return "md2WithRSA";
-            case SignatureAlgorithmType::MD5WithRSA:       return "md5WithRSA";
-            case SignatureAlgorithmType::SHA1WithRSA:      return "sha1WithRSA";
-            case SignatureAlgorithmType::SHA256WithRSA:    return "sha256WithRSA";
-            case SignatureAlgorithmType::SHA384WithRSA:    return "sha384WithRSA";
-            case SignatureAlgorithmType::SHA512WithRSA:    return "sha512WithRSA";
-            case SignatureAlgorithmType::DSAWithSHA1:      return "dsaWithSHA1";
-            case SignatureAlgorithmType::DSAWithSHA256:    return "dsaWithSHA256";
-            case SignatureAlgorithmType::ECDSAWithSHA1:    return "ecdsaWithSHA1";
-            case SignatureAlgorithmType::ECDSAWithSHA256:  return "ecdsaWithSHA256";
-            case SignatureAlgorithmType::ECDSAWithSHA384:  return "ecdsaWithSHA384";
-            case SignatureAlgorithmType::ECDSAWithSHA512:  return "ecdsaWithSHA512";
-            case SignatureAlgorithmType::SHA256WithRSAPSS: return "sha256WithRSAPSS";
-            case SignatureAlgorithmType::SHA384WithRSAPSS: return "sha384WithRSAPSS";
-            case SignatureAlgorithmType::SHA512WithRSAPSS: return "sha512WithRSAPSS";
+            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return "unknownSignatureAlgorithm"s;
+            case SignatureAlgorithmType::MD2WithRSA:                return "md2WithRSA"s;
+            case SignatureAlgorithmType::MD5WithRSA:                return "md5WithRSA"s;
+            case SignatureAlgorithmType::SHA1WithRSA:               return "sha1WithRSA"s;
+            case SignatureAlgorithmType::SHA256WithRSA:             return "sha256WithRSA"s;
+            case SignatureAlgorithmType::SHA384WithRSA:             return "sha384WithRSA"s;
+            case SignatureAlgorithmType::SHA512WithRSA:             return "sha512WithRSA"s;
+            case SignatureAlgorithmType::DSAWithSHA1:               return "dsaWithSHA1"s;
+            case SignatureAlgorithmType::DSAWithSHA256:             return "dsaWithSHA256"s;
+            case SignatureAlgorithmType::ECDSAWithSHA1:             return "ecdsaWithSHA1"s;
+            case SignatureAlgorithmType::ECDSAWithSHA256:           return "ecdsaWithSHA256"s;
+            case SignatureAlgorithmType::ECDSAWithSHA384:           return "ecdsaWithSHA384"s;
+            case SignatureAlgorithmType::ECDSAWithSHA512:           return "ecdsaWithSHA512"s;
+            case SignatureAlgorithmType::SHA256WithRSAPSS:          return "sha256WithRSAPSS"s;
+            case SignatureAlgorithmType::SHA384WithRSAPSS:          return "sha384WithRSAPSS"s;
+            case SignatureAlgorithmType::SHA512WithRSAPSS:          return "sha512WithRSAPSS"s;
             default: return "";
         }
     }
@@ -243,17 +244,17 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         std::string name;
         HasherHandlerType hasher;
     } SIGNATURE_ALGORITHM_DETAILS[] {
-        { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA",   Util::Crypto::SHA1 },
-        { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA", Util::Crypto::SHA256 },
-        { SignatureAlgorithmType::SHA384WithRSA,             COSEAlgorithmIdentifierType::AlgRS384,    "SHA384-RSA", Util::Crypto::SHA384 },
-        { SignatureAlgorithmType::SHA512WithRSA,             COSEAlgorithmIdentifierType::AlgRS512,    "SHA512-RSA", Util::Crypto::SHA512 },
-        { SignatureAlgorithmType::SHA256WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS256, "SHA256-RSAPSS", Util::Crypto::SHA256 },
-        { SignatureAlgorithmType::SHA384WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS384, "SHA384-RSAPSS", Util::Crypto::SHA384 },
-        { SignatureAlgorithmType::SHA512WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS512, "SHA512-RSAPSS", Util::Crypto::SHA512 },
-        { SignatureAlgorithmType::ECDSAWithSHA256,           COSEAlgorithmIdentifierType::AlgES256,  "ECDSA-SHA256", Util::Crypto::SHA256 },
-        { SignatureAlgorithmType::ECDSAWithSHA384,           COSEAlgorithmIdentifierType::AlgES384,  "ECDSA-SHA384", Util::Crypto::SHA384 },
-        { SignatureAlgorithmType::ECDSAWithSHA512,           COSEAlgorithmIdentifierType::AlgES512,  "ECDSA-SHA512", Util::Crypto::SHA512 },
-        { SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA,         "EdDSA", Util::Crypto::SHA512 }
+        { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA"s,   Util::Crypto::SHA1 },
+        { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA"s, Util::Crypto::SHA256 },
+        { SignatureAlgorithmType::SHA384WithRSA,             COSEAlgorithmIdentifierType::AlgRS384,    "SHA384-RSA"s, Util::Crypto::SHA384 },
+        { SignatureAlgorithmType::SHA512WithRSA,             COSEAlgorithmIdentifierType::AlgRS512,    "SHA512-RSA"s, Util::Crypto::SHA512 },
+        { SignatureAlgorithmType::SHA256WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS256, "SHA256-RSAPSS"s, Util::Crypto::SHA256 },
+        { SignatureAlgorithmType::SHA384WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS384, "SHA384-RSAPSS"s, Util::Crypto::SHA384 },
+        { SignatureAlgorithmType::SHA512WithRSAPSS,          COSEAlgorithmIdentifierType::AlgPS512, "SHA512-RSAPSS"s, Util::Crypto::SHA512 },
+        { SignatureAlgorithmType::ECDSAWithSHA256,           COSEAlgorithmIdentifierType::AlgES256,  "ECDSA-SHA256"s, Util::Crypto::SHA256 },
+        { SignatureAlgorithmType::ECDSAWithSHA384,           COSEAlgorithmIdentifierType::AlgES384,  "ECDSA-SHA384"s, Util::Crypto::SHA384 },
+        { SignatureAlgorithmType::ECDSAWithSHA512,           COSEAlgorithmIdentifierType::AlgES512,  "ECDSA-SHA512"s, Util::Crypto::SHA512 },
+        { SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA,         "EdDSA"s, Util::Crypto::SHA512 }
     };
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated
@@ -638,10 +639,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (items == nullptr || size == 0) {
 
-                return unexpected(std::string("No CBOR data available to parse a public key"));
+                return unexpected("No CBOR data available to parse a public key"s);
             }
 
-            PublicKeyDataType pk{0};
+            PublicKeyDataType pk{};
             auto fieldCount = 0;
 
             for (decltype(size) i = 0; i < size; ++i) {
@@ -673,7 +674,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 2) {
 
-                return unexpected(std::string("Could not CBOR-decode public key: could not find all public key fields"));                
+                return unexpected("Could not CBOR-decode public key: could not find all public key fields"s);
             }
 
             return pk;
@@ -724,7 +725,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 2) {
 
-                return unexpected(std::string("Could not CBOR-decode OKP public key: could not find all fields"));                
+                return unexpected("Could not CBOR-decode OKP public key: could not find all fields"s);                
             }
 
             return okp;
@@ -791,7 +792,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 3) {
 
-                return unexpected(std::string("Could not CBOR-decode EC2 public key: could not find all fields"));                
+                return unexpected("Could not CBOR-decode EC2 public key: could not find all fields"s);                
             }
 
             return ec2;
@@ -854,7 +855,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 2) {
 
-                return unexpected(std::string("Could not CBOR-decode RSA public key: could not find all fields"));                
+                return unexpected("Could not CBOR-decode RSA public key: could not find all fields"s);                
             }
 
             return rsa;
@@ -870,7 +871,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         if (!unmarshalResult) {
 
-            return unexpected(std::string("Could not CBOR-decode public key"));
+            return unexpected("Could not CBOR-decode public key"s);
         }
         auto cborItem = unmarshalResult.value();
 
@@ -940,7 +941,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         } else {
 
             cbor_decref(&cborItem);
-            return unexpected(std::string("Could not CBOR-decode public key: root element is not a map"));
+            return unexpected("Could not CBOR-decode public key: root element is not a map"s);
         }
     }
 
@@ -999,19 +1000,46 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
     }*/
 
+    inline ValueType<PublicKeyDataType> KeyCast(const std::any& key, bool& success) noexcept {
+
+        static ValueType<PublicKeyDataType> vpk{PublicKeyDataType{}};
+        success = true;
+
+        try {
+            
+            return ValueType<PublicKeyDataType>{std::any_cast<const OKPPublicKeyDataType&>(key)};
+        } catch(const std::bad_any_cast&) {
+
+            try {
+                
+                return ValueType<PublicKeyDataType>{std::any_cast<const EC2PublicKeyDataType&>(key)};
+            } catch(const std::bad_any_cast&) {
+
+                try {
+                    
+                    return ValueType<PublicKeyDataType>{std::any_cast<const RSAPublicKeyDataType&>(key)};
+                } catch(const std::bad_any_cast&) {
+
+                    success = false;
+                }
+            }
+        }
+
+        return vpk;
+    }
+
     inline expected<bool>
     VerifySignature(const std::any& key, const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) noexcept {
 
-        try {
+        auto success = false;
+        auto vpk = KeyCast(key, success);
 
-            auto k = std::any_cast<const PublicKeyDataType&>(key);
-            return k.Verify(data, sig);
-        } catch(const std::exception&) {
+        if (success) {
 
-            return unexpected(std::string(ErrUnsupportedKey()));
+            return vpk.Value.Verify(data, sig);
         }
 
-        return true;
+        return unexpected(ErrUnsupportedKey());
     }
 
     inline std::string DisplayPublicKey(const std::vector<uint8_t>& cpk) {
@@ -1104,8 +1132,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         ErrUnsupportedKey() noexcept :
             ErrorType(
-                "invalid_key_type",
-                "Unsupported Public Key Type") {
+                "invalid_key_type"s,
+                "Unsupported Public Key Type"s) {
         }
     };
     
@@ -1113,8 +1141,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         ErrUnsupportedAlgorithm() noexcept :
             ErrorType(
-                "unsupported_key_algorithm",
-                "Unsupported public key algorithm") {
+                "unsupported_key_algorithm"s,
+                "Unsupported public key algorithm"s) {
         }
     };
     
@@ -1122,8 +1150,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         ErrSigNotProvidedOrInvalid() noexcept :
             ErrorType(
-                "signature_not_provided_or_invalid",
-                "Signature invalid or not provided") {
+                "signature_not_provided_or_invalid"s,
+                "Signature invalid or not provided"s) {
         }
     };
 } // namespace WebAuthN::Protocol::WebAuthNCOSE

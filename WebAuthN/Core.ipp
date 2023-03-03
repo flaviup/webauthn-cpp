@@ -19,6 +19,12 @@
 namespace WebAuthN {
 
     template<typename T>
+    struct ValueType {
+
+        const T& Value;
+    };
+
+    template<typename T>
     using expected = tl::expected<T, ErrorType>;
     using unexpected = tl::unexpected<ErrorType>;
 } // namespace WebAuthN::Protocol
