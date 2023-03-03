@@ -57,7 +57,7 @@ namespace WebAuthN::Protocol {
                 if (!certParsingResult) {
 
                     return unexpected(ErrAttestationFormat().
-                        WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", certParsingResult.error())));
+                        WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(certParsingResult.error()))));
                 }
                 auto ct = certParsingResult.value();
                 auto notBeforeResult = Util::Time::ParseISO8601(ct.NotBefore);
@@ -97,7 +97,7 @@ namespace WebAuthN::Protocol {
 
             if (!attCertResult) {
 
-                return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", attCertResult.error())));
+                return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
             }
             auto attCert = attCertResult.value();
 
@@ -110,7 +110,7 @@ namespace WebAuthN::Protocol {
 
             if (!signatureCheckResult || !signatureCheckResult.value()) {
 
-                return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", signatureCheckResult.error())));
+                return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
             }
 
             // Step 2.2 Verify that attestnCert meets the requirements in §8.2.1 Packed attestation statement certificate requirements.

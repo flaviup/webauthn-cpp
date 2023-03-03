@@ -43,7 +43,7 @@ namespace WebAuthN::Util::Time {
         if (count > 2) {
 
             int tzh{0}, tzm{0};
-            result = sscanf(dateTime.c_str(), "%d-%d-%dT%d:%d:%fZ", &year, &month, &day, &hour, &minute, &second, &tzh, &tzm);
+            result = sscanf(dateTime.c_str(), "%d-%d-%dT%d:%d:%f:%d:%dZ", &year, &month, &day, &hour, &minute, &second, &tzh, &tzm);
 
             if (result != EOF && 6 < result) {
 
@@ -63,12 +63,13 @@ namespace WebAuthN::Util::Time {
         }
 
         std::tm t{
-            .tm_year = year - 1900,
-            .tm_mon = month, // -1 ?
-            .tm_mday = day,
-            .tm_hour = hour,
-            .tm_min = minute,
-            .tm_sec = static_cast<int>(second)
+            .tm_year  = year - 1900,
+            .tm_mon   = month - 1,
+            .tm_mday  = day,
+            .tm_hour  = hour,
+            .tm_min   = minute,
+            .tm_sec   = static_cast<int>(second),
+            .tm_isdst = -1
         };
         const auto tp = std::chrono::system_clock::from_time_t(std::mktime(&t));
         const auto epoch = tp.time_since_epoch();

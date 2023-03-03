@@ -286,7 +286,7 @@ namespace WebAuthN::Util::Crypto {
                 return result == 1;
             } else {
 
-                return unexpected("Could not check signature");
+                return unexpected("Could not check signature"s);
             }
         }
     }
@@ -294,10 +294,6 @@ namespace WebAuthN::Util::Crypto {
 #pragma GCC visibility pop
 
     inline expected<std::pair<std::string, std::string>> GetNamesX509(const std::vector<uint8_t>& data) noexcept {
-
-        OpenSSL_add_all_algorithms();
-        ERR_load_BIO_strings();
-        ERR_load_crypto_strings();
 
         auto bio = BIO_new(BIO_s_mem());
 
@@ -348,10 +344,6 @@ namespace WebAuthN::Util::Crypto {
     }
 
     inline expected<X509CertificateType> ParseCertificate(const std::vector<uint8_t>& data) noexcept {
-
-        OpenSSL_add_all_algorithms();
-        ERR_load_BIO_strings();
-        ERR_load_crypto_strings();
 
         auto bio = BIO_new(BIO_s_mem());
 
@@ -451,10 +443,6 @@ namespace WebAuthN::Util::Crypto {
                    const std::string& algorithm,
                    const std::vector<uint8_t>& data,
                    const std::vector<uint8_t>& signature) noexcept {
-
-        OpenSSL_add_all_algorithms();
-        ERR_load_BIO_strings();
-        ERR_load_crypto_strings();
 
         auto bio = BIO_new(BIO_s_mem());
 

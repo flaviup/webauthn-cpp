@@ -10,7 +10,6 @@
 #define WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
 
 #include <functional>
-#include <sodium.h>
 #include "IUser.ipp"
 #include "Config.ipp"
 #include "SessionData.ipp"
@@ -54,6 +53,8 @@ namespace WebAuthN::WebAuthN {
 
                 return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
             }
+            OpenSSL_add_all_algorithms();
+            ERR_load_crypto_strings();
             auto sodiumInit = sodium_init();
 
             if (sodiumInit != 0) {
