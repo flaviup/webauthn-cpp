@@ -93,7 +93,7 @@ namespace WebAuthN::Util::Crypto {
 
 #pragma GCC visibility pop
 
-    inline bool GetNamesX509(const std::vector<uint8_t>& data, std::pair<std::string, std::string>& names) {
+    inline expected<std::pair<std::string, std::string>> GetNamesX509(const std::vector<uint8_t>& data) {
 
         auto bio = BIO_new(BIO_s_mem());
         BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
@@ -103,7 +103,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free(bio);
-            return false;
+            return unexpected(std::string("Could not get names from X509 certificate"));
         }
 
         auto subject = X509_get_subject_name(certificate);
@@ -111,7 +111,7 @@ namespace WebAuthN::Util::Crypto {
 
         auto subjectName = _ExtractNameEntry(subject, NID_commonName);
         auto issuerName  = _ExtractNameEntry(issuer, NID_commonName);
-        names = std::make_pair(subjectName, issuerName);
+        auto names = std::make_pair(subjectName, issuerName);
 
         X509_NAME_free(subject);
         X509_NAME_free(issuer);
@@ -119,7 +119,7 @@ namespace WebAuthN::Util::Crypto {
         X509_free(certificate);
         BIO_free(bio);
 
-        return true;
+        return names;
     }
 
     struct X509CertificateType {

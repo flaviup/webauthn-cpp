@@ -153,12 +153,12 @@ namespace WebAuthN::Protocol {
 
                 if (x5c && !x5c.value().empty()) {
 
-                    std::pair<std::string, std::string> names;
+                    auto namesResult = Util::Crypto::GetNamesX509(x5c.value().begin()->second);
                     
-                    if (!Util::Crypto::GetNamesX509(x5c.value().begin()->second, names)) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
+                    if (!namesResult) {  //x5cAtt, err := x509.ParseCertificate(x5c[0].([]byte))
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
-                    
+                    auto names = namesResult.value();
 
                     if (names.first != names.second) {
 
