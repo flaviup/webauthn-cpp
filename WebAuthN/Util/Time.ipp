@@ -35,7 +35,7 @@ namespace WebAuthN::Util::Time {
 
     inline expected<int64_t> ParseISO8601(const std::string& dateTime) noexcept {
 
-        const auto count = std::count(dateTime.begin(), dateTime.end(), ':');
+        const auto count = std::count(dateTime.cbegin(), dateTime.cend(), ':');
         int year{0}, month{0}, day{0}, hour{0}, minute{0};
         float second{0};
         int result = 0;

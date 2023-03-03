@@ -82,7 +82,7 @@ namespace WebAuthN::Protocol {
         /*try {
 
             auto decodedStr = base64_decode(encoded, true);
-            return std::vector<uint8_t>(decodedStr.begin(), decodedStr.end());
+            return std::vector<uint8_t>(decodedStr.cbegin(), decodedStr.cend());
         } catch (const std::exception&) {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
         }*/

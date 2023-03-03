@@ -654,8 +654,8 @@ namespace WebAuthN::WebAuthN {
             // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
             // for your use case), look up the corresponding credential public key.
             auto credIter = std::find_if(userCredentials.begin(),
-                                        userCredentials.end(),
-                                        [&parsedResponseRawID](const CredentialType& userCredential) { return userCredential.ID == parsedResponseRawID; });
+                                         userCredentials.end(),
+                                         [&parsedResponseRawID](const CredentialType& userCredential) { return userCredential.ID == parsedResponseRawID; });
 
             credentialFound = credIter != userCredentials.end();
 

@@ -255,25 +255,11 @@ namespace WebAuthN::Protocol {
 
             try {
 
-                auto k = std::any_cast<const WebAuthNCOSE::EC2PublicKeyDataType&>(key);
+                auto k = std::any_cast<const WebAuthNCOSE::PublicKeyDataType&>(key);
                 auto err = _VerifyKeyAlgorithm(k.Algorithm, alg);
             } catch (const std::exception&) {
 
-                try {
-
-                    auto k = std::any_cast<const WebAuthNCOSE::RSAPublicKeyDataType&>(key);
-                    auto err = _VerifyKeyAlgorithm(k.Algorithm, alg);
-                } catch (const std::exception&) {
-
-                    try {
-
-                        auto k = std::any_cast<const WebAuthNCOSE::OKPPublicKeyDataType&>(key);
-                        auto err = _VerifyKeyAlgorithm(k.Algorithm, alg);
-                    } catch (const std::exception&) {
-
-                        return unexpected(ErrInvalidAttestation().WithDetails("Error verifying the public key data"));
-                    }
-                }
+                return unexpected(ErrInvalidAttestation().WithDetails("Error verifying the public key data"));
             }
 
             if (err) {
@@ -324,21 +310,21 @@ namespace WebAuthN::Protocol {
 
             if (att.AttStatement) {
 
-                if (att.AttStatement.value().find("alg") == att.AttStatement.value().end()) {
+                if (att.AttStatement.value().find("alg") == att.AttStatement.value().cend()) {
 
                     return unexpected(ErrAttestationFormat().WithDetails("Error retrieving alg value"));
                 }
                 auto alg = att.AttStatement.value()["alg"].get<int64_t>();
 
                 // Get the sig value - A byte string containing the attestation signature.
-                if (att.AttStatement.value().find("sig") == att.AttStatement.value().end()) {
+                if (att.AttStatement.value().find("sig") == att.AttStatement.value().cend() || !att.AttStatement.value()["sig"].is_binary()) {
 
                     return unexpected(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
                 }
-                auto sig = att.AttStatement.value()["sig"].get<std::vector<uint8_t>>();
+                auto sig = att.AttStatement.value()["sig"].get_binary();
 
                 // Step 2. If x5c is present, this indicates that the attestation type is not ECDAA.
-                if (att.AttStatement.value().find("x5c") != att.AttStatement.value().end()) {
+                if (att.AttStatement.value().find("x5c") != att.AttStatement.value().cend()) {
 
                     auto x5c = att.AttStatement.value()["x5c"];
 
@@ -348,7 +334,7 @@ namespace WebAuthN::Protocol {
 
                 // Step 3. If ecdaaKeyId is present, then the attestation type is ECDAA.
                 // Also make sure the we did not have an x509 then
-                if (att.AttStatement.value().find("ecdaaKeyId") != att.AttStatement.value().end()) {
+                if (att.AttStatement.value().find("ecdaaKeyId") != att.AttStatement.value().cend()) {
 
                     auto ecdaaKeyID = att.AttStatement.value()["ecdaaKeyId"];
                     // Handle ECDAA Attestation steps for the x509 Certificate

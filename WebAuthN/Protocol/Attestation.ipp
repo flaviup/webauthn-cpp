@@ -115,7 +115,7 @@ namespace WebAuthN::Protocol {
 
             auto formatHandlerIter= ATTESTATION_REGISTRY.find(Format);
             
-            if (formatHandlerIter == ATTESTATION_REGISTRY.end()) {
+            if (formatHandlerIter == ATTESTATION_REGISTRY.cend()) {
                 return ErrAttestationFormat().WithInfo(fmt::format("Attestation format {} is unsupported", Format));
             }
 
@@ -140,7 +140,7 @@ namespace WebAuthN::Protocol {
             }
             auto metaIter = Metadata::METADATA.find(aaguid);
 
-            if (metaIter != Metadata::METADATA.end()) {
+            if (metaIter != Metadata::METADATA.cend()) {
 
                 auto meta = metaIter->second;
 

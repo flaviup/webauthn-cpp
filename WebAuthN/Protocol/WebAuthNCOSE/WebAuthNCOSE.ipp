@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 #include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
+#include "../WebAuthNCBOR/WebAuthNCBOR.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -279,6 +280,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         PublicKeyDataType& operator =(const PublicKeyDataType& other) noexcept = default;
         PublicKeyDataType& operator =(PublicKeyDataType&& other) noexcept = default;
 
+        virtual expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+
+            return false;
+        }
+
         // Decode the results to int by default.
         bool _struct;      // cbor:",keyasint"
         // The type of key created. Should be OKP, EC2, or RSA.
@@ -307,6 +314,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         EC2PublicKeyDataType() noexcept = default;
 
+        EC2PublicKeyDataType(const PublicKeyDataType& pk) noexcept :
+            PublicKeyDataType(pk) {
+        }
+
         EC2PublicKeyDataType(const json& j) :
             PublicKeyDataType(j) {
             
@@ -331,8 +342,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         EC2PublicKeyDataType& operator =(EC2PublicKeyDataType&& other) noexcept = default;
 
         // Verify Elliptic Curve Public Key Signature.
-        inline expected<bool>
-        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+        expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
             return true;
             /*var curve elliptic.Curve
 
@@ -434,6 +445,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         RSAPublicKeyDataType() noexcept = default;
 
+        RSAPublicKeyDataType(const PublicKeyDataType& pk) noexcept :
+            PublicKeyDataType(pk) {
+        }
+
         RSAPublicKeyDataType(const json& j) :
             PublicKeyDataType(j) {
 
@@ -454,8 +469,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         RSAPublicKeyDataType& operator =(RSAPublicKeyDataType&& other) noexcept = default;
 
         // Verify RSA Public Key Signature.
-        inline expected<bool>
-        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+        expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
             return true;
             /*pubkey := &rsa.PublicKey{
                 N: big.NewInt(0).SetBytes(Modulus),
@@ -534,6 +549,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         OKPPublicKeyDataType() noexcept = default;
 
+        OKPPublicKeyDataType(const PublicKeyDataType& pk) noexcept :
+            PublicKeyDataType(pk) {
+        }
+
         OKPPublicKeyDataType(const json& j) :
             PublicKeyDataType(j) {
 
@@ -550,8 +569,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         OKPPublicKeyDataType& operator =(OKPPublicKeyDataType&& other) noexcept = default;
 
         // Verify Octet Key Pair (OKP) Public Key Signature.
-        inline expected<bool>
-        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept {
+        expected<bool>
+        Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
             return true;
             /*var key ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
 
@@ -610,36 +629,319 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : Util::Crypto::SHA256;  // default to SHA256?  Why not.
     }
 
+#pragma GCC visibility push(hidden)
+
+    namespace {
+
+        inline expected<PublicKeyDataType>
+        _PublicKeyDataFromCBOR(const cbor_pair* items, size_t size) noexcept {
+
+            if (items == nullptr || size == 0) {
+
+                return unexpected(std::string("No CBOR data available to parse a public key"));
+            }
+
+            PublicKeyDataType pk{0};
+            auto fieldCount = 0;
+
+            for (decltype(size) i = 0; i < size; ++i) {
+
+                auto item = *(items + i);
+
+                if (cbor_isa_uint(item.key) && 
+                    cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
+
+                    auto k = cbor_get_uint8(item.key);
+
+                    switch (k) {
+
+                        case 1: pk.KeyType = cbor_isa_uint(item.value) ? cbor_get_uint8(item.value) : 0;
+                            ++fieldCount;
+                            break;
+
+                        case 3: pk.Algorithm = cbor_isa_negint(item.value) ? 
+                                                -(cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8 ? cbor_get_uint8(item.value) : cbor_get_uint16(item.value)) - 1
+                                                : 0;
+                            ++fieldCount;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (fieldCount < 2) {
+
+                return unexpected(std::string("Could not CBOR-decode public key: could not find all public key fields"));                
+            }
+
+            return pk;
+        }
+
+        inline expected<OKPPublicKeyDataType>
+        _OKPPublicKeyDataFromCBOR(const PublicKeyDataType& pk, const cbor_pair* items, size_t size) noexcept {
+
+            OKPPublicKeyDataType okp{pk};
+            auto fieldCount = 0;
+
+            for (decltype(size) i = 0; i < size; ++i) {
+
+                auto item = *(items + i);
+
+                if (cbor_isa_negint(item.key) && 
+                    cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
+
+                    auto k = -cbor_get_uint8(item.key) - 1;
+
+                    switch (k) {
+
+                        case -1: okp.Curve = cbor_isa_uint(item.value) ? cbor_get_uint64(item.value) : -cbor_get_uint64(item.value) - 1;
+                            ++fieldCount;
+                            break;
+
+                        case -2:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    okp.XCoord = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                                ++fieldCount;
+                            }
+                            break;
+                        }
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (fieldCount < 2) {
+
+                return unexpected(std::string("Could not CBOR-decode OKP public key: could not find all fields"));                
+            }
+
+            return okp;
+        }
+
+        inline expected<EC2PublicKeyDataType>
+        _EC2PublicKeyDataFromCBOR(const PublicKeyDataType& pk, const cbor_pair* items, size_t size) noexcept {
+
+            EC2PublicKeyDataType ec2{pk};
+            auto fieldCount = 0;
+
+            for (decltype(size) i = 0; i < size; ++i) {
+
+                auto item = *(items + i);
+
+                if (cbor_isa_negint(item.key) && 
+                    cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
+
+                    auto k = -cbor_get_uint8(item.key) - 1;
+
+                    switch (k) {
+
+                        case -1: ec2.Curve = cbor_isa_uint(item.value) ? cbor_get_uint64(item.value) : -cbor_get_uint64(item.value) - 1;
+                            ++fieldCount;
+                            break;
+
+                        case -2:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    ec2.XCoord = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                                ++fieldCount;
+                            }
+                            break;
+                        }
+
+                       case -3:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    ec2.YCoord = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                                ++fieldCount;
+                            }
+                            break;
+                        }
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (fieldCount < 3) {
+
+                return unexpected(std::string("Could not CBOR-decode EC2 public key: could not find all fields"));                
+            }
+
+            return ec2;
+        }
+
+        inline expected<RSAPublicKeyDataType>
+        _RSAPublicKeyDataFromCBOR(const PublicKeyDataType& pk, const cbor_pair* items, size_t size) noexcept {
+
+            RSAPublicKeyDataType rsa{pk};
+            auto fieldCount = 0;
+
+            for (decltype(size) i = 0; i < size; ++i) {
+
+                auto item = *(items + i);
+
+                if (cbor_isa_negint(item.key) && 
+                    cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
+
+                    auto k = -cbor_get_uint8(item.key) - 1;
+
+                    switch (k) {
+
+                        case -1:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    rsa.Modulus = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                                ++fieldCount;
+                            }
+                            break;
+                        }
+
+                        case -2:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    rsa.Exponent = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                                ++fieldCount;
+                            }
+                            break;
+                        }
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            if (fieldCount < 2) {
+
+                return unexpected(std::string("Could not CBOR-decode RSA public key: could not find all fields"));                
+            }
+
+            return rsa;
+        }
+    } // namespace
+
+#pragma GCC visibility pop
+
     // ParsePublicKey figures out what kind of COSE material was provided and create the data for the new key.
     inline expected<std::any> ParsePublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
-        PublicKeyDataType pk;
-        return pk;
-        /*WebAuthNCBOR::Unmarshal(keyBytes, &pk);
 
-        switch COSEKeyType(pk.KeyType) {
-        case OctetKey:
-            OKPPublicKeyDataType o{};
-            WebAuthNCBOR::Unmarshal(keyBytes, &o);
-            o.PublicKeyData = pk;
+        auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
 
-            return o, nil
-        case EllipticKey:
-            EC2PublicKeyDataType e{};
+        if (!unmarshalResult) {
 
-            WebAuthNCBOR::Unmarshal(keyBytes, &e);
-            e.PublicKeyData = pk;
+            return unexpected(std::string("Could not CBOR-decode public key"));
+        }
+        auto cborItem = unmarshalResult.value();
 
-            return e, nil
-        case RSAKey:
-            RSAPublicKeyDataType r{};
+        if (cbor_isa_map(cborItem) && cbor_map_is_definite(cborItem)) {
 
-            WebAuthNCBOR::Unmarshal(keyBytes, &r);
-            r.PublicKeyData = pk;
+            auto size = cbor_map_size(cborItem);
+            auto items = cbor_map_handle(cborItem);
+            auto pkResult = _PublicKeyDataFromCBOR(items, size);
 
-            return r, nil
-        default:
-            return nil, ErrUnsupportedKey
-        }*/
+            if (!pkResult) {
+
+                cbor_decref(&cborItem);
+                return unexpected(pkResult.error());
+            }
+            auto pk = pkResult.value();
+
+            switch (pk.KeyType) {
+
+                case static_cast<int>(COSEKeyType::OctetKey):
+                {
+                    auto okpPkResult = _OKPPublicKeyDataFromCBOR(pk, items, size);
+
+                    if (!okpPkResult) {
+
+                        cbor_decref(&cborItem);
+                        return unexpected(okpPkResult.error());
+                    }
+                    auto okp = okpPkResult.value();
+
+                    cbor_decref(&cborItem);
+                    return okp;
+                }
+                case static_cast<int>(COSEKeyType::EllipticKey):
+                {
+                    auto ec2PkResult = _EC2PublicKeyDataFromCBOR(pk, items, size);
+
+                    if (!ec2PkResult) {
+
+                        cbor_decref(&cborItem);
+                        return unexpected(ec2PkResult.error());
+                    }
+                    auto ec2 = ec2PkResult.value();
+
+                    cbor_decref(&cborItem);
+                    return ec2;
+                }
+                case static_cast<int>(COSEKeyType::RSAKey):
+                {
+                    auto rsaPkResult = _RSAPublicKeyDataFromCBOR(pk, items, size);
+
+                    if (!rsaPkResult) {
+
+                        cbor_decref(&cborItem);
+                        return unexpected(rsaPkResult.error());
+                    }
+                    auto rsa = rsaPkResult.value();
+
+                    cbor_decref(&cborItem);
+                    return rsa;
+                }
+                default:
+                {
+                    cbor_decref(&cborItem);
+                    return unexpected(std::string(ErrUnsupportedKey()));
+                }
+            }
+        } else {
+
+            cbor_decref(&cborItem);
+            return unexpected(std::string("Could not CBOR-decode public key: root element is not a map"));
+        }
     }
 
     // ParseFIDOPublicKey is only used when the appID extension is configured by the assertion response.
@@ -697,18 +999,19 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
     }*/
 
-    inline expected<bool> VerifySignature(const std::any& key, const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) {
+    inline expected<bool>
+    VerifySignature(const std::any& key, const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) noexcept {
+
+        try {
+
+            auto k = std::any_cast<const PublicKeyDataType&>(key);
+            return k.Verify(data, sig);
+        } catch(const std::exception&) {
+
+            return unexpected(std::string(ErrUnsupportedKey()));
+        }
+
         return true;
-        /*switch k := key.(type) {
-        case OKPPublicKeyData:
-            return k.Verify(data, sig)
-        case EC2PublicKeyData:
-            return k.Verify(data, sig)
-        case RSAPublicKeyData:
-            return k.Verify(data, sig)
-        default:
-            return false, ErrUnsupportedKey
-        }*/
     }
 
     inline std::string DisplayPublicKey(const std::vector<uint8_t>& cpk) {
