@@ -230,7 +230,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             case SignatureAlgorithmType::SHA256WithRSAPSS:          return "sha256WithRSAPSS"s;
             case SignatureAlgorithmType::SHA384WithRSAPSS:          return "sha384WithRSAPSS"s;
             case SignatureAlgorithmType::SHA512WithRSAPSS:          return "sha512WithRSAPSS"s;
-            default: return "";
+            default: return ""s;
         }
     }
 

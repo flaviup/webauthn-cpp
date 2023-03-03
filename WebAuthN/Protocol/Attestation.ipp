@@ -112,8 +112,7 @@ namespace WebAuthN::Protocol {
 
                 return std::nullopt;
             }
-
-            auto formatHandlerIter= ATTESTATION_REGISTRY.find(Format);
+            auto formatHandlerIter = ATTESTATION_REGISTRY.find(Format);
             
             if (formatHandlerIter == ATTESTATION_REGISTRY.cend()) {
                 return ErrAttestationFormat().WithInfo(fmt::format("Attestation format {} is unsupported", Format));
