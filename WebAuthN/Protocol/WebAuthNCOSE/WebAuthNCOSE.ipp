@@ -20,7 +20,6 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <openssl/core_names.h>
-#include <openssl/ecdsa.h>
 
 #include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
@@ -221,22 +220,22 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         switch (signatureAlgorithm) {
 
-            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return "unknownSignatureAlgorithm"s;
-            case SignatureAlgorithmType::MD2WithRSA:                return "md2WithRSA"s;
-            case SignatureAlgorithmType::MD5WithRSA:                return "md5WithRSA"s;
-            case SignatureAlgorithmType::SHA1WithRSA:               return "sha1WithRSA"s;
-            case SignatureAlgorithmType::SHA256WithRSA:             return "sha256WithRSA"s;
-            case SignatureAlgorithmType::SHA384WithRSA:             return "sha384WithRSA"s;
-            case SignatureAlgorithmType::SHA512WithRSA:             return "sha512WithRSA"s;
-            case SignatureAlgorithmType::DSAWithSHA1:               return "dsaWithSHA1"s;
-            case SignatureAlgorithmType::DSAWithSHA256:             return "dsaWithSHA256"s;
-            case SignatureAlgorithmType::ECDSAWithSHA1:             return "ecdsaWithSHA1"s;
-            case SignatureAlgorithmType::ECDSAWithSHA256:           return "ecdsaWithSHA256"s;
-            case SignatureAlgorithmType::ECDSAWithSHA384:           return "ecdsaWithSHA384"s;
-            case SignatureAlgorithmType::ECDSAWithSHA512:           return "ecdsaWithSHA512"s;
-            case SignatureAlgorithmType::SHA256WithRSAPSS:          return "sha256WithRSAPSS"s;
-            case SignatureAlgorithmType::SHA384WithRSAPSS:          return "sha384WithRSAPSS"s;
-            case SignatureAlgorithmType::SHA512WithRSAPSS:          return "sha512WithRSAPSS"s;
+            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return ""s;
+            case SignatureAlgorithmType::MD2WithRSA:                return "MD2"s;
+            case SignatureAlgorithmType::MD5WithRSA:                return "MD5"s;
+            case SignatureAlgorithmType::SHA1WithRSA:               return "SHA1"s;
+            case SignatureAlgorithmType::SHA256WithRSA:             return "SHA256"s;
+            case SignatureAlgorithmType::SHA384WithRSA:             return "SHA384"s;
+            case SignatureAlgorithmType::SHA512WithRSA:             return "SHA512"s;
+            case SignatureAlgorithmType::DSAWithSHA1:               return "SHA1"s;
+            case SignatureAlgorithmType::DSAWithSHA256:             return "SHA256"s;
+            case SignatureAlgorithmType::ECDSAWithSHA1:             return "SHA1"s;
+            case SignatureAlgorithmType::ECDSAWithSHA256:           return "SHA256"s;
+            case SignatureAlgorithmType::ECDSAWithSHA384:           return "SHA384"s;
+            case SignatureAlgorithmType::ECDSAWithSHA512:           return "SHA512"s;
+            case SignatureAlgorithmType::SHA256WithRSAPSS:          return "SHA256"s;
+            case SignatureAlgorithmType::SHA384WithRSAPSS:          return "SHA384"s;
+            case SignatureAlgorithmType::SHA512WithRSAPSS:          return "SHA512"s;
             default: return ""s;
         }
     }
@@ -435,18 +434,18 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 default:
                     return unexpected(ErrUnsupportedAlgorithm());
             }
-            //auto pkeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr);
-            auto pkeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "EC", nullptr);
+            //auto pKeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr);
+            auto pKeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "EC", nullptr);
 
-            if (pkeyCtx == nullptr) {
+            if (pKeyCtx == nullptr) {
 
                 return unexpected("Could not create an EC key generation context"s);
             }
 
-            //if (EVP_PKEY_keygen_init(pkeyCtx) != 1) {
-            if (EVP_PKEY_fromdata_init(pkeyCtx) != 1) {
+            //if (EVP_PKEY_keygen_init(pKeyCtx) != 1) {
+            if (EVP_PKEY_fromdata_init(pKeyCtx) != 1) {
 
-                EVP_PKEY_CTX_free(pkeyCtx);
+                EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not init EC key generation"s);
             }
             OSSL_PARAM params[]{
@@ -459,21 +458,13 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                               YCoord.value().size()),
                 OSSL_PARAM_END
             };
+            EVP_PKEY* pKey = nullptr;
 
-            if (EVP_PKEY_CTX_set_params(pkeyCtx, params) != 1 || 
-                EVP_PKEY_param_check(pkeyCtx) != 1 ||
-                EVP_PKEY_public_check(pkeyCtx) != 1) {
+            //if (EVP_PKEY_generate(pKeyCtx, &pKey) != 1 ||
+            if (EVP_PKEY_fromdata(pKeyCtx, &pKey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
+                pKey == nullptr) {
 
-                EVP_PKEY_CTX_free(pkeyCtx);
-                return unexpected("Could not set EC key generation params"s);
-            }
-            EVP_PKEY* pkey = nullptr;
-
-            //if (EVP_PKEY_generate(pkeyCtx, &pkey) != 1 ||
-            if (EVP_PKEY_fromdata(pkeyCtx, &pkey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
-                pkey == nullptr) {
-
-                EVP_PKEY_CTX_free(pkeyCtx);
+                EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not generate EC key"s);                
             }
             auto f = HasherFromCOSEAlg(static_cast<COSEAlgorithmIdentifierType>(Algorithm));
@@ -485,8 +476,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (ecdsaSig == nullptr) {
 
-                EVP_PKEY_free(pkey);
-                EVP_PKEY_CTX_free(pkeyCtx);
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected(ErrSigNotProvidedOrInvalid());
             }
 
@@ -497,25 +488,29 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             if (mdCtx == nullptr) {
 
                 ECDSA_SIG_free(ecdsaSig);
-                EVP_PKEY_free(pkey);
-                EVP_PKEY_CTX_free(pkeyCtx);
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not create MD context"s);
             }
-            auto result = EVP_DigestVerifyInit(mdCtx, nullptr, nullptr, nullptr, pkey);
+            auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
+            auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
+            auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
+            auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
 
             if (result != 1) {
 
                 EVP_MD_CTX_free(mdCtx);
                 ECDSA_SIG_free(ecdsaSig);
-                EVP_PKEY_free(pkey);
-                EVP_PKEY_CTX_free(pkeyCtx);
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Unable to init signature checking"s);
             }
             result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), hashData.data(), hashData.size());
+            auto errCode = ERR_get_error();
             EVP_MD_CTX_free(mdCtx);
             ECDSA_SIG_free(ecdsaSig);
-            EVP_PKEY_free(pkey);
-            EVP_PKEY_CTX_free(pkeyCtx);
+            EVP_PKEY_free(pKey);
+            EVP_PKEY_CTX_free(pKeyCtx);
 
             if (result == 0 || result == 1) {
 

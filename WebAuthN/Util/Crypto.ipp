@@ -247,7 +247,7 @@ namespace WebAuthN::Util::Crypto {
 
         inline expected<bool>
         _CheckSignature(const X509* certificate,
-                        const std::string& algorithm,
+                        const std::string& algorithmName,
                         const std::vector<uint8_t>& data,
                         const std::vector<uint8_t>& signature) noexcept {
 
@@ -269,7 +269,7 @@ namespace WebAuthN::Util::Crypto {
                 EVP_PKEY_free(pKey);
                 return unexpected("Could not create MD context"s);
             }
-            auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithm.c_str(), nullptr, nullptr, pKey, nullptr);
+            auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
 
             if (result != 1) {
 
@@ -440,7 +440,7 @@ namespace WebAuthN::Util::Crypto {
 
     inline expected<bool>
     CheckSignature(const std::vector<uint8_t>& certData,
-                   const std::string& algorithm,
+                   const std::string& algorithmName,
                    const std::vector<uint8_t>& data,
                    const std::vector<uint8_t>& signature) noexcept {
 
@@ -460,7 +460,7 @@ namespace WebAuthN::Util::Crypto {
             return unexpected("Could not parse X509 certificate"s);
         }
 
-        auto result = _CheckSignature(certificate, algorithm, data, signature);
+        auto result = _CheckSignature(certificate, algorithmName, data, signature);
         
         X509_free(certificate);
         BIO_free_all(bio);
