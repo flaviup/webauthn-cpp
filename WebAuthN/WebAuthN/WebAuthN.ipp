@@ -158,6 +158,7 @@ namespace WebAuthN::WebAuthN {
             if (!creation.Response.Timeout || creation.Response.Timeout.value() == 0) {
 
                 switch (creation.Response.AuthenticatorSelection.value().UserVerification.value()) {
+
                     case Protocol::UserVerificationRequirementType::Discouraged:
                         creation.Response.Timeout = _config.Timeouts.Registration.Timeout.count();
                         break;
@@ -275,6 +276,7 @@ namespace WebAuthN::WebAuthN {
                 cco.AuthenticatorSelection.value().ResidentKey = requirement;
 
                 switch (requirement) {
+
                     case Protocol::ResidentKeyRequirementType::Required:
                         cco.AuthenticatorSelection.value().RequireResidentKey = Protocol::ResidentKeyRequired();
                         break;
@@ -576,6 +578,7 @@ namespace WebAuthN::WebAuthN {
             if (!assertion.Response.Timeout || assertion.Response.Timeout.value() == 0) {
 
                 switch (assertion.Response.UserVerification.value()) {
+
                     case Protocol::UserVerificationRequirementType::Discouraged:
                         assertion.Response.Timeout = _config.Timeouts.Login.TimeoutUVD.count();
                         break;

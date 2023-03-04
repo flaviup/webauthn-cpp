@@ -15,6 +15,12 @@
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
+
+#include <openssl/asn1.h>
+#include <openssl/err.h>
+#include <openssl/x509v3.h>
+#include <openssl/ecdsa.h>
+
 #include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
 #include "../WebAuthNCBOR/WebAuthNCBOR.ipp"
@@ -234,6 +240,35 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
     }
 
+    // Errors
+
+    struct ErrUnsupportedKey : public ErrorType {
+
+        ErrUnsupportedKey() noexcept :
+            ErrorType(
+                "invalid_key_type"s,
+                "Unsupported Public Key Type"s) {
+        }
+    };
+    
+    struct ErrUnsupportedAlgorithm : public ErrorType {
+
+        ErrUnsupportedAlgorithm() noexcept :
+            ErrorType(
+                "unsupported_key_algorithm"s,
+                "Unsupported public key algorithm"s) {
+        }
+    };
+    
+    struct ErrSigNotProvidedOrInvalid : public ErrorType {
+
+        ErrSigNotProvidedOrInvalid() noexcept :
+            ErrorType(
+                "signature_not_provided_or_invalid"s,
+                "Signature invalid or not provided"s) {
+        }
+    };
+
     // Structs
 
     using HasherHandlerType = std::vector<uint8_t> (*)(const std::string& str);
@@ -256,6 +291,28 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         { SignatureAlgorithmType::ECDSAWithSHA512,           COSEAlgorithmIdentifierType::AlgES512,  "ECDSA-SHA512"s, Util::Crypto::SHA512 },
         { SignatureAlgorithmType::UnknownSignatureAlgorithm, COSEAlgorithmIdentifierType::AlgEdDSA,         "EdDSA"s, Util::Crypto::SHA512 }
     };
+
+    // SigAlgFromCOSEAlg return which signature algorithm is being used from the COSE Key.
+    inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
+
+        const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
+
+        auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
+                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
+
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
+    }
+
+    // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
+    inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
+
+        const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
+
+        auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
+                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
+
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : Util::Crypto::SHA256;  // default to SHA256?  Why not.
+    }
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated
     // by an authenticator and returned to a Relying Party at registration time. We unpack this object
@@ -345,42 +402,93 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         // Verify Elliptic Curve Public Key Signature.
         expected<bool>
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
-            return true;
-            /*var curve elliptic.Curve
 
-            switch COSEAlgorithmIdentifier(Algorithm) {
-            case AlgES512: // IANA COSE code for ECDSA w/ SHA-512.
-                curve = elliptic.P521()
-            case AlgES384: // IANA COSE code for ECDSA w/ SHA-384.
-                curve = elliptic.P384()
-            case AlgES256: // IANA COSE code for ECDSA w/ SHA-256.
-                curve = elliptic.P256()
-            default:
-                return false, ErrUnsupportedAlgorithm
+            int curve{};
+
+            switch (Algorithm) {
+
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES512): // IANA COSE code for ECDSA w/ SHA-512.
+                    curve = NID_secp521r1;
+                    break;
+
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES384): // IANA COSE code for ECDSA w/ SHA-384.
+                    curve = NID_secp384r1;
+                    break;
+
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256): // IANA COSE code for ECDSA w/ SHA-256.
+                    curve = NID_secp256k1;
+                    break;
+
+                default:
+                    return unexpected(ErrUnsupportedAlgorithm());
+            }
+            auto ek = EC_KEY_new_by_curve_name(curve);
+
+            if (ek == nullptr) {
+
+                return unexpected("Could not create an EC key"s);
+            }
+            const auto x = BN_bin2bn(XCoord.value().data(), XCoord.value().size(), nullptr);
+            const auto y = BN_bin2bn(YCoord.value().data(), YCoord.value().size(), nullptr);
+            EC_KEY_set_public_key_affine_coordinates(ek, x, y);
+
+            auto f = HasherFromCOSEAlg(static_cast<COSEAlgorithmIdentifierType>(Algorithm));
+            auto hashData = f(std::string(reinterpret_cast<const char*>(data.data()), data.size()));
+
+            ECDSA_SIG* ecdsaSig = nullptr;
+            const uint8_t* pSigData = sig.data();
+            d2i_ECDSA_SIG(&ecdsaSig, &pSigData, sig.size());
+
+            if (ecdsaSig == nullptr) {
+
+                EC_KEY_free(ek);
+                return unexpected(ErrSigNotProvidedOrInvalid());
             }
 
-            pubkey := &ecdsa.PublicKey{
-                Curve: curve,
-                X:     big.NewInt(0).SetBytes(k.XCoord),
-                Y:     big.NewInt(0).SetBytes(k.YCoord),
+            //auto verificationResult = ecdsa.Verify(pubkey, h.Sum(nil), e.R, e.S);
+
+            auto mdCtx = EVP_MD_CTX_new();
+
+            if (mdCtx == nullptr) {
+
+                EC_KEY_free(ek);
+                ECDSA_SIG_free(ecdsaSig);
+                return unexpected("Could not create MD context"s);
+            }
+            auto pkey = EVP_PKEY_new();
+
+            if (pkey == nullptr) {
+
+                EVP_MD_CTX_free(mdCtx);
+                EC_KEY_free(ek);
+                ECDSA_SIG_free(ecdsaSig);
+                return unexpected("Could not create a public key"s);
             }
 
-            type ECDSASignature struct {
-                R, S *big.Int
+            EVP_PKEY_set1_EC_KEY(pkey, nullptr);
+            auto result = EVP_DigestVerifyInit(mdCtx, nullptr, nullptr, nullptr, pkey);
+
+            if (result != 1) {
+
+                EVP_PKEY_free(pkey);
+                EVP_MD_CTX_free(mdCtx);
+                EC_KEY_free(ek);
+                ECDSA_SIG_free(ecdsaSig);
+                return unexpected("Unable to init signature checking"s);
             }
+            result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), hashData.data(), hashData.size());
+            EVP_PKEY_free(pkey);
+            EVP_MD_CTX_free(mdCtx);
+            EC_KEY_free(ek);
+            ECDSA_SIG_free(ecdsaSig);
 
-            e := &ECDSASignature{}
-            f := HasherFromCOSEAlg(COSEAlgorithmIdentifier(Algorithm))
-            h := f()
+            if (result == 0 || result == 1) {
 
-            h.Write(data)
+                return result == 1;
+            } else {
 
-            _, err := asn1.Unmarshal(sig, e)
-            if err != nil {
-                return false, ErrSigNotProvidedOrInvalid
+                return unexpected("Could not check signature"s);
             }
-
-            return ecdsa.Verify(pubkey, h.Sum(nil), e.R, e.S), nil*/
         }
 
         /*inline tpm2.EllipticCurveType TPMCurveID() const noexcept {
@@ -607,28 +715,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     }
 
     // Functions
-
-    // SigAlgFromCOSEAlg return which signature algorithm is being used from the COSE Key.
-    inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
-
-        const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
-
-        auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
-                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
-
-        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
-    }
-
-    // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
-    inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
-
-        const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
-
-        auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
-                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
-
-        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : Util::Crypto::SHA256;  // default to SHA256?  Why not.
-    }
 
 #pragma GCC visibility push(hidden)
 
@@ -890,7 +976,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             switch (pk.KeyType) {
 
-                case static_cast<int>(COSEKeyType::OctetKey):
+                case static_cast<int64_t>(COSEKeyType::OctetKey):
                 {
                     auto okpPkResult = _OKPPublicKeyDataFromCBOR(pk, items, size);
 
@@ -904,7 +990,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     cbor_decref(&cborItem);
                     return okp;
                 }
-                case static_cast<int>(COSEKeyType::EllipticKey):
+
+                case static_cast<int64_t>(COSEKeyType::EllipticKey):
                 {
                     auto ec2PkResult = _EC2PublicKeyDataFromCBOR(pk, items, size);
 
@@ -918,7 +1005,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     cbor_decref(&cborItem);
                     return ec2;
                 }
-                case static_cast<int>(COSEKeyType::RSAKey):
+
+                case static_cast<int64_t>(COSEKeyType::RSAKey):
                 {
                     auto rsaPkResult = _RSAPublicKeyDataFromCBOR(pk, items, size);
 
@@ -932,6 +1020,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     cbor_decref(&cborItem);
                     return rsa;
                 }
+
                 default:
                 {
                     cbor_decref(&cborItem);
@@ -1125,35 +1214,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             return "Cannot display key of this type"
         }*/
     }
-
-    // Errors
-
-    struct ErrUnsupportedKey : public ErrorType {
-
-        ErrUnsupportedKey() noexcept :
-            ErrorType(
-                "invalid_key_type"s,
-                "Unsupported Public Key Type"s) {
-        }
-    };
-    
-    struct ErrUnsupportedAlgorithm : public ErrorType {
-
-        ErrUnsupportedAlgorithm() noexcept :
-            ErrorType(
-                "unsupported_key_algorithm"s,
-                "Unsupported public key algorithm"s) {
-        }
-    };
-    
-    struct ErrSigNotProvidedOrInvalid : public ErrorType {
-
-        ErrSigNotProvidedOrInvalid() noexcept :
-            ErrorType(
-                "signature_not_provided_or_invalid"s,
-                "Signature invalid or not provided"s) {
-        }
-    };
 } // namespace WebAuthN::Protocol::WebAuthNCOSE
 
 #pragma GCC visibility pop
