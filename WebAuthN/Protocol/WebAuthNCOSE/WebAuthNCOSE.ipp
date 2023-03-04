@@ -19,6 +19,7 @@
 #include <openssl/asn1.h>
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
+#include <openssl/core_names.h>
 #include <openssl/ecdsa.h>
 
 #include "../../Core.ipp"
@@ -403,35 +404,79 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         expected<bool>
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
 
-            int curve{};
+            if (!XCoord) {
+
+                return unexpected("XCoord param missing"s);
+            }
+
+            if (!YCoord) {
+
+                return unexpected("YCoord param missing"s);
+            }
+            char CURVE_P521[] = "P-521";
+            char CURVE_P384[] = "P-384";
+            char CURVE_P256[] = "P-256";
+            char* curve = nullptr;
 
             switch (Algorithm) {
 
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES512): // IANA COSE code for ECDSA w/ SHA-512.
-                    curve = NID_secp521r1;
+                    curve = CURVE_P521; //NID_secp521r1;
                     break;
 
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES384): // IANA COSE code for ECDSA w/ SHA-384.
-                    curve = NID_secp384r1;
+                    curve = CURVE_P384; //NID_secp384r1;
                     break;
 
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256): // IANA COSE code for ECDSA w/ SHA-256.
-                    curve = NID_secp256k1;
+                    curve = CURVE_P256; //NID_secp256k1;
                     break;
 
                 default:
                     return unexpected(ErrUnsupportedAlgorithm());
             }
-            auto ek = EC_KEY_new_by_curve_name(curve);
+            //auto pkeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr);
+            auto pkeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "EC", nullptr);
 
-            if (ek == nullptr) {
+            if (pkeyCtx == nullptr) {
 
-                return unexpected("Could not create an EC key"s);
+                return unexpected("Could not create an EC key generation context"s);
             }
-            const auto x = BN_bin2bn(XCoord.value().data(), XCoord.value().size(), nullptr);
-            const auto y = BN_bin2bn(YCoord.value().data(), YCoord.value().size(), nullptr);
-            EC_KEY_set_public_key_affine_coordinates(ek, x, y);
 
+            //if (EVP_PKEY_keygen_init(pkeyCtx) != 1) {
+            if (EVP_PKEY_fromdata_init(pkeyCtx) != 1) {
+
+                EVP_PKEY_CTX_free(pkeyCtx);
+                return unexpected("Could not init EC key generation"s);
+            }
+            EVP_PKEY* pkey = nullptr;
+            OSSL_PARAM params[4]{};
+
+            params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME,
+                                                         curve, 0);
+            params[1] = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_EC_PUB_X,
+                                                const_cast<uint8_t*>(XCoord.value().data()), 
+                                                XCoord.value().size());
+            params[2] = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_EC_PUB_Y,
+                                                const_cast<uint8_t*>(XCoord.value().data()), 
+                                                YCoord.value().size());
+            params[3] = OSSL_PARAM_construct_end();
+
+            if (EVP_PKEY_CTX_set_params(pkeyCtx, params) != 1 || 
+                EVP_PKEY_param_check(pkeyCtx) != 1 ||
+                EVP_PKEY_public_check(pkeyCtx) != 1) {
+
+                EVP_PKEY_CTX_free(pkeyCtx);
+                return unexpected("Could not set EC key generation params"s);
+            }
+
+            //if (EVP_PKEY_generate(pkeyCtx, &pkey) != 1 ||
+            if (EVP_PKEY_fromdata(pkeyCtx, &pkey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
+                pkey == nullptr) {
+
+                EVP_PKEY_CTX_free(pkeyCtx);
+                return unexpected("Could not generate EC key"s);                
+            }
             auto f = HasherFromCOSEAlg(static_cast<COSEAlgorithmIdentifierType>(Algorithm));
             auto hashData = f(std::string(reinterpret_cast<const char*>(data.data()), data.size()));
 
@@ -441,7 +486,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (ecdsaSig == nullptr) {
 
-                EC_KEY_free(ek);
+                EVP_PKEY_free(pkey);
+                EVP_PKEY_CTX_free(pkeyCtx);
                 return unexpected(ErrSigNotProvidedOrInvalid());
             }
 
@@ -451,36 +497,26 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (mdCtx == nullptr) {
 
-                EC_KEY_free(ek);
                 ECDSA_SIG_free(ecdsaSig);
+                EVP_PKEY_free(pkey);
+                EVP_PKEY_CTX_free(pkeyCtx);
                 return unexpected("Could not create MD context"s);
             }
-            auto pkey = EVP_PKEY_new();
-
-            if (pkey == nullptr) {
-
-                EVP_MD_CTX_free(mdCtx);
-                EC_KEY_free(ek);
-                ECDSA_SIG_free(ecdsaSig);
-                return unexpected("Could not create a public key"s);
-            }
-
-            EVP_PKEY_set1_EC_KEY(pkey, nullptr);
             auto result = EVP_DigestVerifyInit(mdCtx, nullptr, nullptr, nullptr, pkey);
 
             if (result != 1) {
 
-                EVP_PKEY_free(pkey);
                 EVP_MD_CTX_free(mdCtx);
-                EC_KEY_free(ek);
                 ECDSA_SIG_free(ecdsaSig);
+                EVP_PKEY_free(pkey);
+                EVP_PKEY_CTX_free(pkeyCtx);
                 return unexpected("Unable to init signature checking"s);
             }
             result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), hashData.data(), hashData.size());
-            EVP_PKEY_free(pkey);
             EVP_MD_CTX_free(mdCtx);
-            EC_KEY_free(ek);
             ECDSA_SIG_free(ecdsaSig);
+            EVP_PKEY_free(pkey);
+            EVP_PKEY_CTX_free(pkeyCtx);
 
             if (result == 0 || result == 1) {
 
