@@ -55,6 +55,12 @@ namespace WebAuthN::WebAuthN {
             }
             OpenSSL_add_all_algorithms();
             ERR_load_crypto_strings();
+            OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_DIGESTS | 
+                                OPENSSL_INIT_ADD_ALL_CIPHERS |
+                                OPENSSL_INIT_LOAD_CRYPTO_STRINGS |
+                                OPENSSL_INIT_ENGINE_ALL_BUILTIN |
+                                OPENSSL_INIT_ENGINE_OPENSSL |
+                                OPENSSL_INIT_ENGINE_AFALG, nullptr);
             auto sodiumInit = sodium_init();
 
             if (sodiumInit != 0) {

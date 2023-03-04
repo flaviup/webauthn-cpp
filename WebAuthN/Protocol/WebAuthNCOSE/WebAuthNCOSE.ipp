@@ -505,7 +505,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Unable to init signature checking"s);
             }
-            result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), hashData.data(), hashData.size());
+            result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), data.data(), data.size());
             auto errCode = ERR_get_error();
             EVP_MD_CTX_free(mdCtx);
             ECDSA_SIG_free(ecdsaSig);
