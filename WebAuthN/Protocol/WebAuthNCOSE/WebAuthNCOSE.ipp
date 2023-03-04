@@ -449,18 +449,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pkeyCtx);
                 return unexpected("Could not init EC key generation"s);
             }
-            EVP_PKEY* pkey = nullptr;
-            OSSL_PARAM params[4]{};
-
-            params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME,
-                                                         curve, 0);
-            params[1] = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_EC_PUB_X,
-                                                const_cast<uint8_t*>(XCoord.value().data()), 
-                                                XCoord.value().size());
-            params[2] = OSSL_PARAM_construct_BN(OSSL_PKEY_PARAM_EC_PUB_Y,
-                                                const_cast<uint8_t*>(XCoord.value().data()), 
-                                                YCoord.value().size());
-            params[3] = OSSL_PARAM_construct_end();
+            OSSL_PARAM params[]{
+                OSSL_PARAM_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve, 0),
+                OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X,
+                              const_cast<uint8_t*>(XCoord.value().data()), 
+                              XCoord.value().size()),
+                OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_Y,
+                              const_cast<uint8_t*>(XCoord.value().data()), 
+                              YCoord.value().size()),
+                OSSL_PARAM_END
+            };
 
             if (EVP_PKEY_CTX_set_params(pkeyCtx, params) != 1 || 
                 EVP_PKEY_param_check(pkeyCtx) != 1 ||
@@ -469,6 +467,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pkeyCtx);
                 return unexpected("Could not set EC key generation params"s);
             }
+            EVP_PKEY* pkey = nullptr;
 
             //if (EVP_PKEY_generate(pkeyCtx, &pkey) != 1 ||
             if (EVP_PKEY_fromdata(pkeyCtx, &pkey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
