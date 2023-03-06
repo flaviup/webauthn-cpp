@@ -337,9 +337,10 @@ namespace WebAuthN::WebAuthN {
             }
 
             std::vector<Protocol::CredentialDescriptorType> allowedCredentials(credentials.size());
+            size_t n = 0;
 
             for (const auto& credential : credentials) {
-                allowedCredentials.push_back(credential.ToDescriptorType());
+                allowedCredentials[n++] = credential.ToDescriptorType();
             }
 
             return _BeginLogin(user.GetWebAuthNID(), user.GetWebAuthNName(), user.GetWebAuthNDisplayName(), allowedCredentials, opts);
