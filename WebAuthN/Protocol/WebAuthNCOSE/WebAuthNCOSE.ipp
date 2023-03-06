@@ -457,7 +457,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not init EC key generation"s);
             }
-            std::vector<uint8_t> pubKeyData{};
+            std::vector<uint8_t> pubKeyData(1 + XCoord.value().size() + YCoord.value().size());
             pubKeyData.push_back(0x04);
             std::copy(XCoord.value().cbegin(), XCoord.value().cend(), std::back_inserter(pubKeyData));
             std::copy(YCoord.value().cbegin(), YCoord.value().cend(), std::back_inserter(pubKeyData));
@@ -686,7 +686,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not init RSA key generation"s);
             }
-            //std::vector<uint8_t> pubKeyData{};
+            //std::vector<uint8_t> pubKeyData(Modulus.value() + 4);
             //pubKeyData.push_back(0x30);
             // ... pubKeyData.push_back ....
             //std::copy(Modulus.value().cbegin(), Modulus.value().cend(), std::back_inserter(pubKeyData));
