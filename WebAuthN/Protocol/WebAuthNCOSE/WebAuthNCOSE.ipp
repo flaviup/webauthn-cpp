@@ -464,10 +464,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             OSSL_PARAM params[]{
                 OSSL_PARAM_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve, 0),
                 /*OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X,
-                              const_cast<uint8_t*>(XCoord.value().data()), 
+                              const_cast<uint8_t*>(XCoord.value().data()),
                               XCoord.value().size()),
                 OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_Y,
-                              const_cast<uint8_t*>(XCoord.value().data()), 
+                              const_cast<uint8_t*>(XCoord.value().data()),
                               YCoord.value().size()),*/
                 OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pubKeyData.data(), pubKeyData.size()),
                 OSSL_PARAM_END
@@ -502,7 +502,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 //OSSL_PARAM_free(params);
                 //OSSL_PARAM_BLD_free(bld);
                 EVP_PKEY_CTX_free(pKeyCtx);
-                return unexpected("Could not generate EC key"s);                
+                return unexpected("Could not generate EC key"s);
             }
             auto mdCtx = EVP_MD_CTX_new();
 
@@ -693,8 +693,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             //pubKeyData.push_back(Exponent.value()[0]);
             //pubKeyData.push_back(Exponent.value()[1]);
             //pubKeyData.push_back(Exponent.value()[2]);
-            auto exponent = static_cast<int32_t>(static_cast<uint32_t>(Exponent.value()[2]) | 
-                                                 static_cast<uint32_t>(Exponent.value()[1])<<8 | 
+            auto exponent = static_cast<int32_t>(static_cast<uint32_t>(Exponent.value()[2]) |
+                                                 static_cast<uint32_t>(Exponent.value()[1])<<8 |
                                                  static_cast<uint32_t>(Exponent.value()[0])<<16);
             OSSL_PARAM params[]{
                 OSSL_PARAM_BN(OSSL_PKEY_PARAM_RSA_N,
@@ -711,7 +711,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 pKey == nullptr) {
 
                 EVP_PKEY_CTX_free(pKeyCtx);
-                return unexpected("Could not generate RSA key"s);                
+                return unexpected("Could not generate RSA key"s);
             }
             auto mdCtx = EVP_MD_CTX_new();
 
@@ -805,12 +805,91 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         // Verify Octet Key Pair (OKP) Public Key Signature.
         expected<bool>
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
-            return true;
-            /*var key ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
 
-            std::copy(key, XCoord);
+            if (!XCoord) {
 
-            return ed25519.Verify(key, data, sig), nil */
+                return unexpected("XCoord param missing"s);
+            }
+
+            if (Algorithm != static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgEdDSA)) {
+
+                return unexpected("Unknown unsupported algorithm"s);
+            }
+            auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
+            auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
+            auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
+
+            if (algorithmName.empty()) {
+
+                return unexpected("Unknown unsupported algorithm"s);
+            }
+            //auto pKeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);
+            auto pKeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "ED25519", nullptr);
+
+            if (pKeyCtx == nullptr) {
+
+                return unexpected("Could not create an Ed25519 key generation context"s);
+            }
+
+            if (EVP_PKEY_fromdata_init(pKeyCtx) != 1) {
+
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not init Ed25519 key generation"s);
+            }
+
+#ifndef OSSL_SIGNATURE_PARAM_INSTANCE
+#define OSSL_SIGNATURE_PARAM_INSTANCE "instance"
+#endif
+
+#ifndef OSSL_SIGNATURE_PARAM_CONTEXT_STRING
+#define OSSL_SIGNATURE_PARAM_CONTEXT_STRING "context-string"
+#endif
+
+            std::vector<uint8_t> pubKeyData(XCoord.value().size());
+            std::copy(XCoord.value().cbegin(), XCoord.value().cend(), std::back_inserter(pubKeyData));
+            char Ed25519[] = "Ed25519";
+            OSSL_PARAM params[]{
+                OSSL_PARAM_utf8_string(OSSL_SIGNATURE_PARAM_INSTANCE, Ed25519, 0),
+                OSSL_PARAM_octet_string(OSSL_SIGNATURE_PARAM_CONTEXT_STRING, pubKeyData.data(), pubKeyData.size()),
+                OSSL_PARAM_END
+            };
+            EVP_PKEY* pKey = nullptr;
+
+            if (EVP_PKEY_fromdata(pKeyCtx, &pKey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
+                pKey == nullptr) {
+
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not generate Ed25519 key"s);
+            }
+            auto mdCtx = EVP_MD_CTX_new();
+
+            if (mdCtx == nullptr) {
+
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not create MD context"s);
+            }
+            auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
+
+            if (result != 1) {
+
+                EVP_MD_CTX_free(mdCtx);
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Unable to init signature checking"s);
+            }
+            result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), data.data(), data.size());
+            EVP_MD_CTX_free(mdCtx);
+            EVP_PKEY_free(pKey);
+            EVP_PKEY_CTX_free(pKeyCtx);
+
+            if (result == 0 || result == 1) {
+
+                return result == 1;
+            } else {
+
+                return unexpected("Could not check signature"s);
+            }
         }
 
         int64_t Curve;
@@ -936,7 +1015,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 2) {
 
-                return unexpected("Could not CBOR-decode OKP public key: could not find all fields"s);                
+                return unexpected("Could not CBOR-decode OKP public key: could not find all fields"s);
             }
 
             return okp;
@@ -1003,7 +1082,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 3) {
 
-                return unexpected("Could not CBOR-decode EC2 public key: could not find all fields"s);                
+                return unexpected("Could not CBOR-decode EC2 public key: could not find all fields"s);
             }
 
             return ec2;
@@ -1066,7 +1145,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             if (fieldCount < 2) {
 
-                return unexpected("Could not CBOR-decode RSA public key: could not find all fields"s);                
+                return unexpected("Could not CBOR-decode RSA public key: could not find all fields"s);
             }
 
             return rsa;
