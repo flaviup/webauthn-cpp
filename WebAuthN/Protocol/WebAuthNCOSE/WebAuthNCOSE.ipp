@@ -223,11 +223,11 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             case SignatureAlgorithmType::UnknownSignatureAlgorithm: return ""s;
             case SignatureAlgorithmType::MD2WithRSA:                return "MD2"s;
-            case SignatureAlgorithmType::MD5WithRSA:                return "MD5"s;
-            case SignatureAlgorithmType::SHA1WithRSA:               return "SHA1"s;
-            case SignatureAlgorithmType::SHA256WithRSA:             return "SHA256"s;
-            case SignatureAlgorithmType::SHA384WithRSA:             return "SHA384"s;
-            case SignatureAlgorithmType::SHA512WithRSA:             return "SHA512"s;
+            case SignatureAlgorithmType::MD5WithRSA:                return "MD5"s;    // EVP_md5();
+            case SignatureAlgorithmType::SHA1WithRSA:               return "SHA1"s;   // EVP_sha1();
+            case SignatureAlgorithmType::SHA256WithRSA:             return "SHA256"s; // EVP_sha256()
+            case SignatureAlgorithmType::SHA384WithRSA:             return "SHA384"s; // EVP_sha384();
+            case SignatureAlgorithmType::SHA512WithRSA:             return "SHA512"s; // EVP_sha512();
             case SignatureAlgorithmType::DSAWithSHA1:               return "SHA1"s;
             case SignatureAlgorithmType::DSAWithSHA256:             return "SHA256"s;
             case SignatureAlgorithmType::ECDSAWithSHA1:             return "SHA1"s;
@@ -487,7 +487,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
             EVP_PKEY* pKey = nullptr;
 
-            //if (EVP_PKEY_generate(pKeyCtx, &pKey) != 1 ||
             if (EVP_PKEY_fromdata(pKeyCtx, &pKey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
                 pKey == nullptr) {
 
@@ -496,34 +495,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not generate EC key"s);                
             }
-            //auto f = HasherFromCOSEAlg(static_cast<COSEAlgorithmIdentifierType>(Algorithm));
-            //auto hashData = f(std::string(reinterpret_cast<const char*>(data.data()), data.size()));
-
-            /*ECDSA_SIG* ecdsaSig = nullptr;
-            const uint8_t* pSigData = sig.data();
-            d2i_ECDSA_SIG(&ecdsaSig, &pSigData, sig.size());
-
-            if (ecdsaSig == nullptr) {
-
-                EVP_PKEY_free(pKey);
-                EVP_PKEY_CTX_free(pKeyCtx);
-                return unexpected(ErrSigNotProvidedOrInvalid());
-            }
-
-            auto r = ECDSA_SIG_get0_r(ecdsaSig);
-            auto s = ECDSA_SIG_get0_s(ecdsaSig);
-            
-            if (r != nullptr) {
-
-                std::clog << std::endl << "R: " << BN_bn2hex(r) << std::endl;
-            }
-
-            if (s != nullptr) {
-
-                std::clog << std::endl << "S: " << BN_bn2hex(s) << std::endl;
-            }
-            ECDSA_SIG_free(ecdsaSig);*/
-
             auto mdCtx = EVP_MD_CTX_new();
 
             if (mdCtx == nullptr) {
@@ -538,7 +509,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
             auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
             auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
-            //auto result = EVP_DigestVerifyInit(mdCtx, nullptr, EVP_sha256(), nullptr, pKey);
 
             if (result != 1) {
 
