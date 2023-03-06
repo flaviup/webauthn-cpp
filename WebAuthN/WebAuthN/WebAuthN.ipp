@@ -557,7 +557,7 @@ namespace WebAuthN::WebAuthN {
 
             if (validationResult) {
 
-                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, validationResult.value()));
+                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(validationResult.value())));
             }
 
             auto challengeCreationResult = Protocol::CreateChallenge();

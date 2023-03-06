@@ -22,6 +22,8 @@
 #include <openssl/core_names.h>
 //#include <openssl/param_build.h>
 
+#include <iostream>
+
 #include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
 #include "../WebAuthNCBOR/WebAuthNCBOR.ipp"
@@ -1240,21 +1242,23 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // ParseFIDOPublicKey is only used when the appID extension is configured by the assertion response.
     inline expected<EC2PublicKeyDataType> ParseFIDOPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
-        EC2PublicKeyDataType ec2Pk{};
-        return ec2Pk;
-        /*x, y := elliptic.Unmarshal(elliptic.P256(), keyBytes)
 
-        if x == nil || y == nil {
-            return data, fmt::Errorf("elliptic unmarshall returned a nil value");
+        //std::optional<std::vector<uint8_t>> [x, y] = elliptic.Unmarshal(elliptic.P256(), keyBytes);
+        std::optional<std::vector<uint8_t>> x{}, y{};
+
+        std::clog << std::endl << "FIDO EC P256: " << WebAuthNCBOR::VectorUint8ToHexString(keyBytes);
+
+        if (!x || !y) {
+
+            return unexpected("Missing value(s) in elliptic unmarshal"s);
         }
 
-        return EC2PublicKeyData{
-            PublicKeyData: PublicKeyData{
-                Algorithm: int64(AlgES256),
-            },
-            XCoord: x.Bytes(),
-            YCoord: y.Bytes(),
-        }, nil*/
+        EC2PublicKeyDataType ec2{};
+        ec2.Algorithm = static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256);
+        ec2.XCoord = x;
+        ec2.YCoord = y;
+
+        return ec2;
     }
 
     /*inline expected<std::vector<uint8_t>> MarshalEd25519PublicKey(const ed25519.PublicKey& pub) {
