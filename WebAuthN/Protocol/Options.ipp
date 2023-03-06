@@ -606,9 +606,10 @@ namespace WebAuthN::Protocol {
 
             if (AllowedCredentials) {
                 std::vector<std::vector<uint8_t>> allowedCredentialIDs(AllowedCredentials.value().size());
+                size_t n = 0;
 
                 for (const auto& credential : AllowedCredentials.value()) {
-                    allowedCredentialIDs.push_back(credential.CredentialID);
+                    allowedCredentialIDs[n++] = credential.CredentialID;
                 }
 
                 return allowedCredentialIDs;
