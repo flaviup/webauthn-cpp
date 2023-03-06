@@ -717,6 +717,10 @@ namespace WebAuthN::Protocol {
 
         CredentialAssertionType() noexcept = default;
 
+        CredentialAssertionType(const PublicKeyCredentialRequestOptionsType& response) noexcept :
+            Response(response) {
+        }
+
         CredentialAssertionType(const json& j) :
             Response(j["publicKey"].get<PublicKeyCredentialRequestOptionsType>()) {
         }
