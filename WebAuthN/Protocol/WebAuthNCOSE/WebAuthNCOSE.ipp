@@ -460,9 +460,9 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 return unexpected("Could not init EC key generation"s);
             }
             std::vector<uint8_t> pubKeyData(1 + XCoord.value().size() + YCoord.value().size());
-            pubKeyData.push_back(0x04);
-            std::copy(XCoord.value().cbegin(), XCoord.value().cend(), std::back_inserter(pubKeyData));
-            std::copy(YCoord.value().cbegin(), YCoord.value().cend(), std::back_inserter(pubKeyData));
+            pubKeyData[0] = static_cast<uint8_t>(0x04);
+            std::memcpy(pubKeyData.data() + 1, XCoord.value().data(), XCoord.value().size());
+            std::memcpy(pubKeyData.data() + XCoord.value().size() + 1, YCoord.value().data(), YCoord.value().size());
             OSSL_PARAM params[]{
                 OSSL_PARAM_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve, 0),
                 /*OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X,
@@ -689,12 +689,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 return unexpected("Could not init RSA key generation"s);
             }
             //std::vector<uint8_t> pubKeyData(Modulus.value() + 4);
-            //pubKeyData.push_back(0x30);
-            // ... pubKeyData.push_back ....
-            //std::copy(Modulus.value().cbegin(), Modulus.value().cend(), std::back_inserter(pubKeyData));
-            //pubKeyData.push_back(Exponent.value()[0]);
-            //pubKeyData.push_back(Exponent.value()[1]);
-            //pubKeyData.push_back(Exponent.value()[2]);
+            //pubKeyData[0] = static_cast<uint8_t>(0x30);
+            // ... pubKeyData[...] = ....
+            //std::memcpy(pubKeyData.data() + 1, Modulus.value().data(), Modulus.value().size());
+            //pubKeyData[pubKeyData.data() + Modulus.value().size() + 1] = Exponent.value()[0];
+            //pubKeyData[pubKeyData.data() + Modulus.value().size() + 2] = Exponent.value()[1];
+            //pubKeyData[pubKeyData.data() + Modulus.value().size() + 3] = Exponent.value()[2];
             auto exponent = static_cast<int32_t>(static_cast<uint32_t>(Exponent.value()[2]) |
                                                  static_cast<uint32_t>(Exponent.value()[1])<<8 |
                                                  static_cast<uint32_t>(Exponent.value()[0])<<16);
@@ -847,8 +847,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 #define OSSL_SIGNATURE_PARAM_CONTEXT_STRING "context-string"
 #endif
 
-            std::vector<uint8_t> pubKeyData(XCoord.value().size());
-            std::copy(XCoord.value().cbegin(), XCoord.value().cend(), std::back_inserter(pubKeyData));
+            std::vector<uint8_t> pubKeyData(XCoord.value());
             char Ed25519[] = "Ed25519";
             OSSL_PARAM params[]{
                 OSSL_PARAM_utf8_string(OSSL_SIGNATURE_PARAM_INSTANCE, Ed25519, 0),
