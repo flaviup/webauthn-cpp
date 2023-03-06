@@ -413,6 +413,15 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
                 return unexpected("YCoord param missing"s);
             }
+            auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
+            auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
+            auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
+
+            if (algorithmName.empty()) {
+
+                return unexpected("Unknown unsupported algorithm"s);
+            }
+
             char CURVE_P521[] = "P-521";
             char CURVE_P384[] = "P-384";
             char CURVE_P256[] = "P-256";
@@ -505,9 +514,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not create MD context"s);
             }
-            auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
-            auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
-            auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
             auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
 
             if (result != 1) {
@@ -624,43 +630,118 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         // Verify RSA Public Key Signature.
         expected<bool>
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
-            return true;
-            /*pubkey := &rsa.PublicKey{
-                N: big.NewInt(0).SetBytes(Modulus),
-                E: int(uint(Exponent[2]) | uint(Exponent[1])<<8 | uint(Exponent[0])<<16),
+
+            if (!Modulus) {
+
+                return unexpected("Modulus param missing"s);
             }
 
-            f := HasherFromCOSEAlg(COSEAlgorithmIdentifier(Algorithm))
-            h := f()
-            h.Write(data)
+            if (!Exponent) {
 
-            var hash crypto.Hash
-
-            switch COSEAlgorithmIdentifier(Algorithm) {
-            case AlgRS1:
-                hash = crypto.SHA1
-            case AlgPS256, AlgRS256:
-                hash = crypto.SHA256
-            case AlgPS384, AlgRS384:
-                hash = crypto.SHA384
-            case AlgPS512, AlgRS512:
-                hash = crypto.SHA512
-            default:
-                return false, ErrUnsupportedAlgorithm
+                return unexpected("Exponent param missing"s);
             }
 
-            switch COSEAlgorithmIdentifier(Algorithm) {
-            case AlgPS256, AlgPS384, AlgPS512:
-                err := rsa.VerifyPSS(pubkey, hash, h.Sum(nil), sig, nil)
+            if (Exponent.value().size() < 3) {
 
-                return err == nil, err
-            case AlgRS1, AlgRS256, AlgRS384, AlgRS512:
-                err := rsa.VerifyPKCS1v15(pubkey, hash, h.Sum(nil), sig)
+                return unexpected("Exponent param too small"s);
+            }
+            auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
+            auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
+            auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
 
-                return err == nil, err
-            default:
-                return false, ErrUnsupportedAlgorithm
-            }*/
+            if (algorithmName.empty()) {
+
+                return unexpected("Unknown unsupported algorithm"s);
+            }
+            EVP_PKEY_CTX* pKeyCtx = nullptr;
+
+            switch (Algorithm)
+            {
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgPS256):
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgPS384):
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgPS512):
+                    //pKeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA_PSS, nullptr);
+                    pKeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "RSASSA-PSS", nullptr);
+                    break;
+                
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS1):
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS256):
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS384):
+                case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS512):
+                    //pKeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA2, nullptr);
+                    pKeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "RSA", nullptr);
+                    break;
+
+                default:
+                    return unexpected(ErrUnsupportedAlgorithm());
+            }
+
+            if (pKeyCtx == nullptr) {
+
+                return unexpected("Could not create an RSA key generation context"s);
+            }
+
+            if (EVP_PKEY_fromdata_init(pKeyCtx) != 1) {
+
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not init RSA key generation"s);
+            }
+            //std::vector<uint8_t> pubKeyData{};
+            //pubKeyData.push_back(0x30);
+            // ... pubKeyData.push_back ....
+            //std::copy(Modulus.value().cbegin(), Modulus.value().cend(), std::back_inserter(pubKeyData));
+            //pubKeyData.push_back(Exponent.value()[0]);
+            //pubKeyData.push_back(Exponent.value()[1]);
+            //pubKeyData.push_back(Exponent.value()[2]);
+            auto exponent = static_cast<int32_t>(static_cast<uint32_t>(Exponent.value()[2]) | 
+                                                 static_cast<uint32_t>(Exponent.value()[1])<<8 | 
+                                                 static_cast<uint32_t>(Exponent.value()[0])<<16);
+            OSSL_PARAM params[]{
+                OSSL_PARAM_BN(OSSL_PKEY_PARAM_RSA_N,
+                              const_cast<uint8_t*>(Modulus.value().data()), 
+                              Modulus.value().size()),
+                OSSL_PARAM_int32(OSSL_PKEY_PARAM_RSA_EXPONENT,
+                                 &exponent),
+                //OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pubKeyData.data(), pubKeyData.size()),
+                OSSL_PARAM_END
+            };
+            EVP_PKEY* pKey = nullptr;
+
+            if (EVP_PKEY_fromdata(pKeyCtx, &pKey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
+                pKey == nullptr) {
+
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not generate RSA key"s);                
+            }
+            auto mdCtx = EVP_MD_CTX_new();
+
+            if (mdCtx == nullptr) {
+
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not create MD context"s);
+            }
+            auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
+
+            if (result != 1) {
+
+                EVP_MD_CTX_free(mdCtx);
+                EVP_PKEY_free(pKey);
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Unable to init signature checking"s);
+            }
+            result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), data.data(), data.size()); // Verify PSS or PKCS1v15
+            EVP_MD_CTX_free(mdCtx);
+            EVP_PKEY_free(pKey);
+            EVP_PKEY_CTX_free(pKeyCtx);
+
+            if (result == 0 || result == 1) {
+
+                return result == 1;
+            } else {
+
+                return unexpected("Could not check signature"s);
+            }
         }
 
         // Represents the modulus parameter for the RSA algorithm.
