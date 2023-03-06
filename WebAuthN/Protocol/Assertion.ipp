@@ -276,7 +276,7 @@ namespace WebAuthN::Protocol {
 
             // Begin Step 11. Verify that the rpIdHash in authData is the SHA-256 hash of the RP ID expected by the RP.
             auto rpIDHash = Util::Crypto::SHA256(relyingPartyID);
-            std::vector<uint8_t> appIDHash{0};
+            std::vector<uint8_t> appIDHash{};
 
             if (!appID.empty()) {
                 appIDHash = Util::Crypto::SHA256(appID);
@@ -295,7 +295,7 @@ namespace WebAuthN::Protocol {
             // Step 16. Using the credential public key looked up in step 3, verify that sig is
             // a valid signature over the binary concatenation of authData and hash.
 
-            std::vector<uint8_t> sigData{0};
+            std::vector<uint8_t> sigData{};
             std::copy(Raw.AssertionResponse.AuthenticatorData.cbegin(), Raw.AssertionResponse.AuthenticatorData.cend(), std::back_inserter(sigData));
             std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(sigData));
 

@@ -90,7 +90,7 @@ namespace WebAuthN::Protocol {
 
                 return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
             }
-            std::vector<uint8_t> signatureData{0};
+            std::vector<uint8_t> signatureData{};
             std::copy(authData.cbegin(), authData.cend(), std::back_inserter(signatureData));
             std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(signatureData));
             auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
@@ -240,7 +240,7 @@ namespace WebAuthN::Protocol {
 
             // §4.2 Verify that sig is a valid signature over the concatenation of authenticatorData and
             // clientDataHash using the credential public key with alg.
-            std::vector<uint8_t> verificationData{0};
+            std::vector<uint8_t> verificationData{};
             std::copy(authData.cbegin(), authData.cend(), std::back_inserter(verificationData));
             std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(verificationData));
 

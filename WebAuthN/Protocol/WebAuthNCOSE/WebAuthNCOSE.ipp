@@ -20,6 +20,7 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <openssl/core_names.h>
+#include <openssl/param_build.h>
 
 #include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
@@ -442,35 +443,63 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 return unexpected("Could not create an EC key generation context"s);
             }
 
-            //if (EVP_PKEY_keygen_init(pKeyCtx) != 1) {
             if (EVP_PKEY_fromdata_init(pKeyCtx) != 1) {
 
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not init EC key generation"s);
             }
-            OSSL_PARAM params[]{
-                OSSL_PARAM_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve, 0),
-                OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X,
+            std::vector<uint8_t> pubKeyData{};
+            pubKeyData.push_back(0x04);
+            std::copy(XCoord.value().cbegin(), XCoord.value().cend(), std::back_inserter(pubKeyData));
+            std::copy(YCoord.value().cbegin(), YCoord.value().cend(), std::back_inserter(pubKeyData));
+            //OSSL_PARAM params[]{
+            //    OSSL_PARAM_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve, 0),
+                /*OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X,
                               const_cast<uint8_t*>(XCoord.value().data()), 
                               XCoord.value().size()),
                 OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_Y,
                               const_cast<uint8_t*>(XCoord.value().data()), 
-                              YCoord.value().size()),
-                OSSL_PARAM_END
-            };
+                              YCoord.value().size()),*/
+            //    OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pubKeyData.data(), pubKeyData.size()),
+            //    OSSL_PARAM_END
+            //};
+            auto bld = OSSL_PARAM_BLD_new();
+
+            if (bld == nullptr) {
+
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not start creating EC key params"s);
+            }
+            if (OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_PKEY_PARAM_GROUP_NAME, curve, 0) != 1 ||
+                OSSL_PARAM_BLD_push_octet_string(bld, OSSL_PKEY_PARAM_PUB_KEY, pubKeyData.data(), pubKeyData.size()) != 1) {
+
+                OSSL_PARAM_BLD_free(bld);
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not start creating EC key params"s);
+            }
+            auto params = OSSL_PARAM_BLD_to_param(bld);
+
+            if (params == nullptr) {
+
+                OSSL_PARAM_BLD_free(bld);
+                EVP_PKEY_CTX_free(pKeyCtx);
+                return unexpected("Could not create EC key params"s);
+            }
             EVP_PKEY* pKey = nullptr;
 
             //if (EVP_PKEY_generate(pKeyCtx, &pKey) != 1 ||
             if (EVP_PKEY_fromdata(pKeyCtx, &pKey, EVP_PKEY_PUBLIC_KEY, params) != 1 ||
                 pKey == nullptr) {
 
+                OSSL_PARAM_free(params);
+                OSSL_PARAM_BLD_free(bld);
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not generate EC key"s);                
             }
-            auto f = HasherFromCOSEAlg(static_cast<COSEAlgorithmIdentifierType>(Algorithm));
-            auto hashData = f(std::string(reinterpret_cast<const char*>(data.data()), data.size()));
+            //auto f = HasherFromCOSEAlg(static_cast<COSEAlgorithmIdentifierType>(Algorithm));
+            //auto hashData = f(std::string(reinterpret_cast<const char*>(data.data()), data.size()));
 
-            ECDSA_SIG* ecdsaSig = nullptr;
+            /*ECDSA_SIG* ecdsaSig = nullptr;
             const uint8_t* pSigData = sig.data();
             d2i_ECDSA_SIG(&ecdsaSig, &pSigData, sig.size());
 
@@ -481,14 +510,27 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 return unexpected(ErrSigNotProvidedOrInvalid());
             }
 
-            //auto verificationResult = ecdsa.Verify(pubkey, h.Sum(nil), e.R, e.S);
+            auto r = ECDSA_SIG_get0_r(ecdsaSig);
+            auto s = ECDSA_SIG_get0_s(ecdsaSig);
+            
+            if (r != nullptr) {
+
+                std::clog << std::endl << "R: " << BN_bn2hex(r) << std::endl;
+            }
+
+            if (s != nullptr) {
+
+                std::clog << std::endl << "S: " << BN_bn2hex(s) << std::endl;
+            }
+            ECDSA_SIG_free(ecdsaSig);*/
 
             auto mdCtx = EVP_MD_CTX_new();
 
             if (mdCtx == nullptr) {
 
-                ECDSA_SIG_free(ecdsaSig);
                 EVP_PKEY_free(pKey);
+                OSSL_PARAM_free(params);
+                OSSL_PARAM_BLD_free(bld);
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Could not create MD context"s);
             }
@@ -496,20 +538,22 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             auto sigAlg = SigAlgFromCOSEAlg(coseAlg);
             auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
             auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
+            //auto result = EVP_DigestVerifyInit(mdCtx, nullptr, EVP_sha256(), nullptr, pKey);
 
             if (result != 1) {
 
                 EVP_MD_CTX_free(mdCtx);
-                ECDSA_SIG_free(ecdsaSig);
                 EVP_PKEY_free(pKey);
+                OSSL_PARAM_free(params);
+                OSSL_PARAM_BLD_free(bld);
                 EVP_PKEY_CTX_free(pKeyCtx);
                 return unexpected("Unable to init signature checking"s);
             }
             result = EVP_DigestVerify(mdCtx, sig.data(), sig.size(), data.data(), data.size());
-            auto errCode = ERR_get_error();
             EVP_MD_CTX_free(mdCtx);
-            ECDSA_SIG_free(ecdsaSig);
             EVP_PKEY_free(pKey);
+            OSSL_PARAM_free(params);
+            OSSL_PARAM_BLD_free(bld);
             EVP_PKEY_CTX_free(pKeyCtx);
 
             if (result == 0 || result == 1) {
