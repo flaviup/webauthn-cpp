@@ -221,7 +221,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         switch (signatureAlgorithm) {
 
-            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return ""s;
+            case SignatureAlgorithmType::UnknownSignatureAlgorithm: return "SHA512"s;
             case SignatureAlgorithmType::MD2WithRSA:                return "MD2"s;
             case SignatureAlgorithmType::MD5WithRSA:                return "MD5"s;    // EVP_md5();
             case SignatureAlgorithmType::SHA1WithRSA:               return "SHA1"s;   // EVP_sha1();
