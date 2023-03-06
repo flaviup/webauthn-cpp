@@ -400,9 +400,14 @@ namespace WebAuthN::Protocol {
             if (err) {
                 return err;
             }
+            auto decodedClientDataJson = URLEncodedBase64_Decode(Raw.AttestationResponse.ClientDataJSON);
+
+            if (!decodedClientDataJson) {
+                return decodedClientDataJson.error();
+            }
 
             // Step 7. Compute the hash of response.clientDataJSON using SHA-256.
-            auto clientDataHash = Util::Crypto::SHA256(Raw.AttestationResponse.ClientDataJSON);
+            auto clientDataHash = Util::Crypto::SHA256(decodedClientDataJson.value());
 
             // Step 8. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse
             // structure to obtain the attestation statement format fmt, the authenticator data authData, and the
