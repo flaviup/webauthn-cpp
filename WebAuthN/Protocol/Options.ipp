@@ -139,7 +139,9 @@ namespace WebAuthN::Protocol {
     // Specification: Credential Management §2.2. The Credential Interface (https://www.w3.org/TR/credential-management/#credential)
     struct CredentialType {
 
-        CredentialType() noexcept = default;
+        CredentialType() noexcept :
+            Type("public-key") {
+        }
 
         CredentialType(const json& j) :
             ID(j["id"].get<std::string>()),
@@ -156,12 +158,12 @@ namespace WebAuthN::Protocol {
         // ID is The credential’s identifier. The requirements for the
         // identifier are distinct for each type of credential. It might
         // represent a username for username/password tuples, for example.
-        std::string ID;
+        std::string ID{};
 
         // Type is the value of the object’s interface object's [[type]] slot,
         // which specifies the credential type represented by this object.
         // This should be type "public-key" for Webauthn credentials.
-        std::string Type;
+        std::string Type{};
     };
 
     inline void to_json(json& j, const CredentialType& credential) {
