@@ -284,20 +284,20 @@ namespace WebAuthN::Protocol {
 
         // The packed attestation statement looks like:
         //
-        //	packedStmtFormat = {
-        //	 	alg: COSEAlgorithmIdentifier,
-        //	 	sig: bytes,
-        //	 	x5c: [ attestnCert: bytes, * (caCert: bytes) ]
-        //	 } OR
-        //	 {
-        //	 	alg: COSEAlgorithmIdentifier, (-260 for ED256 / -261 for ED512)
-        //	 	sig: bytes,
-        //	 	ecdaaKeyId: bytes
-        //	 } OR
-        //	 {
-        //	 	alg: COSEAlgorithmIdentifier
-        //	 	sig: bytes,
-        //	 }
+        // packedStmtFormat = {
+        //      alg: COSEAlgorithmIdentifier,
+        //      sig: bytes,
+        //      x5c: [ attestnCert: bytes, * (caCert: bytes) ]
+        // } OR
+        // {
+        //      alg: COSEAlgorithmIdentifier, (-260 for ED256 / -261 for ED512)
+        //      sig: bytes,
+        //      ecdaaKeyId: bytes
+        // } OR
+        // {
+        //      alg: COSEAlgorithmIdentifier
+        //      sig: bytes,
+        // }
         //
         // Specification: §8.2. Packed Attestation Statement Format (https://www.w3.org/TR/webauthn/#sctn-packed-attestation)
         inline expected<std::tuple<std::string, std::optional<json::object_t>>>

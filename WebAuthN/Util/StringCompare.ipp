@@ -51,6 +51,23 @@ namespace WebAuthN::Util::StringCompare {
         return (c == 0);*/
         return s1.empty() || (sodium_memcmp(s1.data(), s2.data(), s1.size()) == 0);
     }
+
+    inline bool ConstantTimeEqual(const std::vector<uint8_t>& v1, const std::vector<uint8_t>& v2) noexcept {
+
+        assert(v1.size() == v2.size());
+        
+        /*volatile uint8_t c = 0;
+        volatile auto n = v1.size();
+        volatile const uint8_t* p1 = v1.data();
+        volatile const uint8_t* p2 = v2.data();
+
+        for (volatile auto i = 0; i < n; i = i + 1) {
+            c = c | (p1[i] ^ p2[i]);
+        }
+
+        return (c == 0);*/
+        return v1.empty() || (sodium_memcmp(v1.data(), v2.data(), v1.size()) == 0);
+    }
 } // namespace WebAuthN::Util::StringCompare
 
 #pragma GCC visibility pop
