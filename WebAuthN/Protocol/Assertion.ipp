@@ -343,8 +343,8 @@ namespace WebAuthN::Protocol {
 
             auto errSig = WebAuthNCOSE::VerifySignature(key, sigData, Response.Signature);
 
-            if (errSig) {
-                return ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", errSig.value()));
+            if (!errSig) {
+                return ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", std::string(errSig.error())));
             }
 
             return std::nullopt;
