@@ -10,6 +10,7 @@
 #define WEBAUTHN_UTIL_CRYPTO_IPP
 
 #include <algorithm>
+#include <tuple>
 #include <string>
 #include <vector>
 #include <sodium.h>
@@ -293,7 +294,7 @@ namespace WebAuthN::Util::Crypto {
 
 #pragma GCC visibility pop
 
-    inline expected<std::pair<std::string, std::string>> GetNamesX509(const std::vector<uint8_t>& data) noexcept {
+    inline expected<std::tuple<std::string, std::string>> GetNamesX509(const std::vector<uint8_t>& data) noexcept {
 
         auto bio = BIO_new(BIO_s_mem());
 

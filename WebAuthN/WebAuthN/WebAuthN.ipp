@@ -10,6 +10,7 @@
 #define WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
 
 #include <functional>
+#include <tuple>
 #include "IUser.ipp"
 #include "Config.ipp"
 #include "SessionData.ipp"
@@ -97,7 +98,7 @@ namespace WebAuthN::WebAuthN {
 
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
         template<size_t N>
-        expected<std::pair<Protocol::CredentialCreationType, SessionDataType>>
+        expected<std::tuple<Protocol::CredentialCreationType, SessionDataType>>
         BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = DEFAULT_REGISTRATION_OPTIONS) noexcept {
 
             auto err = _config.Validate();
@@ -184,7 +185,7 @@ namespace WebAuthN::WebAuthN {
                 creation.Response.AuthenticatorSelection.value().UserVerification.value()
             };
 
-            return std::make_pair(creation, session);
+            return std::tuple{creation, session};
         }
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
@@ -325,7 +326,7 @@ namespace WebAuthN::WebAuthN {
         //
         // Specification: §5.5. Options for Assertion Generation (https://www.w3.org/TR/webauthn/#dictionary-assertion-options)
         template<size_t N>
-        expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        expected<std::tuple<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
                    const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
@@ -348,7 +349,7 @@ namespace WebAuthN::WebAuthN {
 
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
         template<size_t N>
-        expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        expected<std::tuple<Protocol::CredentialAssertionType, SessionDataType>>
         BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             return _BeginLogin(std::nullopt, std::nullopt, std::nullopt, std::nullopt, opts);
@@ -547,7 +548,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         template<size_t N>
-        expected<std::pair<Protocol::CredentialAssertionType, SessionDataType>>
+        expected<std::tuple<Protocol::CredentialAssertionType, SessionDataType>>
         _BeginLogin(const std::optional<std::vector<uint8_t>>& userID, 
                     const std::optional<std::string>& userName, 
                     const std::optional<std::string>& userDisplayName, 
@@ -607,7 +608,7 @@ namespace WebAuthN::WebAuthN {
                 assertion.Response.Extensions
             };
 
-            return std::make_pair(assertion, session);
+            return std::tuple{assertion, session};
         }
 
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.

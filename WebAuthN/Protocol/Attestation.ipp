@@ -29,7 +29,7 @@ namespace WebAuthN::Protocol {
 
     // Attestation Registry
 
-    using AttestationFormatValidationHandlerType = expected<std::pair<std::string, std::optional<json::object_t>>> (*)(const struct AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
+    using AttestationFormatValidationHandlerType = expected<std::tuple<std::string, std::optional<json::object_t>>> (*)(const struct AttestationObjectType& attestationObject, const std::vector<uint8_t>& data);
     inline std::map<std::string, AttestationFormatValidationHandlerType> ATTESTATION_REGISTRY{};
 
     // RegisterAttestationFormat is a function to register attestation formats with the library. Generally using one of the
@@ -127,8 +127,7 @@ namespace WebAuthN::Protocol {
             if (!result) {
                 return result.error();
             }
-            auto attestationType = result.value().first;
-            auto x5c = result.value().second;
+            auto [attestationType, x5c] = result.value();
 
             uuid_t aaguid;
             std::memcpy(aaguid, AuthData.AttData.AAGUID.data(), AuthData.AttData.AAGUID.size());
@@ -154,9 +153,9 @@ namespace WebAuthN::Protocol {
 
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
-                    auto names = namesResult.value();
+                    auto [subjectName, issuerName] = namesResult.value();
 
-                    if (names.first != names.second) {
+                    if (subjectName != issuerName) {
 
                         auto hasBasicFull = false;
 

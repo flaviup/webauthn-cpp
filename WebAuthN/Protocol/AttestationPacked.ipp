@@ -29,7 +29,7 @@ namespace WebAuthN::Protocol {
     namespace {
 
         // Handle the attestation steps laid out in
-        inline expected<std::pair<std::string, std::optional<json::object_t>>>
+        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _HandleBasicAttestation(const std::vector<uint8_t>& signature,
                                 const std::vector<uint8_t>& clientDataHash,
                                 const std::vector<uint8_t>& authData,
@@ -207,10 +207,10 @@ namespace WebAuthN::Protocol {
             // Step 2.4 If successful, return attestation type Basic and attestation trust path x5c.
             // We don't handle trust paths yet but we're done
 
-            return std::make_pair(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
+            return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
         }
 
-        inline expected<std::pair<std::string, std::optional<json::object_t>>>
+        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _HandleECDAAAttestation(const std::vector<uint8_t>& signature, 
                                 const std::vector<uint8_t>& clientDataHash, 
                                 const std::vector<uint8_t>& ecdaaKeyID) noexcept {
@@ -229,7 +229,7 @@ namespace WebAuthN::Protocol {
             return std::nullopt;
         }
 
-        inline expected<std::pair<std::string, std::optional<json::object_t>>>
+        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _HandleSelfAttestation(const int64_t alg,
                                const std::vector<uint8_t>& pubKey,
                                const std::vector<uint8_t>& authData,
@@ -279,7 +279,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(validationResult.error());
             }
 
-            return std::make_pair(json(Metadata::AuthenticatorAttestationType::BasicSurrogate).get<std::string>(), std::nullopt);
+            return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicSurrogate).get<std::string>(), std::nullopt};
         }
 
         // The packed attestation statement looks like:
@@ -300,7 +300,7 @@ namespace WebAuthN::Protocol {
         //	 }
         //
         // Specification: §8.2. Packed Attestation Statement Format (https://www.w3.org/TR/webauthn/#sctn-packed-attestation)
-        inline expected<std::pair<std::string, std::optional<json::object_t>>>
+        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _VerifyPackedFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined
