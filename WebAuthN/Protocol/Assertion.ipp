@@ -290,8 +290,14 @@ namespace WebAuthN::Protocol {
                 return err;
             }
 
+            auto decodedClientDataJson = URLEncodedBase64_Decode(Raw.AssertionResponse.ClientDataJSON);
+
+            if (!decodedClientDataJson) {
+                return decodedClientDataJson.error();
+            }
+
             // Step 15. Let hash be the result of computing a hash over the cData using SHA-256.
-            auto clientDataHash = Util::Crypto::SHA256(Raw.AssertionResponse.ClientDataJSON);
+            auto clientDataHash = Util::Crypto::SHA256(decodedClientDataJson.value());
 
             // Step 16. Using the credential public key looked up in step 3, verify that sig is
             // a valid signature over the binary concatenation of authData and hash.

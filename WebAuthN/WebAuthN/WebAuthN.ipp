@@ -641,8 +641,8 @@ namespace WebAuthN::WebAuthN {
                 }
 
                 credentialFound = std::any_of(sessionData.AllowedCredentialIDs.value().cbegin(), 
-                                            sessionData.AllowedCredentialIDs.value().cend(), 
-                                            [&parsedResponseRawID](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponseRawID; });
+                                              sessionData.AllowedCredentialIDs.value().cend(),
+                                              [&parsedResponseRawID](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponseRawID; });
 
                 if (!credentialFound) {
 
