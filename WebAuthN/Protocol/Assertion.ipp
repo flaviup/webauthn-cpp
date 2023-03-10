@@ -140,6 +140,7 @@ namespace WebAuthN::Protocol {
 
         from_json(j, static_cast<AuthenticatorResponseType&>(authenticatorAssertionResponse));
         j.at("authenticatorData").get_to(authenticatorAssertionResponse.AuthenticatorData);
+        j.at("signature").get_to(authenticatorAssertionResponse.Signature);
 
         if (j.find("userHandle") != j.end()) {
             authenticatorAssertionResponse.UserHandle.emplace(j["userHandle"].get<URLEncodedBase64Type>());
