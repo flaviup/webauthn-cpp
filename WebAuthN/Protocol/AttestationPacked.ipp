@@ -90,9 +90,9 @@ namespace WebAuthN::Protocol {
 
                 return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
             }
-            std::vector<uint8_t> signatureData{};
-            std::copy(authData.cbegin(), authData.cend(), std::back_inserter(signatureData));
-            std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(signatureData));
+            std::vector<uint8_t> signatureData(authData.size() + clientDataHash.size());
+            std::memcpy(signatureData.data(), authData.data(), authData.size());
+            std::memcpy(signatureData.data() + authData.size(), clientDataHash.data(), clientDataHash.size());
             auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
 
             if (!attCertResult) {
@@ -240,9 +240,9 @@ namespace WebAuthN::Protocol {
 
             // §4.2 Verify that sig is a valid signature over the concatenation of authenticatorData and
             // clientDataHash using the credential public key with alg.
-            std::vector<uint8_t> verificationData{};
-            std::copy(authData.cbegin(), authData.cend(), std::back_inserter(verificationData));
-            std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(verificationData));
+            std::vector<uint8_t> verificationData(authData.size() + clientDataHash.size());
+            std::memcpy(verificationData.data(), authData.data(), authData.size());
+            std::memcpy(verificationData.data() + authData.size(), clientDataHash.data(), clientDataHash.size());
 
             auto ok = WebAuthNCOSE::ParsePublicKey(pubKey);
 

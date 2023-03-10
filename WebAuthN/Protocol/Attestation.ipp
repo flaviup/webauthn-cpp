@@ -130,7 +130,8 @@ namespace WebAuthN::Protocol {
             auto [attestationType, x5c] = result.value();
 
             uuid_t aaguid;
-            std::memcpy(aaguid, AuthData.AttData.AAGUID.data(), AuthData.AttData.AAGUID.size());
+            auto aaguidSize = std::min(AuthData.AttData.AAGUID.size(), sizeof(aaguid));
+            std::memcpy(aaguid, AuthData.AttData.AAGUID.data(), aaguidSize);
             auto metaIter = Metadata::METADATA.find(aaguid);
 
             if (metaIter != Metadata::METADATA.cend()) {

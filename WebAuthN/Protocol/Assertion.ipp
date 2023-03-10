@@ -296,9 +296,9 @@ namespace WebAuthN::Protocol {
             // Step 16. Using the credential public key looked up in step 3, verify that sig is
             // a valid signature over the binary concatenation of authData and hash.
 
-            std::vector<uint8_t> sigData{};
-            std::copy(Raw.AssertionResponse.AuthenticatorData.cbegin(), Raw.AssertionResponse.AuthenticatorData.cend(), std::back_inserter(sigData));
-            std::copy(clientDataHash.cbegin(), clientDataHash.cend(), std::back_inserter(sigData));
+            std::vector<uint8_t> sigData(Raw.AssertionResponse.AuthenticatorData.size() + clientDataHash.size());
+            std::memcpy(sigData.data(), Raw.AssertionResponse.AuthenticatorData.data(), Raw.AssertionResponse.AuthenticatorData.size());
+            std::memcpy(sigData.data() + Raw.AssertionResponse.AuthenticatorData.size(), clientDataHash.data(), clientDataHash.size());
 
             // If the Session Data does not contain the appID extension or it wasn't reported as used by the Client/RP then we
             // use the standard CTAP2 public key parser.
