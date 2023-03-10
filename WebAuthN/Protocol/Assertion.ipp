@@ -241,7 +241,7 @@ namespace WebAuthN::Protocol {
                         credentialAssertionResponse.ID, 
                         credentialAssertionResponse.Type
                     },
-                    std::vector<uint8_t>(credentialAssertionResponse.RawID.cbegin(), credentialAssertionResponse.RawID.cend()),
+                    URLEncodedBase64_DecodeAsBinary(credentialAssertionResponse.RawID).value(),
                     credentialAssertionResponse.ClientExtensionResults,
                     credentialAssertionResponse.AuthenticatorAttachment
                 },
