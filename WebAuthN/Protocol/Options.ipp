@@ -232,7 +232,7 @@ namespace WebAuthN::Protocol {
 
         CredentialDescriptorType() noexcept = default;
 
-        CredentialDescriptorType(const CredentialType& type,
+        CredentialDescriptorType(const CredentialTypeType type,
             const std::vector<uint8_t>& credentialID,
             const std::optional<std::vector<AuthenticatorTransportType>>& transports,
             const std::string& attestationType
@@ -244,7 +244,7 @@ namespace WebAuthN::Protocol {
         }
 
         CredentialDescriptorType(const json& j) :
-            Type(j["type"].get<CredentialType>()) {
+            Type(j["type"].get<CredentialTypeType>()) {
             
             auto id = j["id"].get<URLEncodedBase64Type>();
             CredentialID = URLEncodedBase64_DecodeAsBinary(id).value();
@@ -262,7 +262,7 @@ namespace WebAuthN::Protocol {
         CredentialDescriptorType& operator =(CredentialDescriptorType&& other) noexcept = default;
         
         // The valid credential types.
-        CredentialType Type;
+        CredentialTypeType Type;
 
         // CredentialID The ID of a credential to allow/disallow.
         std::vector<uint8_t> CredentialID;

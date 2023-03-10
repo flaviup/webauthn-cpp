@@ -36,7 +36,7 @@ namespace WebAuthN::WebAuthN {
         inline Protocol::CredentialDescriptorType ToDescriptorType() const noexcept {
 
             return Protocol::CredentialDescriptorType{
-                Protocol::PublicKeyCredentialType(),
+                Protocol::CredentialTypeType::PublicKey,
                 this->ID,
                 this->Transports,
                 this->AttestationType
