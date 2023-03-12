@@ -1,13 +1,13 @@
 //
-//  AttestationAndroid.ipp
+//  AttestationAndroidKey.ipp
 //  webauthn-cpp
 //
 //  Created by Flaviu Pasca on 03/10/23.
 //  flaviup on gmail com
 //
 
-#ifndef WEBAUTHN_PROTOCOL_ATTESTATION_ANDROID_IPP
-#define WEBAUTHN_PROTOCOL_ATTESTATION_ANDROID_IPP
+#ifndef WEBAUTHN_PROTOCOL_ATTESTATION_ANDROID_KEY_IPP
+#define WEBAUTHN_PROTOCOL_ATTESTATION_ANDROID_KEY_IPP
 
 #include <fmt/format.h>
 #include "Attestation.ipp"
@@ -21,7 +21,7 @@ namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
     
-    inline const std::string ANDROID_ATTESTATION_KEY = "android-key";
+    inline const std::string ANDROID_KEY_ATTESTATION_KEY = "android-key";
 
 #pragma GCC visibility push(hidden)
 
@@ -140,7 +140,7 @@ namespace WebAuthN::Protocol {
         //      x5c: [ credCert: bytes, * (caCert: bytes) ]
         //  }
         inline expected<std::tuple<std::string, std::optional<json::object_t>>>
-        _VerifyAndroidFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
+        _VerifyAndroidKeyFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Given the verification procedure inputs attStmt, authenticatorData and clientDataHash, the verification procedure is as follows:
             // §8.4.1. Verify that attStmt is valid CBOR conforming to the syntax defined above and perform CBOR decoding on it to extract
@@ -324,12 +324,12 @@ namespace WebAuthN::Protocol {
 
 #pragma GCC visibility pop
 
-    inline void RegisterAndroidAttestation() noexcept {
+    inline void RegisterAndroidKeyAttestation() noexcept {
 
-        RegisterAttestationFormat(ANDROID_ATTESTATION_KEY, _VerifyAndroidFormat);
+        RegisterAttestationFormat(ANDROID_KEY_ATTESTATION_KEY, _VerifyAndroidKeyFormat);
     }
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop
 
-#endif // WEBAUTHN_PROTOCOL_ATTESTATION_ANDROID_IPP
+#endif // WEBAUTHN_PROTOCOL_ATTESTATION_ANDROID_KEY_IPP
