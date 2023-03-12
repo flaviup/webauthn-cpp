@@ -19,6 +19,7 @@
 
 namespace WebAuthN::Protocol {
 
+    using namespace std::string_literals;
     using json = nlohmann::json;
     
     inline const std::string APPLE_ATTESTATION_KEY = "apple";
@@ -30,8 +31,59 @@ namespace WebAuthN::Protocol {
         // Apple has not yet publish schema for the extension(as of JULY 2021.)
         struct AppleAnonymousAttestationType {
 
-            std::vector<uint8_t> Nonce;// `asn1:"tag:1,explicit"`
+            std::vector<uint8_t> Nonce;
         };
+
+        inline expected<AppleAnonymousAttestationType>
+        _ParseAppleAnonymousAttestation(const std::vector<uint8_t>& keyBytes) noexcept {
+
+            auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
+
+            if (!unmarshalResult) {
+
+                return unexpected("Could not CBOR-decode AppleAnonymousAttestation"s);
+            }
+            auto cborItem = unmarshalResult.value();
+
+            if (cbor_isa_map(cborItem) && cbor_map_is_definite(cborItem)) {
+
+                auto size = cbor_map_size(cborItem);
+                auto items = cbor_map_handle(cborItem);
+
+                if (items == nullptr || size == 0) {
+
+                    cbor_decref(&cborItem);
+                    return unexpected("No CBOR data available to parse AppleAnonymousAttestation"s);
+                }
+
+                for (decltype(size) i = 0; i < size; ++i) {
+
+                    auto item = *(items + i);
+
+                    if (cbor_isa_uint(item.key) && 
+                        cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
+
+                        auto k = cbor_get_uint8(item.key);
+
+                        if (k == 1 && 
+                            cbor_isa_bytestring(item.value) && 
+                            cbor_bytestring_is_definite(item.value)) {
+                            
+                            auto dataSize = cbor_bytestring_length(item.value);
+                            auto data = dataSize > 0 ? cbor_bytestring_handle(item.value) : nullptr;
+                            AppleAnonymousAttestationType aaa{
+
+                                .Nonce = dataSize > 0 ? std::vector<uint8_t>(data, data + dataSize) : std::vector<uint8_t>{}
+                            };
+                            cbor_decref(&cborItem);
+                            return aaa;
+                        }
+                    }
+                }
+            }
+            cbor_decref(&cborItem);
+            return unexpected("Could not CBOR-decode AppleAnonymousAttestation: root element is not a map"s);
+        }
 
         // From §8.8. https://www.w3.org/TR/webauthn-2/#sctn-apple-anonymous-attestation
         // The apple attestation statement looks like:
@@ -109,17 +161,19 @@ namespace WebAuthN::Protocol {
 
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.2.840.113635.100.8.2"));
                 }
-                AppleAnonymousAttestationType decoded{};
+                auto decodedResult = _ParseAppleAnonymousAttestation(attExtBytes);
 
-                /*if _, err = asn1.Unmarshal(attExtBytes, &decoded); err != nil {
-                    return unexpected(ErrAttestationFormat().WithDetails("Unable to parse Apple attestation certificate extensions"));
-                }*/
+                if (!decodedResult) {
+
+                    unexpected(ErrAttestationFormat().WithDetails("Unable to parse Apple attestation certificate extensions"));
+                }
+                auto decoded = decodedResult.value();
 
                 if (!Util::StringCompare::ConstantTimeEqual(decoded.Nonce, nonce)) {
                     return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate does not contain expected nonce"));
                 }
 
-                // Step 5. Verify that the credential public key equals the Subject Public Key of credCert.
+                // Step 5. Verify that the credential public key equals the Subject Public Key of attCert.
                 auto ok = WebAuthNCOSE::ParsePublicKey(att.AuthData.AttData.CredentialPublicKey);
 
                 if (!ok) {

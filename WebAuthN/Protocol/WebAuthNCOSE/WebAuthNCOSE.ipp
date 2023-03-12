@@ -1257,20 +1257,83 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     // ParseFIDOPublicKey is only used when the appID extension is configured by the assertion response.
     inline expected<EC2PublicKeyDataType> ParseFIDOPublicKey(const std::vector<uint8_t>& keyBytes) noexcept {
 
-        //std::optional<std::vector<uint8_t>> [x, y] = elliptic.Unmarshal(elliptic.P256(), keyBytes);
-        std::optional<std::vector<uint8_t>> x{}, y{};
+        auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
 
-        std::clog << std::endl << "FIDO EC P256: " << WebAuthNCBOR::VectorUint8ToHexString(keyBytes);
+        if (!unmarshalResult) {
 
-        if (!x || !y) {
+            return unexpected("Could not CBOR-decode public key"s);
+        }
+        auto cborItem = unmarshalResult.value();
+        EC2PublicKeyDataType ec2{};
+        ec2.Algorithm = static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256);
+
+        if (cbor_isa_map(cborItem) && cbor_map_is_definite(cborItem)) {
+
+            auto size = cbor_map_size(cborItem);
+            auto items = cbor_map_handle(cborItem);
+
+            if (items == nullptr || size == 0) {
+
+                cbor_decref(&cborItem);
+                return unexpected("No CBOR data available to parse a P256 curve key"s);
+            }
+
+            for (decltype(size) i = 0; i < size; ++i) {
+
+                auto item = *(items + i);
+
+                if (cbor_isa_negint(item.key) && 
+                    cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
+
+                    auto k = -cbor_get_uint8(item.key) - 1;
+
+                    switch (k) {
+
+                        case -1: ec2.Curve = cbor_isa_uint(item.value) ? cbor_get_uint64(item.value) : -cbor_get_uint64(item.value) - 1;
+                            break;
+
+                        case -2:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    ec2.XCoord = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                            }
+                            break;
+                        }
+
+                       case -3:
+                        {
+                            if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
+
+                                auto dataSize = cbor_bytestring_length(item.value);
+
+                                if (dataSize > 0) {
+                                    
+                                    auto data = cbor_bytestring_handle(item.value);
+                                    ec2.YCoord = std::vector<uint8_t>(data, data + dataSize);
+                                }
+                            }
+                            break;
+                        }
+
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        cbor_decref(&cborItem);
+
+        if (!ec2.XCoord || !ec2.YCoord) { // || !ec2.Curve || !ec2.Curve.value() != static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256)
 
             return unexpected("Missing value(s) in elliptic unmarshal"s);
         }
-
-        EC2PublicKeyDataType ec2{};
-        ec2.Algorithm = static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256);
-        ec2.XCoord = x;
-        ec2.YCoord = y;
 
         return ec2;
     }
