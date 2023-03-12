@@ -66,7 +66,7 @@ namespace WebAuthN::WebAuthN {
 
             if (sodiumInit != 0) {
 
-                return unexpected(fmt::format("Could not initialize sodium: error {}.", sodiumInit));
+                return unexpected(fmt::format("Could not initialize sodium: error {}", sodiumInit));
             }
 
             return WebAuthNType(config);

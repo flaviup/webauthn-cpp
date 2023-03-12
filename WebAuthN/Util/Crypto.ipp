@@ -17,9 +17,11 @@
 
 #include <openssl/asn1.h>
 #include <openssl/err.h>
+#include <openssl/pem.h>
 #include <openssl/x509v3.h>
 
 #include "../Core.ipp"
+#include "SSLHostCheck/openssl_hostname_validation.h"
 
 #pragma GCC visibility push(default)
 
@@ -41,12 +43,22 @@ namespace WebAuthN::Util::Crypto {
         return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
     }
 
-    inline std::vector<uint8_t> SHA256(const std::string& str) {
+    inline std::vector<uint8_t> SHA256(const unsigned char* str, const size_t size) {
 
         unsigned char out[crypto_hash_sha256_BYTES];
-        crypto_hash_sha256(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
+        crypto_hash_sha256(out, str, size);
 
         return std::vector<uint8_t>(out, out + crypto_hash_sha256_BYTES);
+    }
+
+    inline std::vector<uint8_t> SHA256(const std::string& str) {
+
+        return SHA256(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    }
+
+    inline std::vector<uint8_t> SHA256(const std::vector<uint8_t>& data) {
+
+        return SHA256(data.data(), data.size());
     }
 
     inline std::vector<uint8_t> SHA384(const std::string& str) {
@@ -105,7 +117,8 @@ namespace WebAuthN::Util::Crypto {
 
         // Obtains an entry from a X509 name (i.e. either
         // the certificate’s issuer or subject)
-        inline expected<std::string> _ExtractNameEntry(const X509_NAME* name, int nid) noexcept {
+        inline expected<std::string>
+        _ExtractNameEntry(const X509_NAME* name, int nid) noexcept {
 
             if (name == nullptr) {
 
@@ -135,7 +148,8 @@ namespace WebAuthN::Util::Crypto {
             return s;
         }
 
-        inline expected<std::string> _ConvertASN1TIME(const ASN1_TIME* t) noexcept {
+        inline expected<std::string>
+        _ConvertASN1TIME(const ASN1_TIME* t) noexcept {
 
             if (t == nullptr) {
 
@@ -169,7 +183,8 @@ namespace WebAuthN::Util::Crypto {
             return std::string(buf);
         }
 
-        inline expected<X509CertificateType::ExtensionType> _GetExtension(const stack_st_X509_EXTENSION* extensions, const int index) noexcept {
+        inline expected<X509CertificateType::ExtensionType>
+        _GetExtension(const stack_st_X509_EXTENSION* extensions, const int index) noexcept {
 
             if (extensions == nullptr) {
 
@@ -294,7 +309,8 @@ namespace WebAuthN::Util::Crypto {
 
 #pragma GCC visibility pop
 
-    inline expected<std::tuple<std::string, std::string>> GetNamesX509(const std::vector<uint8_t>& data) noexcept {
+    inline expected<std::tuple<std::string, std::string>>
+    GetNamesX509(const std::vector<uint8_t>& data) noexcept {
 
         auto bio = BIO_new(BIO_s_mem());
 
@@ -344,7 +360,8 @@ namespace WebAuthN::Util::Crypto {
         return std::make_pair(subjectNameResult.value(), issuerNameResult.value());
     }
 
-    inline expected<X509CertificateType> ParseCertificate(const std::vector<uint8_t>& data) noexcept {
+    inline expected<X509CertificateType>
+    ParseCertificate(const std::vector<uint8_t>& data) noexcept {
 
         auto bio = BIO_new(BIO_s_mem());
 
@@ -451,7 +468,7 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Null BIO"s);
         }
-        BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
+        BIO_puts(bio, reinterpret_cast<const char*>(certData.data()));
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
 
@@ -467,6 +484,104 @@ namespace WebAuthN::Util::Crypto {
         BIO_free_all(bio);
 
         return result;
+    }
+
+    inline expected<std::string>
+    ParseCertificatePublicKey(const std::vector<uint8_t>& certData) noexcept {
+
+        auto bio = BIO_new(BIO_s_mem());
+
+        if (bio == nullptr) {
+
+            return unexpected("Null BIO"s);
+        }
+        BIO_puts(bio, reinterpret_cast<const char*>(certData.data()));
+        X509* certificate = nullptr;
+        d2i_X509_bio(bio, &certificate);
+
+        if (certificate == nullptr) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not parse X509 certificate"s);
+        }
+
+        auto pKey = X509_get0_pubkey(certificate);
+            
+        if (pKey == nullptr) {
+
+            X509_free(certificate);
+            BIO_free_all(bio);
+            return unexpected("Could not get the public key from certificate"s);
+        }
+        auto bioKey = BIO_new(BIO_s_mem());
+        
+        if (bioKey == nullptr) {
+
+            EVP_PKEY_free(pKey);
+            X509_free(certificate);
+            BIO_free_all(bio);
+            return unexpected("Null BIO"s);
+        }
+        const char* p = nullptr;
+        long size = 0;
+        auto s = ""s;
+        auto ok = false;
+
+        if (PEM_write_bio_PUBKEY(bioKey, pKey) == 1) {
+
+            BIO_flush(bioKey);
+            size = BIO_get_mem_data(bioKey, &p);
+            ok = true;
+        }
+
+        if (p != nullptr) {
+
+            s = std::string(p, p + size);
+        }
+
+        BIO_free_all(bioKey);
+        EVP_PKEY_free(pKey);
+        X509_free(certificate);
+        BIO_free_all(bio);
+
+        if (!ok && p == nullptr) {
+
+            return unexpected("PEM_write_bio_PUBKEY failed"s);
+        }
+
+        return s;
+    }
+
+    inline expected<bool>
+    VerifyCertificateHostname(const std::vector<uint8_t>& certData, const char* hostname) noexcept {
+
+        auto bio = BIO_new(BIO_s_mem());
+
+        if (bio == nullptr) {
+
+            return unexpected("Null BIO"s);
+        }
+        BIO_puts(bio, reinterpret_cast<const char*>(certData.data()));
+        X509* certificate = nullptr;
+        d2i_X509_bio(bio, &certificate);
+
+        if (certificate == nullptr) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not parse X509 certificate"s);
+        }
+        auto result = validate_hostname(hostname, certificate);
+
+        X509_free(certificate);
+        BIO_free_all(bio);
+
+        if (result == MatchFound) {
+            return true;
+        } else if (result == MatchNotFound) {
+            return false;
+        }
+
+        return unexpected("Error verifying certificate hostname"s);
     }
 } // namespace WebAuthN::Util::Crypto
 

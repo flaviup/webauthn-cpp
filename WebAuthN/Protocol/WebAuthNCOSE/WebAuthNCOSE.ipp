@@ -306,6 +306,11 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
     }
 
+    std::vector<uint8_t> SHA256Hasher(const std::string& str) {
+
+        return Util::Crypto::SHA256(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    }
+
     // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
     inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
 
@@ -314,7 +319,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
                                SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
 
-        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : Util::Crypto::SHA256;  // default to SHA256?  Why not.
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : SHA256Hasher;  // default to SHA256?  Why not.
     }
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated

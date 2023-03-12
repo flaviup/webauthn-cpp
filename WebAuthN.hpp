@@ -13,5 +13,6 @@
 #include "WebAuthN/WebAuthN/WebAuthN.ipp"
 #include "WebAuthN/Protocol/AttestationAndroid.ipp"
 #include "WebAuthN/Protocol/AttestationPacked.ipp"
+#include "WebAuthN/Protocol/AttestationSafetyNet.ipp"
 
 #endif /* WEBAUTHN_HPP */

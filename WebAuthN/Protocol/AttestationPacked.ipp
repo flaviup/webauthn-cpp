@@ -348,7 +348,7 @@ namespace WebAuthN::Protocol {
                 return _HandleSelfAttestation(alg, att.AuthData.AttData.CredentialPublicKey, att.RawAuthData, clientDataHash, sig);
             } else {
 
-                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided."));
+                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
         }
     } // namespace

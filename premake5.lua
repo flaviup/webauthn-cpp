@@ -33,6 +33,7 @@ project "webauthn-cpp"
         "cbor",
         "crypto",
         "fmt",
+        "jwt",
         "sodium",
         "ssl",
         "uuid"

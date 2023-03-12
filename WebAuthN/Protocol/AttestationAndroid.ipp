@@ -11,9 +11,7 @@
 
 #include <fmt/format.h>
 #include "Attestation.ipp"
-#include "../Metadata/Metadata.ipp"
 #include "../Util/Crypto.ipp"
-#include "../Util/Time.ipp"
 #include "../Util/StringCompare.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
@@ -230,7 +228,7 @@ namespace WebAuthN::Protocol {
                     if (!verificationResult) {
                         err = verificationResult.error();
                     } else if (!verificationResult.value()) {
-                        err = ErrInvalidAttestation().WithDetails("Signature verification failed.");
+                        err = ErrInvalidAttestation().WithDetails("Signature verification failed");
                     }
                 } catch(const std::bad_any_cast&) {
                     err = ErrUnsupportedKey();
@@ -246,7 +244,7 @@ namespace WebAuthN::Protocol {
                         err = verificationResult.error();
                     } else if (!verificationResult.value()) {
 
-                        return unexpected(ErrInvalidAttestation().WithDetails("Signature verification failed."));
+                        return unexpected(ErrInvalidAttestation().WithDetails("Signature verification failed"));
                     }
                 } else {
                     
@@ -319,7 +317,7 @@ namespace WebAuthN::Protocol {
                 return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
             } else {
 
-                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided."));
+                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
         }
     } // namespace

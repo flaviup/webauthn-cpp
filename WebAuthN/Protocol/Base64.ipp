@@ -25,7 +25,7 @@ namespace WebAuthN::Protocol {
 
             return base64_encode(str, length, true);
         } catch (const std::exception&) {
-            return unexpected(ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding."));
+            return unexpected(ErrParsingData().WithInfo("base64_encode_error").WithDetails("Error base64 encoding"));
         }*/
 
         constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
@@ -58,7 +58,7 @@ namespace WebAuthN::Protocol {
 
             return base64_decode(encoded, true);
         } catch (const std::exception&) {
-            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }*/
 
         constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
@@ -71,7 +71,7 @@ namespace WebAuthN::Protocol {
                               encoded.data(), encoded.size(),
                               nullptr, &decodedLength,
                               nullptr, encodingVariant) != 0) {
-            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }
 
         return std::string(reinterpret_cast<const char*>(decodedData));
@@ -84,7 +84,7 @@ namespace WebAuthN::Protocol {
             auto decodedStr = base64_decode(encoded, true);
             return std::vector<uint8_t>(decodedStr.cbegin(), decodedStr.cend());
         } catch (const std::exception&) {
-            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }*/
 
         constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
@@ -97,7 +97,7 @@ namespace WebAuthN::Protocol {
                               encoded.data(), encoded.size(),
                               nullptr, &decodedLength,
                               nullptr, encodingVariant) != 0) {
-            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding."));
+            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }
 
         return std::vector<uint8_t>(decodedData, decodedData + decodedLength);

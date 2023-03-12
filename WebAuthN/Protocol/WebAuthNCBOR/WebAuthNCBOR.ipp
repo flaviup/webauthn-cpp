@@ -93,7 +93,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
 
         if (item == nullptr) {
 
-            return unexpected(std::string("Unmarshal error."));
+            return unexpected(std::string("Unmarshal error"));
         }
 
         /* Pretty-print the result */
@@ -123,7 +123,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
             return marshaled;
         } else {
 
-            return unexpected(std::string("Marshal error."));
+            return unexpected(std::string("Marshal error"));
         }
     }
 
