@@ -12,6 +12,7 @@
 #include "Version.ipp"
 #include "WebAuthN/WebAuthN/WebAuthN.ipp"
 #include "WebAuthN/Protocol/AttestationAndroidKey.ipp"
+#include "WebAuthN/Protocol/AttestationApple.ipp"
 #include "WebAuthN/Protocol/AttestationPacked.ipp"
 #include "WebAuthN/Protocol/AttestationSafetyNet.ipp"
 
