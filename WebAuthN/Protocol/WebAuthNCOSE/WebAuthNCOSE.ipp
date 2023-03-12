@@ -22,8 +22,6 @@
 #include <openssl/core_names.h>
 //#include <openssl/param_build.h>
 
-#include <iostream>
-
 #include "../../Core.ipp"
 #include "../../Util/Crypto.ipp"
 #include "../WebAuthNCBOR/WebAuthNCBOR.ipp"
