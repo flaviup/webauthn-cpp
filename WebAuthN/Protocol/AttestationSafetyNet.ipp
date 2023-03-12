@@ -13,6 +13,7 @@
 #include <jwt.h>
 #include "Attestation.ipp"
 #include "Base64.ipp"
+#include "../Metadata/Metadata.ipp"
 #include "../Util/Crypto.ipp"
 #include "../Util/Time.ipp"
 #include "../Util/StringCompare.ipp"
@@ -262,6 +263,20 @@ namespace WebAuthN::Protocol {
                 }
 
                 // Verify sanity of timestamp in the payload
+                auto now = Util::Time::Timestamp();
+                auto oneMinuteAgo = now - 60'000;
+                
+                if (safetyNetResponse.TimestampMs > now) {
+                    // zero tolerance for post-dated timestamps
+                    return unexpected(ErrInvalidAttestation().WithDetails("SafetyNet response with timestamp after current time"));
+                } else if (safetyNetResponse.TimestampMs < oneMinuteAgo) {
+
+                    // allow old timestamp for testing purposes
+                    // TODO: Make this user configurable
+                    if (Metadata::Conformance) {
+                        return unexpected(ErrInvalidAttestation().WithDetails("SafetyNet response with timestamp before one minute ago"));
+                    }
+                }
 
                 // §8.5.7 If successful, return implementation-specific values representing attestation type Basic and attestation
                 // trust path attestationCert.
@@ -269,82 +284,6 @@ namespace WebAuthN::Protocol {
             } else {
                 return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
-
-/*
-            token, err := jwt.Parse(string(response), func(token *jwt.Token) (interface{}, error) {
-                chain := token.Header["x5c"].([]interface{})
-
-                o := make([]byte, base64.StdEncoding.DecodedLen(len(chain[0].(string))))
-
-                n, err := base64.StdEncoding.Decode(o, []byte(chain[0].(string)))
-                if err != nil {
-                    return nil, err
-                }
-
-                cert, err := x509.ParseCertificate(o[:n])
-                return cert.PublicKey, err
-            })
-
-            if err != nil {
-                return "", nil, ErrInvalidAttestation.WithDetails(fmt.Sprintf("Error finding cert issued to correct hostname: %+v", err))
-            }
-
-            // marshall the JWT payload into the safetynet response json
-            var safetyNetResponse SafetyNetResponse
-
-            if err = mapstructure.Decode(token.Claims, &safetyNetResponse); err != nil {
-                return "", nil, ErrAttestationFormat.WithDetails(fmt.Sprintf("Error parsing the SafetyNet response: %+v", err))
-            }
-
-            // §8.5.3 Verify that the nonce in the response is identical to the Base64 encoding of the SHA-256 hash of the concatenation
-            // of authenticatorData and clientDataHash.
-            nonceBuffer := sha256.Sum256(append(att.RawAuthData, clientDataHash...))
-
-            nonceBytes, err := base64.StdEncoding.DecodeString(safetyNetResponse.Nonce)
-            if !bytes.Equal(nonceBuffer[:], nonceBytes) || err != nil {
-                return "", nil, ErrInvalidAttestation.WithDetails("Invalid nonce for in SafetyNet response")
-            }
-
-            // §8.5.4 Let attestationCert be the attestation certificate (https://www.w3.org/TR/webauthn/#attestation-certificate)
-            certChain := token.Header["x5c"].([]interface{})
-            l := make([]byte, base64.StdEncoding.DecodedLen(len(certChain[0].(string))))
-
-            n, err := base64.StdEncoding.Decode(l, []byte(certChain[0].(string)))
-            if err != nil {
-                return "", nil, ErrInvalidAttestation.WithDetails(fmt.Sprintf("Error finding cert issued to correct hostname: %+v", err))
-            }
-
-            attestationCert, err := x509.ParseCertificate(l[:n])
-            if err != nil {
-                return "", nil, ErrInvalidAttestation.WithDetails(fmt.Sprintf("Error finding cert issued to correct hostname: %+v", err))
-            }
-
-            // §8.5.5 Verify that attestationCert is issued to the hostname "attest.android.com"
-            err = attestationCert.VerifyHostname("attest.android.com")
-            if err != nil {
-                return "", nil, ErrInvalidAttestation.WithDetails(fmt.Sprintf("Error finding cert issued to correct hostname: %+v", err))
-            }
-
-            // §8.5.6 Verify that the ctsProfileMatch attribute in the payload of response is true.
-            if !safetyNetResponse.CtsProfileMatch {
-                return "", nil, ErrInvalidAttestation.WithDetails("ctsProfileMatch attribute of the JWT payload is false")
-            }
-
-            // Verify sanity of timestamp in the payload
-            now := time.Now()
-            oneMinuteAgo := now.Add(-time.Minute)
-
-            if t := time.Unix(safetyNetResponse.TimestampMs/1000, 0); t.After(now) {
-                // zero tolerance for post-dated timestamps
-                return "", nil, ErrInvalidAttestation.WithDetails("SafetyNet response with timestamp after current time")
-            } else if t.Before(oneMinuteAgo) {
-                // allow old timestamp for testing purposes
-                // TODO: Make this user configurable
-                msg := "SafetyNet response with timestamp before one minute ago"
-                if metadata.Conformance {
-                    return "", nil, ErrInvalidAttestation.WithDetails(msg)
-                }
-            }*/
         }
     } // namespace
 
