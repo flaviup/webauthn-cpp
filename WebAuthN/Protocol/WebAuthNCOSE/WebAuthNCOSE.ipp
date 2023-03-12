@@ -407,6 +407,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         EC2PublicKeyDataType& operator =(const EC2PublicKeyDataType& other) noexcept = default;
         EC2PublicKeyDataType& operator =(EC2PublicKeyDataType&& other) noexcept = default;
 
+        inline bool operator ==(const EC2PublicKeyDataType& other) const noexcept {
+
+            return Curve == other.Curve && XCoord == other.XCoord && YCoord == other.YCoord;
+        }
+
+        inline bool operator !=(const EC2PublicKeyDataType& other) const noexcept {
+
+            return Curve != other.Curve || XCoord != other.XCoord || YCoord != other.YCoord;
+        }
+
         // Verify Elliptic Curve Public Key Signature.
         expected<bool>
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {

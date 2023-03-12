@@ -97,10 +97,10 @@ namespace WebAuthN::Protocol {
 
                     if (extension.ID == ID_FIDO) {
 
-                        if (extension.IsCritical) {
+                        /*if (extension.IsCritical) {
                             
                             return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
-                        }
+                        }*/
                         attExtBytes = extension.Value;
                     }
                 }
@@ -138,9 +138,15 @@ namespace WebAuthN::Protocol {
                         err = ErrInvalidAttestation().WithDetails(fmt::format("Error parsing certificate public key from ASN.1 data: {}", std::string(attCertPubKeyResult.error())));
                     } else {
                         
-                        auto subjectKey = attCertPubKeyResult.value();
+                        ok = WebAuthNCOSE::ParsePublicKey(std::vector<uint8_t>(attCertPubKeyResult.value().data(), attCertPubKeyResult.value().data() + attCertPubKeyResult.value().size()));
 
-                        if (credKey.Curve) {
+                        if (!ok) {
+
+                            return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
+                        }
+                        auto subjectKey = std::any_cast<const WebAuthNCOSE::EC2PublicKeyDataType&>(ok.value());
+
+                        if (credKey != subjectKey) {
                             err = ErrInvalidAttestation().WithDetails("Certificate public key does not match public key in authData");
                         }
                     }
