@@ -210,8 +210,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialParameterType& credentialParameter) {
 
         j = json{
-            { "type",     credentialParameter.Type },
-            { "alg", credentialParameter.Algorithm }
+            { "type",                       credentialParameter.Type },
+            { "alg", static_cast<int>(credentialParameter.Algorithm) }
         };
     }
 
