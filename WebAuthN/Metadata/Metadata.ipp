@@ -433,8 +433,8 @@ namespace WebAuthN::Metadata {
     inline void to_json(json& j, const PublicKeyCredentialParametersType& publicKeyCredentialParameters) {
 
         j = json{
-            { "type", publicKeyCredentialParameters.Type },
-            { "alg",   publicKeyCredentialParameters.Alg }
+            { "type",                   publicKeyCredentialParameters.Type },
+            { "alg",   static_cast<int>(publicKeyCredentialParameters.Alg) }
         };
     }
 
