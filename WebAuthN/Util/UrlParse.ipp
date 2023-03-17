@@ -54,7 +54,7 @@ namespace WebAuthN::Util::Url {
 
             if (res.first == androidPrefix.cend()) { // androidPrefix is a prefix of rawOrigin
 
-                fqo = rawOrigin;
+                fqo = androidPrefix;
                 return true;
             }
         }
