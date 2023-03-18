@@ -207,15 +207,16 @@ namespace WebAuthN::Protocol {
                 }
                 auto response = atts["response"].get_binary();
                 jwt_t* jwt = nullptr;
-                auto ret = jwt_decode_2(&jwt, reinterpret_cast<const char*>(response.data()), JwtKeyProvider);
+                auto responseStr = std::string(reinterpret_cast<const char*>(response.data()), response.size());
+                auto ret = jwt_decode_2(&jwt, responseStr.data(), JwtKeyProvider);
 
                 if (ret != 0 || jwt == nullptr) {
                     return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
                 }
-                
+
                 // marshall the JWT payload into the SafetyNet response json
                 SafetyNetResponseType safetyNetResponse{};
-                auto grants = jwt_get_grants_json(jwt, "Claims");
+                auto grants = jwt_get_grants_json(jwt, nullptr);
 
                 if (grants != nullptr) {
 
@@ -230,8 +231,8 @@ namespace WebAuthN::Protocol {
 
                         return unexpected(ErrAttestationFormat().WithDetails(fmt::format("Error parsing the SafetyNet response", ex.what())));
                     }
+                    jwt_free_str(grants);
                 }
-                jwt_free_str(grants);
 
                 // §8.5.3 Verify that the nonce in the response is identical to the Base64 encoding of the SHA-256 hash of the concatenation
                 // of authenticatorData and clientDataHash.
