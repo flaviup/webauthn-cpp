@@ -126,7 +126,7 @@ namespace WebAuthN::Protocol {
                 jwt_free_str(x5c);
             }
 
-            return -1;
+            return EINVAL;
         }
 
         std::vector<uint8_t> GetFirstCertData(const jwt_t* jwt) {
