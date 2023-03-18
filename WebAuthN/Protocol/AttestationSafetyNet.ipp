@@ -109,7 +109,15 @@ namespace WebAuthN::Protocol {
                                 jwtKey->jwt_key_len = 0;
                                 jwtKey->jwt_key = nullptr;
                                 jwt_free_str(x5c);
-                                return jwt_set_alg(const_cast<jwt_t*>(jwt), jwt_get_alg(jwt), reinterpret_cast<const unsigned char*>(pubKey.data()), static_cast<int>(pubKey.size()));
+                                auto size = pubKey.size();
+
+                                if (size > 1) {
+                                    return jwt_set_alg(const_cast<jwt_t*>(jwt), jwt_get_alg(jwt),
+                                                       reinterpret_cast<const unsigned char*>(pubKey.data()),
+                                                       static_cast<int>(pubKey[size - 1] == '\n' ? size - 1 : size));
+                                } else {
+                                    return EINVAL;
+                                }
                             }
                         }
                     }
