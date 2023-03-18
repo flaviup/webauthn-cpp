@@ -97,7 +97,7 @@ namespace WebAuthN::Protocol {
                     if (!j.empty() && j.is_array()) {
 
                         auto cert = j[0].get<std::string>();
-                        auto decoded = URLEncodedBase64_DecodeAsBinary(cert);
+                        auto decoded = URLEncodedBase64_DecodeAsBinary(cert, false);
 
                         if (decoded) {
 
@@ -200,9 +200,9 @@ namespace WebAuthN::Protocol {
                 if (atts.find("response") == atts.cend()) {
                     return unexpected(ErrAttestationFormat().WithDetails("Unable to find the SafetyNet response"));
                 }
-                auto response = atts["response"].get<std::string>();
+                auto response = atts["response"].get_binary();
                 jwt_t* jwt = nullptr;
-                auto ret = jwt_decode_2(&jwt, response.data(), JwtKeyProvider);
+                auto ret = jwt_decode_2(&jwt, reinterpret_cast<const char*>(response.data()), JwtKeyProvider);
 
                 if (ret != 0 || jwt == nullptr) {
                     return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));

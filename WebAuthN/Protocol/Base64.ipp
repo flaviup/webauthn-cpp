@@ -52,7 +52,7 @@ namespace WebAuthN::Protocol {
         return URLEncodedBase64_Encode(data.data(), data.size());
     }
 
-    inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded) noexcept {
+    inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded, bool urlSafe = true) noexcept {
 
         /*try {
 
@@ -61,7 +61,7 @@ namespace WebAuthN::Protocol {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }*/
 
-        constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+        const auto encodingVariant = urlSafe ? sodium_base64_VARIANT_URLSAFE_NO_PADDING : sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
         const size_t decodedMaxLength = encoded.size() * 4 / 3 + 2;
         size_t decodedLength = 0;
         unsigned char decodedData[decodedMaxLength];
@@ -77,7 +77,7 @@ namespace WebAuthN::Protocol {
         return std::string(reinterpret_cast<const char*>(decodedData));
     }
 
-    inline expected<std::vector<uint8_t>> URLEncodedBase64_DecodeAsBinary(const URLEncodedBase64Type& encoded) noexcept {
+    inline expected<std::vector<uint8_t>> URLEncodedBase64_DecodeAsBinary(const URLEncodedBase64Type& encoded, bool urlSafe = true) noexcept {
 
         /*try {
 
@@ -87,7 +87,7 @@ namespace WebAuthN::Protocol {
             return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }*/
 
-        constexpr auto encodingVariant = sodium_base64_VARIANT_URLSAFE_NO_PADDING;
+        const auto encodingVariant = urlSafe ? sodium_base64_VARIANT_URLSAFE_NO_PADDING : sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
         const size_t decodedMaxLength = encoded.size() * 4 / 3 + 2;
         size_t decodedLength = 0;
         unsigned char decodedData[decodedMaxLength];
