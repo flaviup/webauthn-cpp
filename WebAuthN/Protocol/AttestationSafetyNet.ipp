@@ -41,7 +41,7 @@ namespace WebAuthN::Protocol {
                 ApkPackageName(j["apkPackageName"].get<std::string>()),
                 ApkDigestSha256(j["apkDigestSha256"].get<std::string>()),
                 CtsProfileMatch(j["ctsProfileMatch"].get<bool>()),
-                ApkCertificateDigestSha256(j["apkCertificateDigestSha256"].get<std::vector<json::object_t>>()),
+                ApkCertificateDigestSha256(j["apkCertificateDigestSha256"].get<std::vector<json>>()),
                 BasicIntegrity(j["basicIntegrity"].get<bool>()) {
             }
 
@@ -57,7 +57,7 @@ namespace WebAuthN::Protocol {
             std::string ApkPackageName;
             std::string ApkDigestSha256;
             bool CtsProfileMatch;
-            std::vector<json::object_t> ApkCertificateDigestSha256;
+            std::vector<json> ApkCertificateDigestSha256;
             bool BasicIntegrity;
         };
 
