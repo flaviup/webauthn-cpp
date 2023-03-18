@@ -20,19 +20,19 @@ namespace WebAuthN::Util::Url {
 #pragma GCC visibility push(hidden)
     
     namespace {
-        inline constexpr const auto SCHEME_REGEX   = "((http[s]?)://)?";  // match http or https before the ://
-        inline constexpr const auto USER_REGEX     = "(([^@/:\\s]+)@)?";  // match anything other than @ / : or whitespace before the ending @
-        inline constexpr const auto HOST_REGEX     = "([^@/:\\s]+)";      // mandatory. match anything other than @ / : or whitespace
-        inline constexpr const auto PORT_REGEX     = "(:([0-9]{1,5}))?";  // after the : match 1 to 5 digits
-        inline constexpr const auto PATH_REGEX     = "(/[^:#?\\s]*)?";    // after the / match anything other than : # ? or whitespace
-        inline constexpr const auto QUERY_REGEX    = "(\\?(([^?;&#=]+=[^?;&#=]+)([;|&]([^?;&#=]+=[^?;&#=]+))*))?"; // after the ? match any number of x=y pairs, seperated by & or ;
-        inline constexpr const auto FRAGMENT_REGEX = "(#([^#\\s]*))?";    // after the # match anything other than # or whitespace
+        static inline constexpr const auto SCHEME_REGEX   = "((http[s]?)://)?";  // match http or https before the ://
+        static inline constexpr const auto USER_REGEX     = "(([^@/:\\s]+)@)?";  // match anything other than @ / : or whitespace before the ending @
+        static inline constexpr const auto HOST_REGEX     = "([^@/:\\s]+)";      // mandatory. match anything other than @ / : or whitespace
+        static inline constexpr const auto PORT_REGEX     = "(:([0-9]{1,5}))?";  // after the : match 1 to 5 digits
+        static inline constexpr const auto PATH_REGEX     = "(/[^:#?\\s]*)?";    // after the / match anything other than : # ? or whitespace
+        static inline constexpr const auto QUERY_REGEX    = "(\\?(([^?;&#=]+=[^?;&#=]+)([;|&]([^?;&#=]+=[^?;&#=]+))*))?"; // after the ? match any number of x=y pairs, seperated by & or ;
+        static inline constexpr const auto FRAGMENT_REGEX = "(#([^#\\s]*))?";    // after the # match anything other than # or whitespace
 
-        inline const std::regex URL_REGEX{std::string("^")
-                                        + SCHEME_REGEX + USER_REGEX
-                                        + HOST_REGEX + PORT_REGEX
-                                        + PATH_REGEX + QUERY_REGEX
-                                        + FRAGMENT_REGEX + "$"};
+        static inline const std::regex URL_REGEX{std::string("^")
+                                                 + SCHEME_REGEX + USER_REGEX
+                                                 + HOST_REGEX + PORT_REGEX
+                                                 + PATH_REGEX + QUERY_REGEX
+                                                 + FRAGMENT_REGEX + "$"};
     }
 
 #pragma GCC visibility pop

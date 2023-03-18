@@ -34,7 +34,7 @@ namespace WebAuthN::Protocol {
             std::vector<uint8_t> Nonce;
         };
 
-        inline expected<AppleAnonymousAttestationType>
+        static inline expected<AppleAnonymousAttestationType>
         _ParseAppleAnonymousAttestation(const std::vector<uint8_t>& keyBytes) noexcept {
 
             auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
@@ -97,7 +97,7 @@ namespace WebAuthN::Protocol {
         // appleStmtFormat = {
         //      x5c: [ credCert: bytes, * (caCert: bytes) ]
         // }
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _VerifyAppleFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined

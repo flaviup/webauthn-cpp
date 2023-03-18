@@ -938,7 +938,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     namespace {
 
-        inline expected<PublicKeyDataType>
+        static inline expected<PublicKeyDataType>
         _PublicKeyDataFromCBOR(const cbor_pair* items, size_t size) noexcept {
 
             if (items == nullptr || size == 0) {
@@ -984,7 +984,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             return pk;
         }
 
-        inline expected<OKPPublicKeyDataType>
+        static inline expected<OKPPublicKeyDataType>
         _OKPPublicKeyDataFromCBOR(const PublicKeyDataType& pk, const cbor_pair* items, size_t size) noexcept {
 
             OKPPublicKeyDataType okp{pk};
@@ -1035,7 +1035,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             return okp;
         }
 
-        inline expected<EC2PublicKeyDataType>
+        static inline expected<EC2PublicKeyDataType>
         _EC2PublicKeyDataFromCBOR(const PublicKeyDataType& pk, const cbor_pair* items, size_t size) noexcept {
 
             EC2PublicKeyDataType ec2{pk};
@@ -1102,7 +1102,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             return ec2;
         }
 
-        inline expected<RSAPublicKeyDataType>
+        static inline expected<RSAPublicKeyDataType>
         _RSAPublicKeyDataFromCBOR(const PublicKeyDataType& pk, const cbor_pair* items, size_t size) noexcept {
 
             RSAPublicKeyDataType rsa{pk};

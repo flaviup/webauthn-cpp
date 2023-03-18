@@ -117,7 +117,7 @@ namespace WebAuthN::Util::Crypto {
 
         // Obtains an entry from a X509 name (i.e. either
         // the certificate’s issuer or subject)
-        inline expected<std::string>
+        static inline expected<std::string>
         _ExtractNameEntry(const X509_NAME* name, int nid) noexcept {
 
             if (name == nullptr) {
@@ -148,7 +148,7 @@ namespace WebAuthN::Util::Crypto {
             return s;
         }
 
-        inline expected<std::string>
+        static inline expected<std::string>
         _ConvertASN1TIME(const ASN1_TIME* t) noexcept {
 
             if (t == nullptr) {
@@ -183,7 +183,7 @@ namespace WebAuthN::Util::Crypto {
             return std::string(buf);
         }
 
-        inline expected<X509CertificateType::ExtensionType>
+        static inline expected<X509CertificateType::ExtensionType>
         _GetExtension(const stack_st_X509_EXTENSION* extensions, const int index) noexcept {
 
             if (extensions == nullptr) {
@@ -261,7 +261,7 @@ namespace WebAuthN::Util::Crypto {
             return parsedExtension;
         }
 
-        inline expected<bool>
+        static inline expected<bool>
         _CheckSignature(const X509* certificate,
                         const std::string& algorithmName,
                         const std::vector<uint8_t>& data,

@@ -61,7 +61,7 @@ namespace WebAuthN::Protocol {
             bool BasicIntegrity;
         };
 
-        inline void to_json(json& j, const SafetyNetResponseType& safetyNetResponse) {
+        static inline void to_json(json& j, const SafetyNetResponseType& safetyNetResponse) {
 
             j = json{
                 { "nonce",                                           safetyNetResponse.Nonce },
@@ -74,7 +74,7 @@ namespace WebAuthN::Protocol {
             };
         }
 
-        inline void from_json(const json& j, SafetyNetResponseType& safetyNetResponse) {
+        static inline void from_json(const json& j, SafetyNetResponseType& safetyNetResponse) {
 
             j.at("nonce").get_to(safetyNetResponse.Nonce);
             j.at("timestampMs").get_to(safetyNetResponse.TimestampMs);
@@ -85,7 +85,7 @@ namespace WebAuthN::Protocol {
             j.at("basicIntegrity").get_to(safetyNetResponse.BasicIntegrity);
         }
 
-        int JwtKeyProvider(const jwt_t* jwt, jwt_key_t* jwtKey) {
+        static int _JwtKeyProvider(const jwt_t* jwt, jwt_key_t* jwtKey) {
 
             auto x5c = jwt_get_headers_json(const_cast<jwt_t*>(jwt), "x5c");
 
@@ -129,7 +129,7 @@ namespace WebAuthN::Protocol {
             return EINVAL;
         }
 
-        std::vector<uint8_t> GetFirstCertData(const jwt_t* jwt) {
+        static inline std::vector<uint8_t> _GetFirstCertData(const jwt_t* jwt) {
 
             auto x5c = jwt_get_headers_json(const_cast<jwt_t*>(jwt), "x5c");
 
@@ -168,7 +168,7 @@ namespace WebAuthN::Protocol {
         //
         // provide information regarding provenance of the authenticator and its associated data. Therefore platform-provided
         // authenticators SHOULD make use of the Android Key Attestation when available, even if the SafetyNet API is also present.
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _VerifySafetyNetFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // The syntax of an Android Attestation statement is defined as follows:
@@ -208,7 +208,7 @@ namespace WebAuthN::Protocol {
                 auto response = atts["response"].get_binary();
                 jwt_t* jwt = nullptr;
                 auto responseStr = std::string(reinterpret_cast<const char*>(response.data()), response.size());
-                auto ret = jwt_decode_2(&jwt, responseStr.data(), JwtKeyProvider);
+                auto ret = jwt_decode_2(&jwt, responseStr.data(), _JwtKeyProvider);
 
                 if (ret != 0 || jwt == nullptr) {
                     return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
@@ -249,7 +249,7 @@ namespace WebAuthN::Protocol {
                 }
 
                 // §8.5.4 Let attestationCert be the attestation certificate (https://www.w3.org/TR/webauthn/#attestation-certificate)
-                auto certData = GetFirstCertData(jwt);
+                auto certData = _GetFirstCertData(jwt);
                 jwt_free(jwt);
 
                 if (certData.empty()) {

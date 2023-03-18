@@ -139,7 +139,7 @@ namespace WebAuthN::Protocol {
         //      sig: bytes,
         //      x5c: [ credCert: bytes, * (caCert: bytes) ]
         //  }
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _VerifyAndroidKeyFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Given the verification procedure inputs attStmt, authenticatorData and clientDataHash, the verification procedure is as follows:

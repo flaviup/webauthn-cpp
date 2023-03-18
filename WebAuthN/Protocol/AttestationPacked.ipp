@@ -29,7 +29,7 @@ namespace WebAuthN::Protocol {
     namespace {
 
         // Handle the attestation steps laid out in
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _HandleBasicAttestation(const std::vector<uint8_t>& signature,
                                 const std::vector<uint8_t>& clientDataHash,
                                 const std::vector<uint8_t>& authData,
@@ -210,7 +210,7 @@ namespace WebAuthN::Protocol {
             return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
         }
 
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _HandleECDAAAttestation(const std::vector<uint8_t>& signature, 
                                 const std::vector<uint8_t>& clientDataHash, 
                                 const std::vector<uint8_t>& ecdaaKeyID) noexcept {
@@ -218,7 +218,7 @@ namespace WebAuthN::Protocol {
             return unexpected(ErrNotSpecImplemented());
         }
 
-        inline std::optional<ErrorType>
+        static inline std::optional<ErrorType>
         _VerifyKeyAlgorithm(const int64_t keyAlgorithm, const int64_t attestedAlgorithm) noexcept {
             
             if (keyAlgorithm != attestedAlgorithm) {
@@ -229,7 +229,7 @@ namespace WebAuthN::Protocol {
             return std::nullopt;
         }
 
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _HandleSelfAttestation(const int64_t alg,
                                const std::vector<uint8_t>& pubKey,
                                const std::vector<uint8_t>& authData,
@@ -300,7 +300,7 @@ namespace WebAuthN::Protocol {
         // }
         //
         // Specification: §8.2. Packed Attestation Statement Format (https://www.w3.org/TR/webauthn/#sctn-packed-attestation)
-        inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
         _VerifyPackedFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined

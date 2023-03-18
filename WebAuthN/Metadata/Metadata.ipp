@@ -361,7 +361,7 @@ namespace WebAuthN::Metadata {
 
     namespace {
 
-        inline const auto _MAPPING = std::map<AuthenticationAlgorithmType, AlgKeyCose>{
+        static inline const auto _MAPPING = std::map<AuthenticationAlgorithmType, AlgKeyCose>{
             { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::P256 } },
             { AuthenticationAlgorithmType::ALG_SIGN_SECP256R1_ECDSA_SHA256_DER, { .KeyType = WebAuthNCOSE::COSEKeyType::EllipticKey, .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::P256 } },
             { AuthenticationAlgorithmType::ALG_SIGN_RSASSA_PSS_SHA256_RAW,      { .KeyType = WebAuthNCOSE::COSEKeyType::RSAKey,      .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgPS256 } },
@@ -380,7 +380,7 @@ namespace WebAuthN::Metadata {
             { AuthenticationAlgorithmType::ALG_SIGN_ED448_EDDSA_SHA512_RAW,     { .KeyType = WebAuthNCOSE::COSEKeyType::OctetKey,    .Algorithm = WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgEdDSA,  .Curve = WebAuthNCOSE::COSEEllipticCurveType::Ed448 } }
         };
 
-        inline const AlgKeyCose& _AlgKeyCoseMappingFunction(AuthenticationAlgorithmType authAlgorithm) noexcept {
+        static inline const AlgKeyCose& _AlgKeyCoseMappingFunction(AuthenticationAlgorithmType authAlgorithm) noexcept {
 
             return _MAPPING.find(authAlgorithm)->second;
         }
