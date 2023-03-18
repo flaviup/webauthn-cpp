@@ -36,9 +36,10 @@ namespace WebAuthN::Protocol {
         }
 
         static inline expected<std::string>
-        _Base64_Decode(const std::string& encoded, bool urlSafe = true) noexcept {
+        _Base64_Decode(const std::string& encoded, bool noPadding = true, bool urlSafe = true) noexcept {
 
-            const auto encodingVariant = urlSafe ? sodium_base64_VARIANT_URLSAFE_NO_PADDING : sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+            const auto encodingVariant = noPadding ? (urlSafe ? sodium_base64_VARIANT_URLSAFE_NO_PADDING : sodium_base64_VARIANT_ORIGINAL_NO_PADDING) :
+                                                     (urlSafe ? sodium_base64_VARIANT_URLSAFE : sodium_base64_VARIANT_ORIGINAL);
             const size_t decodedMaxLength = encoded.size() * 4 / 3 + 2;
             size_t decodedLength = 0;
             unsigned char decodedData[decodedMaxLength];
@@ -55,9 +56,10 @@ namespace WebAuthN::Protocol {
         }
 
         static inline expected<std::vector<uint8_t>>
-        _Base64_DecodeAsBinary(const std::string& encoded, bool urlSafe = true) noexcept {
+        _Base64_DecodeAsBinary(const std::string& encoded, bool noPadding = true, bool urlSafe = true) noexcept {
 
-            const auto encodingVariant = urlSafe ? sodium_base64_VARIANT_URLSAFE_NO_PADDING : sodium_base64_VARIANT_ORIGINAL_NO_PADDING;
+            const auto encodingVariant = noPadding ? (urlSafe ? sodium_base64_VARIANT_URLSAFE_NO_PADDING : sodium_base64_VARIANT_ORIGINAL_NO_PADDING) :
+                                                     (urlSafe ? sodium_base64_VARIANT_URLSAFE : sodium_base64_VARIANT_ORIGINAL);
             const size_t decodedMaxLength = encoded.size() * 4 / 3 + 2;
             size_t decodedLength = 0;
             unsigned char decodedData[decodedMaxLength];
@@ -98,14 +100,14 @@ namespace WebAuthN::Protocol {
         return URLEncodedBase64_Encode(data.data(), data.size());
     }
 
-    inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded) noexcept {
+    inline expected<std::string> URLEncodedBase64_Decode(const URLEncodedBase64Type& encoded, bool noPadding = true) noexcept {
 
-        return _Base64_Decode(encoded);
+        return _Base64_Decode(encoded, noPadding);
     }
 
-    inline expected<std::vector<uint8_t>> URLEncodedBase64_DecodeAsBinary(const URLEncodedBase64Type& encoded) noexcept {
+    inline expected<std::vector<uint8_t>> URLEncodedBase64_DecodeAsBinary(const URLEncodedBase64Type& encoded, bool noPadding = true) noexcept {
 
-        return _Base64_DecodeAsBinary(encoded);
+        return _Base64_DecodeAsBinary(encoded, noPadding);
     }
 
     // Base64EncodedType
@@ -130,14 +132,14 @@ namespace WebAuthN::Protocol {
         return Base64_Encode(data.data(), data.size());
     }
 
-    inline expected<std::string> Base64_Decode(const Base64EncodedType& encoded) noexcept {
+    inline expected<std::string> Base64_Decode(const Base64EncodedType& encoded, bool noPadding = true) noexcept {
 
-        return _Base64_Decode(encoded, false);
+        return _Base64_Decode(encoded, noPadding, false);
     }
 
-    inline expected<std::vector<uint8_t>> Base64_DecodeAsBinary(const Base64EncodedType& encoded) noexcept {
+    inline expected<std::vector<uint8_t>> Base64_DecodeAsBinary(const Base64EncodedType& encoded, bool noPadding = true) noexcept {
 
-        return _Base64_DecodeAsBinary(encoded, false);
+        return _Base64_DecodeAsBinary(encoded, noPadding, false);
     }
 } // namespace WebAuthN::Protocol
 
