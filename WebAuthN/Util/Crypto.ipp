@@ -318,7 +318,12 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Null BIO"s);
         }
-        BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
+
+        if (BIO_write(bio, data.data(), static_cast<int>(data.size())) != static_cast<int>(data.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate certificate data"s);
+        }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
 
@@ -369,7 +374,12 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Null BIO"s);
         }
-        BIO_puts(bio, reinterpret_cast<const char*>(data.data()));
+
+        if (BIO_write(bio, data.data(), static_cast<int>(data.size())) != static_cast<int>(data.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate certificate data"s);
+        }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
 
@@ -468,7 +478,12 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Null BIO"s);
         }
-        BIO_puts(bio, reinterpret_cast<const char*>(certData.data()));
+
+        if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate certificate data"s);
+        }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
 
@@ -495,7 +510,12 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Null BIO"s);
         }
-        BIO_puts(bio, reinterpret_cast<const char*>(certData.data()));
+
+        if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate certificate data"s);
+        }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
 
@@ -540,7 +560,7 @@ namespace WebAuthN::Util::Crypto {
         }
 
         BIO_free_all(bioKey);
-        EVP_PKEY_free(pKey);
+        //EVP_PKEY_free(pKey);
         X509_free(certificate);
         BIO_free_all(bio);
 
@@ -561,7 +581,12 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Null BIO"s);
         }
-        BIO_puts(bio, reinterpret_cast<const char*>(certData.data()));
+
+        if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate certificate data"s);
+        }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
 
