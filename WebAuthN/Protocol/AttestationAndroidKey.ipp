@@ -82,19 +82,19 @@ namespace WebAuthN::Protocol {
             std::optional<std::vector<int32_t>> Padding;                     // `asn1:"tag:6,explicit,set,optional"`
             std::optional<int32_t>              EcCurve;                     // `asn1:"tag:10,explicit,optional"`
             std::optional<int32_t>              RsaPublicExponent;           // `asn1:"tag:200,explicit,optional"`
-            std::optional<std::any>             RollbackResistance;          // `asn1:"tag:303,explicit,optional"`
+            std::optional<json>                 RollbackResistance;          // `asn1:"tag:303,explicit,optional"`
             std::optional<int32_t>              ActiveDateTime;              // `asn1:"tag:400,explicit,optional"`
             std::optional<int32_t>              OriginationExpireDateTime;   // `asn1:"tag:401,explicit,optional"`
             std::optional<int32_t>              UsageExpireDateTime;         // `asn1:"tag:402,explicit,optional"`
-            std::optional<std::any>             NoAuthRequired;              // `asn1:"tag:503,explicit,optional"`
+            std::optional<json>                 NoAuthRequired;              // `asn1:"tag:503,explicit,optional"`
             std::optional<int32_t>              UserAuthType;                // `asn1:"tag:504,explicit,optional"`
             std::optional<int32_t>              AuthTimeout;                 // `asn1:"tag:505,explicit,optional"`
-            std::optional<std::any>             AllowWhileOnBody;            // `asn1:"tag:506,explicit,optional"`
-            std::optional<std::any>             TrustedUserPresenceRequired; // `asn1:"tag:507,explicit,optional"`
-            std::optional<std::any>             TrustedConfirmationRequired; // `asn1:"tag:508,explicit,optional"`
-            std::optional<std::any>             UnlockedDeviceRequired;      // `asn1:"tag:509,explicit,optional"`
-            std::optional<std::any>             AllApplications;             // `asn1:"tag:600,explicit,optional"`
-            std::optional<std::any>             ApplicationID;               // `asn1:"tag:601,explicit,optional"`
+            std::optional<json>                 AllowWhileOnBody;            // `asn1:"tag:506,explicit,optional"`
+            std::optional<json>                 TrustedUserPresenceRequired; // `asn1:"tag:507,explicit,optional"`
+            std::optional<json>                 TrustedConfirmationRequired; // `asn1:"tag:508,explicit,optional"`
+            std::optional<json>                 UnlockedDeviceRequired;      // `asn1:"tag:509,explicit,optional"`
+            std::optional<json>                 AllApplications;             // `asn1:"tag:600,explicit,optional"`
+            std::optional<json>                 ApplicationID;               // `asn1:"tag:601,explicit,optional"`
             std::optional<int32_t>              CreationDateTime;            // `asn1:"tag:701,explicit,optional"`
             std::optional<int32_t>              Origin;                      // `asn1:"tag:702,explicit,optional"`
             std::optional<RootOfTrustType>      RootOfTrust;                 // `asn1:"tag:704,explicit,optional"`
