@@ -106,13 +106,10 @@ namespace WebAuthN::Protocol {
                             if (certPublicKeyParsing) {
 
                                 auto pubKey = certPublicKeyParsing.value();
-                                jwtKey->jwt_key_len = static_cast<int>(pubKey.size());
-                                auto pubKeyBuffer = malloc(jwtKey->jwt_key_len);
-                                std::memcpy(pubKeyBuffer, pubKey.data(), jwtKey->jwt_key_len);
-                                jwtKey->jwt_key = reinterpret_cast<unsigned char*>(pubKeyBuffer);
+                                jwtKey->jwt_key_len = 0;
+                                jwtKey->jwt_key = nullptr;
                                 jwt_free_str(x5c);
-
-                                return 0;
+                                return jwt_set_alg(const_cast<jwt_t*>(jwt), jwt_get_alg(jwt), reinterpret_cast<const unsigned char*>(pubKey.data()), static_cast<int>(pubKey.size()));
                             }
                         }
                     }
