@@ -29,10 +29,10 @@ namespace WebAuthN::Util::Url {
         static inline constexpr const auto FRAGMENT_REGEX = "(#([^#\\s]*))?";    // after the # match anything other than # or whitespace
 
         static inline const std::regex URL_REGEX{std::string("^")
-                                                 + SCHEME_REGEX + USER_REGEX
-                                                 + HOST_REGEX + PORT_REGEX
-                                                 + PATH_REGEX + QUERY_REGEX
-                                                 + FRAGMENT_REGEX + "$"};
+                                               + SCHEME_REGEX + USER_REGEX
+                                               + HOST_REGEX + PORT_REGEX
+                                               + PATH_REGEX + QUERY_REGEX
+                                               + FRAGMENT_REGEX + "$"};
     }
 
 #pragma GCC visibility pop
