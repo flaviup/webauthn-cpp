@@ -11,7 +11,7 @@
 
 #define UCHAR_TYPE char16_t
 
-#include <cassert>
+//#include <cassert>
 #include <sodium.h>
 #include <unicode/uchar.h>
 #include <unicode/ustring.h>
@@ -37,9 +37,9 @@ namespace WebAuthN::Util::StringCompare {
 
     inline bool ConstantTimeEqual(const std::string& s1, const std::string& s2) noexcept {
 
-        assert(s1.size() == s2.size());
+        /*assert(s1.size() == s2.size());
         
-        /*volatile char c = 0;
+        volatile char c = 0;
         volatile auto n = s1.size();
         volatile const char* p1 = s1.data();
         volatile const char* p2 = s2.data();
@@ -49,14 +49,14 @@ namespace WebAuthN::Util::StringCompare {
         }
 
         return (c == 0);*/
-        return s1.empty() || (sodium_memcmp(s1.data(), s2.data(), s1.size()) == 0);
+        return (s1.size() == s2.size()) && (s1.empty() || (sodium_memcmp(s1.data(), s2.data(), s1.size()) == 0));
     }
 
     inline bool ConstantTimeEqual(const std::vector<uint8_t>& v1, const std::vector<uint8_t>& v2) noexcept {
 
-        assert(v1.size() == v2.size());
+        /*assert(v1.size() == v2.size());
         
-        /*volatile uint8_t c = 0;
+        volatile uint8_t c = 0;
         volatile auto n = v1.size();
         volatile const uint8_t* p1 = v1.data();
         volatile const uint8_t* p2 = v2.data();
@@ -66,7 +66,7 @@ namespace WebAuthN::Util::StringCompare {
         }
 
         return (c == 0);*/
-        return v1.empty() || (sodium_memcmp(v1.data(), v2.data(), v1.size()) == 0);
+        return (v1.size() == v2.size()) && (v1.empty() || (sodium_memcmp(v1.data(), v2.data(), v1.size()) == 0));
     }
 } // namespace WebAuthN::Util::StringCompare
 
