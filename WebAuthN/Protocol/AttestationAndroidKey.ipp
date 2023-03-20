@@ -65,6 +65,13 @@ namespace WebAuthN::Protocol {
             Failed
         };
 
+        enum class SecurityLevelType : int {
+
+            Software,
+            TrustedEnvironment,
+            StrongBox
+        };
+
         struct RootOfTrustType {
 
             std::vector<uint8_t> VerifiedBootKey;
@@ -116,9 +123,9 @@ namespace WebAuthN::Protocol {
         struct KeyDescriptionType {
 
             int32_t               AttestationVersion;
-            uint32_t              AttestationSecurityLevel; // asn1.Enumerated
+            SecurityLevelType     AttestationSecurityLevel;
             int32_t               KeymasterVersion;
-            uint32_t              KeymasterSecurityLevel;   // asn1.Enumerated
+            SecurityLevelType     KeymasterSecurityLevel;
             std::vector<uint8_t>  AttestationChallenge;
             std::vector<uint8_t>  UniqueID;
             AuthorizationListType SoftwareEnforced;
