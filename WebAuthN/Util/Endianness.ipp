@@ -33,7 +33,8 @@
 #error "This is an unknown architecture."
 #endif
 
-#define MAKE_UINT32(a, b, c, d) ((static_cast<uint32_t>(a) << 24) | (static_cast<uint32_t>(b) << 16) | (static_cast<uint32_t>(c) << 8) | static_cast<uint32_t>(d))
-#define MAKE_UINT16(a, b) ((static_cast<uint16_t>(a) << 8) | static_cast<uint16_t>(b))
+#define MAKE_UINT64(byte0, byte1, byte2, byte3, byte4, byte5, byte6, byte7) static_cast<uint64_t>((static_cast<uint64_t>(byte0) << 56ULL) | (static_cast<uint64_t>(byte1) << 48ULL) | (static_cast<uint64_t>(byte2) << 40ULL) | (static_cast<uint64_t>(byte3) << 32ULL) | (static_cast<uint64_t>(byte4) << 24ULL) | (static_cast<uint64_t>(byte5) << 16ULL) | (static_cast<uint64_t>(byte6) << 8ULL) | static_cast<uint64_t>(byte7))
+#define MAKE_UINT32(byte0, byte1, byte2, byte3) static_cast<uint32_t>((static_cast<uint32_t>(byte0) << 24) | (static_cast<uint32_t>(byte1) << 16) | (static_cast<uint32_t>(byte2) << 8) | static_cast<uint32_t>(byte3))
+#define MAKE_UINT16(byte0, byte1) static_cast<uint16_t>((static_cast<uint16_t>(byte0) << 8) | static_cast<uint16_t>(byte1))
 
 #endif // WEBAUTHN_UTIL_ENDIANNESS_IPP

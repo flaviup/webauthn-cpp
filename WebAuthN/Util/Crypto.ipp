@@ -143,7 +143,7 @@ namespace WebAuthN::Util::Crypto {
             std::string s(reinterpret_cast<const char*>(entryString));
 
             ASN1_STRING_clear_free(asn1Data);
-            X509_NAME_ENTRY_free(entry);
+            //X509_NAME_ENTRY_free(entry);
 
             return s;
         }
@@ -215,7 +215,6 @@ namespace WebAuthN::Util::Crypto {
                 if (size < 0) {
 
                     ASN1_OBJECT_free(obj);
-                    OBJ_cleanup();
                     return unexpected("Invalid extension name length"s);
                 }
                 char* extensionName = new char[size + 2]{0};
@@ -230,7 +229,6 @@ namespace WebAuthN::Util::Crypto {
                 if (extensionName == nullptr) {
 
                     ASN1_OBJECT_free(obj);
-                    OBJ_cleanup();
 
                     return unexpected("Invalid X509v3 extension name"s);
                 }
@@ -245,7 +243,6 @@ namespace WebAuthN::Util::Crypto {
             }
 
             ASN1_OBJECT_free(obj);
-            OBJ_cleanup();
 
             if (parsedExtension.ID.empty() && parsedExtension.Value.empty()) {
 
@@ -343,7 +340,7 @@ namespace WebAuthN::Util::Crypto {
             X509_NAME_free(issuer);
         }
 
-        X509_free(certificate);
+        //X509_free(certificate);
         BIO_free_all(bio);
 
         if (!subjectNameResult) {
@@ -398,7 +395,7 @@ namespace WebAuthN::Util::Crypto {
             parsedCertificate.Subject.OrganizationalUnit = organizationalUnitResult ? organizationalUnitResult.value() : "";
             parsedCertificate.Subject.CommonName = commonNameResult ? commonNameResult.value() : "";
 
-            X509_NAME_free(subject);
+            //X509_NAME_free(subject);
         }
 
         auto extensions = X509_get0_extensions(certificate);
@@ -407,7 +404,7 @@ namespace WebAuthN::Util::Crypto {
 
         if (extCount < 0) {
 
-            X509_free(certificate);
+            //X509_free(certificate);
             BIO_free_all(bio);
             return unexpected("Could not parse X509 certificate: invalid number of extensions"s);
         }
@@ -431,7 +428,7 @@ namespace WebAuthN::Util::Crypto {
 
             if (!conversionResult) {
 
-                X509_free(certificate);
+                //X509_free(certificate);
                 BIO_free_all(bio);
                 return unexpected(conversionResult.error());
             }
@@ -444,7 +441,7 @@ namespace WebAuthN::Util::Crypto {
 
             if (!conversionResult) {
 
-                X509_free(certificate);
+                //X509_free(certificate);
                 BIO_free_all(bio);
                 return unexpected(conversionResult.error());
             }
@@ -454,7 +451,7 @@ namespace WebAuthN::Util::Crypto {
         parsedCertificate.Version = X509_get_version(certificate);
         parsedCertificate.IsCA = X509_check_ca(certificate) > 0;
 
-        X509_free(certificate);
+        //X509_free(certificate);
         BIO_free_all(bio);
 
         return parsedCertificate;
@@ -489,7 +486,7 @@ namespace WebAuthN::Util::Crypto {
 
         auto result = _CheckSignature(certificate, algorithmName, data, signature);
         
-        X509_free(certificate);
+        //X509_free(certificate);
         BIO_free_all(bio);
 
         return result;
@@ -523,7 +520,7 @@ namespace WebAuthN::Util::Crypto {
             
         if (pKey == nullptr) {
 
-            X509_free(certificate);
+            //X509_free(certificate);
             BIO_free_all(bio);
             return unexpected("Could not get the public key from certificate"s);
         }
@@ -532,7 +529,7 @@ namespace WebAuthN::Util::Crypto {
         if (bioKey == nullptr) {
 
             EVP_PKEY_free(pKey);
-            X509_free(certificate);
+            //X509_free(certificate);
             BIO_free_all(bio);
             return unexpected("Null BIO"s);
         }
@@ -555,7 +552,7 @@ namespace WebAuthN::Util::Crypto {
 
         BIO_free_all(bioKey);
         //EVP_PKEY_free(pKey);
-        X509_free(certificate);
+        //X509_free(certificate);
         BIO_free_all(bio);
 
         if (!ok && p == nullptr) {
@@ -591,7 +588,7 @@ namespace WebAuthN::Util::Crypto {
         }
         auto result = validate_hostname(hostname, certificate);
 
-        X509_free(certificate);
+        //X509_free(certificate);
         BIO_free_all(bio);
 
         if (result == MatchFound) {
@@ -601,6 +598,81 @@ namespace WebAuthN::Util::Crypto {
         }
 
         return unexpected("Error verifying certificate hostname"s);
+    }
+
+    // ASN1
+
+    inline expected<long> ASN1GetSequence(const uint8_t*& data) noexcept {
+
+        auto length = 0L;
+        auto tagID = 0, classID = 0;
+        auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
+
+        if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SEQUENCE || length < 1) {
+
+            return unexpected("Could not parse ASN1 data as sequence"s);
+        }
+
+        return length;
+    }
+
+    template<typename T = int32_t>
+    inline expected<T> ASN1GetInt(const uint8_t*& data) noexcept {
+
+        auto length = 0L;
+        auto tagID = 0, classID = 0;
+        auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
+
+        if (ret != 0 || length < 1 || (tagID != V_ASN1_INTEGER && tagID != V_ASN1_ENUMERATED)) {
+
+            return unexpected("Could not parse ASN1 data as int"s);
+        }
+        data += length;
+
+        auto value = length > 7 ? MAKE_UINT64(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]) :
+                                  length > 3 ? MAKE_UINT32(data[0], data[1], data[2], data[3]) :
+                                               length > 1 ? MAKE_UINT16(data[0], data[1]) :
+                                                            data[0];
+
+        return static_cast<T>(value);
+    }
+
+    inline expected<std::vector<uint8_t>> ASN1GetBytes(const uint8_t*& data) noexcept {
+
+        auto length = 0L;
+        auto tagID = 0, classID = 0;
+        auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
+
+        if ((ret & 0x80) || (ret == 0xa0)) {
+
+            return unexpected("Could not parse ASN1 data as bytes"s);
+        }
+        data += length;
+
+        return length > 0 ? std::vector<uint8_t>(data, data + length) : std::vector<uint8_t>{};
+    }
+
+    inline expected<std::map<int, std::vector<uint8_t>>>
+    ASN1GetMap(const uint8_t*& data, const size_t size) noexcept {
+
+        std::map<int, std::vector<uint8_t>> asn1Map{};
+        auto end = data + size;
+
+        while (data < end) {
+
+            auto length = 0L;
+            auto tagID = 0, classID = 0;
+            auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
+
+            if ((ret & 0x80) || (ret == 0xa0) || tagID == V_ASN1_EOC) {
+
+                return unexpected("Could not parse ASN1 data"s);
+            }
+            asn1Map[tagID] = length > 0 ? std::vector<uint8_t>(data, data + length) : std::vector<uint8_t>{};
+            data += length;
+        }
+
+        return asn1Map;
     }
 } // namespace WebAuthN::Util::Crypto
 
