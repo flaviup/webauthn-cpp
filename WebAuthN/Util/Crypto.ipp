@@ -200,7 +200,6 @@ namespace WebAuthN::Util::Crypto {
 
             if (obj == nullptr) {
 
-                X509_EXTENSION_free(extension);
                 return unexpected("Unable to extract ASN1 object from extension"s);
             }
             X509CertificateType::ExtensionType parsedExtension{};
@@ -216,7 +215,6 @@ namespace WebAuthN::Util::Crypto {
                 if (size < 0) {
 
                     ASN1_OBJECT_free(obj);
-                    X509_EXTENSION_free(extension);
                     OBJ_cleanup();
                     return unexpected("Invalid extension name length"s);
                 }
@@ -232,31 +230,27 @@ namespace WebAuthN::Util::Crypto {
                 if (extensionName == nullptr) {
 
                     ASN1_OBJECT_free(obj);
-                    X509_EXTENSION_free(extension);
                     OBJ_cleanup();
 
                     return unexpected("Invalid X509v3 extension name"s);
                 }
                 parsedExtension.ID = extensionName;
             }
-            auto ex = reinterpret_cast<ASN1_OCTET_STRING*>(X509V3_EXT_d2i(extension));
+            auto ex = X509_EXTENSION_get_data(extension); //reinterpret_cast<ASN1_OCTET_STRING*>(X509V3_EXT_d2i(extension));
 
             if (ex != nullptr) {
 
                 parsedExtension.Value = std::vector<uint8_t>(ex->data, ex->data + ex->length);
                 ASN1_OCTET_STRING_free(ex);
-            } else {
-
-                ASN1_OBJECT_free(obj);
-                X509_EXTENSION_free(extension);
-                OBJ_cleanup();
-
-                return unexpected("Could not parse X509_EXTENSION: X509V3_EXT_d2i failure"s);
             }
 
             ASN1_OBJECT_free(obj);
-            X509_EXTENSION_free(extension);
             OBJ_cleanup();
+
+            if (parsedExtension.ID.empty() && parsedExtension.Value.empty()) {
+
+                return unexpected("Could not parse X509_EXTENSION"s);
+            }
 
             return parsedExtension;
         }
