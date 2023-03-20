@@ -627,12 +627,12 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Could not parse ASN1 data as int"s);
         }
-        data += length;
 
         auto value = length > 7 ? MAKE_UINT64(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]) :
                                   length > 3 ? MAKE_UINT32(data[0], data[1], data[2], data[3]) :
                                                length > 1 ? MAKE_UINT16(data[0], data[1]) :
                                                             data[0];
+        data += length;
 
         return static_cast<T>(value);
     }
@@ -647,9 +647,11 @@ namespace WebAuthN::Util::Crypto {
 
             return unexpected("Could not parse ASN1 data as bytes"s);
         }
-        data += length;
 
-        return length > 0 ? std::vector<uint8_t>(data, data + length) : std::vector<uint8_t>{};
+        auto value = length > 0 ? std::vector<uint8_t>(data, data + length) : std::vector<uint8_t>{};
+        data += length;
+        
+        return value;
     }
 
     inline expected<std::map<int, std::vector<uint8_t>>>
