@@ -291,10 +291,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             if (data.empty()) {
                 return unexpected("ASN1 parsing error of AttestationPackageInfoTypes in Android Key Attestation"s);
             }
-
-            std::vector<AttestationPackageInfoType> attPackageInfos{};
             auto p = data.data();
             auto end = p + data.size();
+            auto retSequence = Util::Crypto::ASN1GetSequence(p);
+
+            if (!retSequence || p + retSequence.value() != end) {
+                return unexpected("ASN1 parsing error of AttestationPackageInfoTypes in Android Key Attestation"s);
+            }
+            std::vector<AttestationPackageInfoType> attPackageInfos{};
 
             while (p < end) {
 
@@ -337,10 +341,15 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             if (data.empty()) {
                 return unexpected("ASN1 parsing error of SignatureDigests in Android Key Attestation"s);
             }
-
-            std::vector<std::vector<uint8_t>> attSignatureDigests{};
             auto p = data.data();
             auto end = p + data.size();
+
+            auto retSequence = Util::Crypto::ASN1GetSequence(p);
+
+            if (!retSequence || p + retSequence.value() != end) {
+                return unexpected("ASN1 parsing error of SignatureDigests in Android Key Attestation"s);
+            }
+            std::vector<std::vector<uint8_t>> attSignatureDigests{};
 
             while (p < end) {
 
