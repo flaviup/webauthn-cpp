@@ -311,6 +311,11 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 const auto& data2 = retBytes.value();
                 auto p2 = data2.data();
                 auto end2 = p2 + data2.size();
+                retSequence = Util::Crypto::ASN1GetSequence(p2);
+
+                if (!retSequence || p2 + retSequence.value() != end2) {
+                    return unexpected("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s);
+                }
                 retBytes = Util::Crypto::ASN1GetBytes(p2);
 
                 if (retBytes) {
