@@ -608,10 +608,40 @@ namespace WebAuthN::Util::Crypto {
         auto tagID = 0, classID = 0;
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
-        if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SEQUENCE || length < 1) {
+        if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SEQUENCE) {
 
             return unexpected("Could not parse ASN1 data as sequence"s);
         }
+
+        return length;
+    }
+
+    inline expected<long> ASN1GetSet(const uint8_t*& data) noexcept {
+
+        auto length = 0L;
+        auto tagID = 0, classID = 0;
+        auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
+
+        if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SET) {
+
+            return unexpected("Could not parse ASN1 data as set"s);
+        }
+
+        return length;
+    }
+
+    inline long ASN1TryGetSet(const uint8_t*& data) noexcept {
+
+        auto length = 0L;
+        auto tagID = 0, classID = 0;
+        auto p = data;
+        auto ret = ASN1_get_object(&p, &length, &tagID, &classID, 1L << 24);
+
+        if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SET) {
+
+            return 0;
+        }
+        data = p;
 
         return length;
     }
@@ -623,7 +653,13 @@ namespace WebAuthN::Util::Crypto {
         auto tagID = 0, classID = 0;
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
-        if (ret != 0 || length < 1 || (tagID != V_ASN1_INTEGER && tagID != V_ASN1_ENUMERATED)) {
+        if (ret == 0 && tagID == V_ASN1_NULL) {
+
+            data += length;
+            return static_cast<T>(0);
+        }
+
+        if (ret != 0 || length < 1 || (tagID != V_ASN1_INTEGER && tagID != V_ASN1_ENUMERATED && tagID != V_ASN1_BOOLEAN)) {
 
             return unexpected("Could not parse ASN1 data as int"s);
         }

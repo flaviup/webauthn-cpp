@@ -156,7 +156,7 @@ namespace WebAuthN::Protocol {
             static inline constexpr auto DEVICE_UNIQUE_ATTESTATION_TAG      = 720;
             static inline constexpr auto IDENTITY_CREDENTIAL_KEY_TAG        = 721;
 
-            std::optional<int32_t>                      Purpose;                     // `asn1:"tag:1,explicit,set,optional"`
+            std::optional<KmPurposeType>                Purpose;                     // `asn1:"tag:1,explicit,set,optional"`
             std::optional<int32_t>                      Algorithm;                   // `asn1:"tag:2,explicit,optional"`
             std::optional<int32_t>                      KeySize;                     // `asn1:"tag:3,explicit,optional"`
             std::optional<std::set<int32_t>>            Digest;                      // `asn1:"tag:5,explicit,set,optional"`
@@ -210,8 +210,10 @@ namespace WebAuthN::Protocol {
         };
 
         static inline expected<std::vector<uint8_t>>
-        _Identity(const std::vector<uint8_t>& data) noexcept {
-            return data;
+        _ToBytes(const std::vector<uint8_t>& data) noexcept {
+
+            auto p = data.data();
+            return Util::Crypto::ASN1GetBytes(p);
         }
 
         static inline expected<bool>
@@ -220,55 +222,113 @@ namespace WebAuthN::Protocol {
             if (data.empty()) {
                 return unexpected("Data vector is empty"s);
             }
+            auto p = data.data();
+            auto retInt = Util::Crypto::ASN1GetInt(p);
 
-            return data[0] != 0;
+            if (retInt) {
+                return retInt.value() != 0;
+            }
+
+            return unexpected("Could not parse ASN1 data as int32"s);
         }
 
         static inline expected<int32_t>
         _ToInt32(const std::vector<uint8_t>& data) noexcept {
 
-            if (data.size() < 4) {
-                return unexpected("Data vector size is less than 4 bytes"s);
+            if (data.empty()) {
+                return unexpected("Data vector is empty"s);
+            }
+            auto p = data.data();
+            auto retInt = Util::Crypto::ASN1GetInt(p);
+
+            if (retInt) {
+                return retInt.value();
             }
 
-            return static_cast<int32_t>(MAKE_UINT32(data[0], data[1], data[2], data[3]));
+            return unexpected("Could not parse ASN1 data as int32"s);
         }
 
         static inline expected<int64_t>
         _ToInt64(const std::vector<uint8_t>& data) noexcept {
 
-            if (data.size() < 8) {
-                return unexpected("Data vector size is less than 8 bytes"s);
+            if (data.empty()) {
+                return unexpected("Data vector is empty"s);
+            }
+            auto p = data.data();
+            auto retInt = Util::Crypto::ASN1GetInt<int64_t>(p);
+
+            if (retInt) {
+                return retInt.value();
             }
 
-            return static_cast<int64_t>(MAKE_UINT64(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]));
+            return unexpected("Could not parse ASN1 data as int64"s);
         }
 
         static inline expected<std::set<int32_t>>
         _ToInt32Set(const std::vector<uint8_t>& data) noexcept {
 
-            if (data.size() % 4 != 0) {
-                return unexpected("Data vector size is not a multiple of 4"s);
+            if (data.empty()) {
+                return unexpected("Data vector is empty"s);
             }
-            auto n = data.size() / 4;
-            std::vector<int32_t> value(n);
+            auto p = data.data();
+            auto end = p + data.size();
+            auto retSet = Util::Crypto::ASN1GetSet(p);
 
-            for (auto i = 0; i < n; ++i) {
-                value[i] = static_cast<int32_t>(MAKE_UINT32(data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]));
+            if (!retSet || p + retSet.value() != end) {
+                return  unexpected("Could not parse ASN1 data as set"s);
+            }
+            std::set<int32_t> value{};
+
+            while (p < end) {
+
+                auto retInt = Util::Crypto::ASN1GetInt(p);
+
+                if (retInt) {
+                    value.insert(retInt.value());
+                } else {
+                    return  unexpected("Could not parse ASN1 data as set"s);
+                }
             }
 
-            return std::set(value.data(), value.data() + n);
+            return value;
         }
 
         template<typename T>
         static inline expected<T>
         _ToIntEnum(const std::vector<uint8_t>& data) noexcept {
 
-            if (data.size() < 4) {
-                return unexpected("Data vector size is less than 4 bytes"s);
+            if (data.empty()) {
+                return unexpected("Data vector is empty"s);
+            }
+            auto p = data.data();
+            auto end = p + data.size();
+            auto isSet = Util::Crypto::ASN1TryGetSet(p) != 0;
+
+            if (isSet) {
+
+                T t{0};
+
+                while (p < end) {
+
+                    auto retInt = Util::Crypto::ASN1GetInt(p);
+
+                    if (retInt) {
+                        t = static_cast<T>(static_cast<int>(t) | static_cast<int>(retInt.value()));
+                    } else {
+                        return unexpected("Could not parse ASN1 data as int32"s);
+                    }
+                }
+
+                return t;
+            } else {
+                auto retInt = Util::Crypto::ASN1GetInt(p);
+
+                if (retInt) {
+                    return static_cast<T>(static_cast<int>(retInt.value()));
+                }
             }
 
-            return static_cast<T>(static_cast<int>(MAKE_UINT32(data[0], data[1], data[2], data[3])));
+            return unexpected("Could not parse ASN1 data as int32"s);
         }
 
 #define ASSIGN_ASN1(x, y) \
@@ -286,37 +346,24 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
     ASSIGN_ASN1(field, conversionFunction(asn1Map[fieldTag]));\
 }
         static inline expected<std::vector<AttestationPackageInfoType>>
-        _ASN1UnmarshalAttestPackageInfos(const std::vector<uint8_t>& data) noexcept {
+        _ASN1UnmarshalAttestPackageInfos(const uint8_t*& data, const long length) noexcept {
 
-            if (data.empty()) {
+            if (length == 0) {
                 return unexpected("ASN1 parsing error of AttestationPackageInfoTypes in Android Key Attestation"s);
             }
-            auto p = data.data();
-            auto end = p + data.size();
-            auto retSequence = Util::Crypto::ASN1GetSequence(p);
-
-            if (!retSequence || p + retSequence.value() != end) {
-                return unexpected("ASN1 parsing error of AttestationPackageInfoTypes in Android Key Attestation"s);
-            }
+            auto end = data + length;
             std::vector<AttestationPackageInfoType> attPackageInfos{};
 
-            while (p < end) {
+            while (data < end) {
 
                 AttestationPackageInfoType attPackageInfo{};
-                auto retBytes = Util::Crypto::ASN1GetBytes(p);
+                auto retSequence = Util::Crypto::ASN1GetSequence(data);
 
-                if (!retBytes) {
+                if (!retSequence) {
                     return unexpected("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s);
                 }
-                const auto& data2 = retBytes.value();
-                auto p2 = data2.data();
-                auto end2 = p2 + data2.size();
-                retSequence = Util::Crypto::ASN1GetSequence(p2);
-
-                if (!retSequence || p2 + retSequence.value() != end2) {
-                    return unexpected("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s);
-                }
-                retBytes = Util::Crypto::ASN1GetBytes(p2);
+                auto end2 = data + retSequence.value();
+                auto retBytes = Util::Crypto::ASN1GetBytes(data);
 
                 if (retBytes) {
 
@@ -326,7 +373,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 } else {
                     return unexpected("ASN1 parsing error of AttestationPackageInfoType::PackageName in Android Key Attestation"s);
                 }
-                auto retInt = p2 < end2 ? Util::Crypto::ASN1GetInt<int64_t>(p2) : unexpected(""s);
+                auto retInt = data < end2 ? Util::Crypto::ASN1GetInt<int64_t>(data) : unexpected(""s);
 
                 if (retInt) {
                     attPackageInfo.Version = retInt.value();
@@ -341,24 +388,17 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         }
 
         static inline expected<std::vector<std::vector<uint8_t>>>
-        _ASN1UnmarshalAttestSignatureDigests(const std::vector<uint8_t>& data) noexcept {
+        _ASN1UnmarshalAttestSignatureDigests(const uint8_t*& data, const long length) noexcept {
 
-            if (data.empty()) {
+            if (length == 0) {
                 return unexpected("ASN1 parsing error of SignatureDigests in Android Key Attestation"s);
             }
-            auto p = data.data();
-            auto end = p + data.size();
-
-            auto retSequence = Util::Crypto::ASN1GetSequence(p);
-
-            if (!retSequence || p + retSequence.value() != end) {
-                return unexpected("ASN1 parsing error of SignatureDigests in Android Key Attestation"s);
-            }
+            auto end = data + length;
             std::vector<std::vector<uint8_t>> attSignatureDigests{};
 
-            while (p < end) {
+            while (data < end) {
 
-                auto retBytes = Util::Crypto::ASN1GetBytes(p);
+                auto retBytes = Util::Crypto::ASN1GetBytes(data);
 
                 if (retBytes) {
                     attSignatureDigests.push_back(retBytes.value());
@@ -382,9 +422,21 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto end = p + data.size();
             auto retBytes = Util::Crypto::ASN1GetBytes(p);
 
-            if (retBytes) {
+            if (!retBytes || p != end) {
+                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
+            }
+            p = retBytes.value().data();
+            end = p + retBytes.value().size();
+            auto retSequence = Util::Crypto::ASN1GetSequence(p);
 
-                auto result = _ASN1UnmarshalAttestPackageInfos(retBytes.value());
+            if (!retSequence || p + retSequence.value() != end) {
+                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
+            }
+            auto retSet = Util::Crypto::ASN1GetSet(p);
+
+            if (retSet) {
+
+                auto result = _ASN1UnmarshalAttestPackageInfos(p, retSet.value());
 
                 if (!result) {
                     return unexpected("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s);
@@ -393,11 +445,11 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             } else {
                 return unexpected("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s);
             }
-            retBytes = p < end ? Util::Crypto::ASN1GetBytes(p) : unexpected(""s);
+            retSet = p < end ? Util::Crypto::ASN1GetSet(p) : unexpected(""s);
 
-            if (retBytes) {
+            if (retSet) {
 
-                auto result = _ASN1UnmarshalAttestSignatureDigests(retBytes.value());
+                auto result = _ASN1UnmarshalAttestSignatureDigests(p, retSet.value());
 
                 if (!result) {
                     return unexpected("ASN1 parsing error of AttestationApplicationIDType::SignatureDigests in Android Key Attestation"s);
@@ -405,6 +457,10 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 attAppID.SignatureDigests = result.value();
             } else {
                 return unexpected("ASN1 parsing error of AttestationApplicationIDType::SignatureDigests in Android Key Attestation"s);
+            }
+
+            if (p != end) {
+                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
             }
 
             return attAppID;
@@ -416,10 +472,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             if (data.empty()) {
                 return unexpected("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s);
             }
-
-            RootOfTrustType rootOfTrust{};
             auto p = data.data();
             auto end = p + data.size();
+            auto retSequence = Util::Crypto::ASN1GetSequence(p);
+
+            if (!retSequence || p + retSequence.value() != end) {
+                return unexpected("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s);
+            }
+            RootOfTrustType rootOfTrust{};
             auto retBytes = Util::Crypto::ASN1GetBytes(p);
 
             if (retBytes) {
@@ -453,11 +513,10 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         }
 
         static inline expected<AuthorizationListType>
-        _ASN1UnmarshalAuthorizationList(const std::vector<uint8_t>& data) noexcept {
+        _ASN1UnmarshalAuthorizationList(const uint8_t*& data, size_t size) noexcept {
 
             AuthorizationListType authList{};
-            auto p = data.data();
-            auto asn1MapResult = Util::Crypto::ASN1GetMap(p, data.size());
+            auto asn1MapResult = Util::Crypto::ASN1GetMap(data, size);
 
             if (!asn1MapResult) {
                 return unexpected("ASN1 map parsing error"s);
@@ -465,7 +524,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto asn1Map = asn1MapResult.value();
             using ALT = AuthorizationListType;
 
-            ASSIGN_ASN1_FIELD(authList.Purpose,                     ALT::PURPOSE_TAG,                        _ToInt32,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.Purpose,                     ALT::PURPOSE_TAG,                        _ToIntEnum<KmPurposeType>,   std::nullopt)
             ASSIGN_ASN1_FIELD(authList.Algorithm,                   ALT::ALGORITHM_TAG,                      _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.KeySize,                     ALT::KEY_SIZE_TAG,                       _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.Digest,                      ALT::DIGEST_TAG,                         _ToInt32Set,                 std::nullopt)
@@ -484,7 +543,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             ASSIGN_ASN1_FIELD(authList.TrustedConfirmationRequired, ALT::TRUSTED_CONFIRMATION_REQUIRED_TAG,  _ToBool,                            false)
             ASSIGN_ASN1_FIELD(authList.UnlockedDeviceRequired,      ALT::UNLOCKED_DEVICE_REQUIRED_TAG,       _ToBool,                            false)
             ASSIGN_ASN1_FIELD(authList.AllApplications,             ALT::ALL_APPLICATIONS_TAG,               _ToBool,                            false)
-            ASSIGN_ASN1_FIELD(authList.ApplicationID,               ALT::APPLICATION_ID_TAG,                 _Identity,                   std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.ApplicationID,               ALT::APPLICATION_ID_TAG,                 _ToBytes,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.CreationDateTime,            ALT::CREATION_DATE_TIME_TAG,             _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.Origin,                      ALT::ORIGIN_TAG,                         _ToIntEnum<KmKeyOriginType>, std::nullopt)
             ASSIGN_ASN1_FIELD(authList.RollbackResistant,           ALT::ROLLBACK_RESISTANT_TAG,             _ToBool,                            false)
@@ -492,14 +551,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             ASSIGN_ASN1_FIELD(authList.OsVersion,                   ALT::OS_VERSION_TAG,                     _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.OsPatchLevel,                ALT::OS_PATCH_LEVEL_TAG,                 _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.AttestationApplicationID,    ALT::ATTESTATION_APPLICATION_ID_TAG,     _ASN1UnmarshalAttestAppID,   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDBrand,          ALT::ATTESTATION_ID_BRAND_TAG,           _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDDevice,         ALT::ATTESTATION_ID_DEVICE_TAG,          _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDProduct,        ALT::ATTESTATION_ID_PRODUCT_TAG,         _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDSerial,         ALT::ATTESTATION_ID_SERIAL_TAG,          _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDImei,           ALT::ATTESTATION_ID_IMEI_TAG,            _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDMeid,           ALT::ATTESTATION_ID_MEID_TAG,            _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDManufacturer,   ALT::ATTESTATION_ID_MANUFACTURER_TAG,    _Identity,                   std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.AttestationIDModel,          ALT::ATTESTATION_ID_MODEL_TAG,           _Identity,                   std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDBrand,          ALT::ATTESTATION_ID_BRAND_TAG,           _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDDevice,         ALT::ATTESTATION_ID_DEVICE_TAG,          _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDProduct,        ALT::ATTESTATION_ID_PRODUCT_TAG,         _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDSerial,         ALT::ATTESTATION_ID_SERIAL_TAG,          _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDImei,           ALT::ATTESTATION_ID_IMEI_TAG,            _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDMeid,           ALT::ATTESTATION_ID_MEID_TAG,            _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDManufacturer,   ALT::ATTESTATION_ID_MANUFACTURER_TAG,    _ToBytes,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.AttestationIDModel,          ALT::ATTESTATION_ID_MODEL_TAG,           _ToBytes,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.VendorPatchLevel,            ALT::VENDOR_PATCH_LEVEL_TAG,             _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.BootPatchLevel,              ALT::BOOT_PATCH_LEVEL_TAG,               _ToInt32,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.DeviceUniqueAttestation,     ALT::DEVICE_UNIQUE_ATTESTATION_TAG,      _ToBool,                            false)
@@ -565,11 +624,11 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::UniqueID in Android Key Attestation"s);
             }
-            retBytes = p < end ? Util::Crypto::ASN1GetBytes(p) : unexpected(""s);
+            retSequence = p < end ? Util::Crypto::ASN1GetSequence(p) : unexpected(""s);
 
-            if (retBytes) {
+            if (retSequence) {
 
-                auto ret = _ASN1UnmarshalAuthorizationList(retBytes.value());
+                auto ret = _ASN1UnmarshalAuthorizationList(p, retSequence.value());
 
                 if (ret) {
                     keyDesc.SoftwareEnforced = ret.value();
@@ -579,11 +638,11 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::SoftwareEnforced in Android Key Attestation"s);
             }
-            retBytes = p < end ? Util::Crypto::ASN1GetBytes(p) : unexpected(""s);
+            retSequence = p < end ? Util::Crypto::ASN1GetSequence(p) : unexpected(""s);
 
-            if (retBytes) {
+            if (retSequence) {
 
-                auto ret = _ASN1UnmarshalAuthorizationList(retBytes.value());
+                auto ret = _ASN1UnmarshalAuthorizationList(p, retSequence.value());
 
                 if (ret) {
                     keyDesc.TeeEnforced = ret.value();
@@ -593,6 +652,10 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::TeeEnforced in Android Key Attestation"s);
             }
+
+            //if (p != end) {
+            //    return unexpected("ASN1 parsing error of KeyDescriptionType in Android Key Attestation"s);
+            //}
 
             return keyDesc;
         }
@@ -777,9 +840,9 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
 
                 // The value in the AuthorizationList.purpose field is equal to KM_PURPOSE_SIGN. (which == 2)
                 if ((!decoded.SoftwareEnforced.Purpose || 
-                     ((decoded.SoftwareEnforced.Purpose.value() & static_cast<int32_t>(KmPurposeType::Sign)) == 0)) && 
+                     ((static_cast<int32_t>(decoded.SoftwareEnforced.Purpose.value()) & static_cast<int32_t>(KmPurposeType::Sign)) == 0)) && 
                     (!decoded.TeeEnforced.Purpose || 
-                     ((decoded.TeeEnforced.Purpose.value() & static_cast<int32_t>(KmPurposeType::Sign)) == 0))) {
+                     ((static_cast<int32_t>(decoded.TeeEnforced.Purpose.value()) & static_cast<int32_t>(KmPurposeType::Sign)) == 0))) {
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with purpose not equal KM_PURPOSE_SIGN"));
                 }
 
