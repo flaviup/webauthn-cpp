@@ -136,14 +136,12 @@ namespace WebAuthN::Util::Crypto {
             
             if (asn1Data == nullptr) {
 
-                X509_NAME_ENTRY_free(entry);
                 return unexpected("Null ASN1_STRING"s);
             }
             auto entryString = ASN1_STRING_get0_data(asn1Data);
             std::string s(reinterpret_cast<const char*>(entryString));
 
             ASN1_STRING_clear_free(asn1Data);
-            //X509_NAME_ENTRY_free(entry);
 
             return s;
         }
@@ -329,16 +327,6 @@ namespace WebAuthN::Util::Crypto {
 
         auto subjectNameResult = _ExtractNameEntry(subject, NID_commonName);
         auto issuerNameResult  = _ExtractNameEntry(issuer, NID_commonName);
-
-        if (subject != nullptr) {
-            
-            X509_NAME_free(subject);
-        }
-
-        if (issuer != nullptr) {
-        
-            X509_NAME_free(issuer);
-        }
 
         //X509_free(certificate);
         BIO_free_all(bio);
