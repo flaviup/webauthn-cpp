@@ -176,7 +176,7 @@ namespace WebAuthN::Protocol {
             bool                                        UnlockedDeviceRequired;      // `asn1:"tag:509,explicit"`
             bool                                        AllApplications;             // `asn1:"tag:600,explicit"`
             std::optional<std::vector<uint8_t>>         ApplicationID;               // `asn1:"tag:601,explicit,optional"`
-            std::optional<int32_t>                      CreationDateTime;            // `asn1:"tag:701,explicit,optional"`
+            std::optional<int64_t>                      CreationDateTime;            // `asn1:"tag:701,explicit,optional"`
             std::optional<KmKeyOriginType>              Origin;                      // `asn1:"tag:702,explicit,optional"`
             bool                                        RollbackResistant;           // `asn1:"tag:703,explicit"`
             std::optional<RootOfTrustType>              RootOfTrust;                 // `asn1:"tag:704,explicit,optional"`
@@ -544,7 +544,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             ASSIGN_ASN1_FIELD(authList.UnlockedDeviceRequired,      ALT::UNLOCKED_DEVICE_REQUIRED_TAG,       _ToBool,                            false)
             ASSIGN_ASN1_FIELD(authList.AllApplications,             ALT::ALL_APPLICATIONS_TAG,               _ToBool,                            false)
             ASSIGN_ASN1_FIELD(authList.ApplicationID,               ALT::APPLICATION_ID_TAG,                 _ToBytes,                    std::nullopt)
-            ASSIGN_ASN1_FIELD(authList.CreationDateTime,            ALT::CREATION_DATE_TIME_TAG,             _ToInt32,                    std::nullopt)
+            ASSIGN_ASN1_FIELD(authList.CreationDateTime,            ALT::CREATION_DATE_TIME_TAG,             _ToInt64,                    std::nullopt)
             ASSIGN_ASN1_FIELD(authList.Origin,                      ALT::ORIGIN_TAG,                         _ToIntEnum<KmKeyOriginType>, std::nullopt)
             ASSIGN_ASN1_FIELD(authList.RollbackResistant,           ALT::ROLLBACK_RESISTANT_TAG,             _ToBool,                            false)
             ASSIGN_ASN1_FIELD(authList.RootOfTrust,                 ALT::ROOT_OF_TRUST_TAG,                  _ASN1UnmarshalRootOfTrust,   std::nullopt)

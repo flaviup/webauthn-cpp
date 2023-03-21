@@ -665,9 +665,12 @@ namespace WebAuthN::Util::Crypto {
         }
 
         auto value = length > 7 ? MAKE_UINT64(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]) :
-                                  length > 3 ? MAKE_UINT32(data[0], data[1], data[2], data[3]) :
-                                               length > 1 ? MAKE_UINT16(data[0], data[1]) :
-                                                            data[0];
+                                  length > 6 ? MAKE_UINT64(0, data[0], data[1], data[2], data[3], data[4], data[5], data[6]) :
+                                               length > 5 ? MAKE_UINT64(0, 0, data[0], data[1], data[2], data[3], data[4], data[5]) :
+                                                            length > 4 ? MAKE_UINT64(0, 0, 0, data[0], data[1], data[2], data[3], data[4]) :
+                                                            length > 2 ? MAKE_UINT32(length == 4 ? data[0] : 0, length == 4 ? data[1] : data[0], length == 4 ? data[2] : data[1], length == 4 ? data[3] : data[2]) :
+                                                                         length > 1 ? MAKE_UINT16(data[0], data[1]) :
+                                                                                      data[0];
         data += length;
 
         return static_cast<T>(value);
