@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include "Attestation.ipp"
 #include "../Util/Crypto.ipp"
+#include "../Util/ASN1.ipp"
 #include "../Util/StringCompare.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
@@ -213,7 +214,7 @@ namespace WebAuthN::Protocol {
         _ToBytes(const std::vector<uint8_t>& data) noexcept {
 
             auto p = data.data();
-            return Util::Crypto::ASN1GetBytes(p);
+            return Util::ASN1::GetBytes(p);
         }
 
         static inline expected<bool>
@@ -223,7 +224,7 @@ namespace WebAuthN::Protocol {
                 return unexpected("Data vector is empty"s);
             }
             auto p = data.data();
-            auto retInt = Util::Crypto::ASN1GetInt(p);
+            auto retInt = Util::ASN1::GetInt(p);
 
             if (retInt) {
                 return retInt.value() != 0;
@@ -239,7 +240,7 @@ namespace WebAuthN::Protocol {
                 return unexpected("Data vector is empty"s);
             }
             auto p = data.data();
-            auto retInt = Util::Crypto::ASN1GetInt(p);
+            auto retInt = Util::ASN1::GetInt(p);
 
             if (retInt) {
                 return retInt.value();
@@ -255,7 +256,7 @@ namespace WebAuthN::Protocol {
                 return unexpected("Data vector is empty"s);
             }
             auto p = data.data();
-            auto retInt = Util::Crypto::ASN1GetInt<int64_t>(p);
+            auto retInt = Util::ASN1::GetInt<int64_t>(p);
 
             if (retInt) {
                 return retInt.value();
@@ -272,7 +273,7 @@ namespace WebAuthN::Protocol {
             }
             auto p = data.data();
             auto end = p + data.size();
-            auto retSet = Util::Crypto::ASN1GetSet(p);
+            auto retSet = Util::ASN1::GetSet(p);
 
             if (!retSet || p + retSet.value() != end) {
                 return  unexpected("Could not parse ASN1 data as set"s);
@@ -281,7 +282,7 @@ namespace WebAuthN::Protocol {
 
             while (p < end) {
 
-                auto retInt = Util::Crypto::ASN1GetInt(p);
+                auto retInt = Util::ASN1::GetInt(p);
 
                 if (retInt) {
                     value.insert(retInt.value());
@@ -302,7 +303,7 @@ namespace WebAuthN::Protocol {
             }
             auto p = data.data();
             auto end = p + data.size();
-            auto isSet = Util::Crypto::ASN1TryGetSet(p) != 0;
+            auto isSet = Util::ASN1::TryGetSet(p) != 0;
 
             if (isSet) {
 
@@ -310,7 +311,7 @@ namespace WebAuthN::Protocol {
 
                 while (p < end) {
 
-                    auto retInt = Util::Crypto::ASN1GetInt(p);
+                    auto retInt = Util::ASN1::GetInt(p);
 
                     if (retInt) {
                         t = static_cast<T>(static_cast<int>(t) | static_cast<int>(retInt.value()));
@@ -321,7 +322,7 @@ namespace WebAuthN::Protocol {
 
                 return t;
             } else {
-                auto retInt = Util::Crypto::ASN1GetInt(p);
+                auto retInt = Util::ASN1::GetInt(p);
 
                 if (retInt) {
                     return static_cast<T>(static_cast<int>(retInt.value()));
@@ -357,13 +358,13 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             while (data < end) {
 
                 AttestationPackageInfoType attPackageInfo{};
-                auto retSequence = Util::Crypto::ASN1GetSequence(data);
+                auto retSequence = Util::ASN1::GetSequence(data);
 
                 if (!retSequence) {
                     return unexpected("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s);
                 }
                 auto end2 = data + retSequence.value();
-                auto retBytes = Util::Crypto::ASN1GetBytes(data);
+                auto retBytes = Util::ASN1::GetBytes(data);
 
                 if (retBytes) {
 
@@ -373,7 +374,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 } else {
                     return unexpected("ASN1 parsing error of AttestationPackageInfoType::PackageName in Android Key Attestation"s);
                 }
-                auto retInt = data < end2 ? Util::Crypto::ASN1GetInt<int64_t>(data) : unexpected(""s);
+                auto retInt = data < end2 ? Util::ASN1::GetInt<int64_t>(data) : unexpected(""s);
 
                 if (retInt) {
                     attPackageInfo.Version = retInt.value();
@@ -398,7 +399,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
 
             while (data < end) {
 
-                auto retBytes = Util::Crypto::ASN1GetBytes(data);
+                auto retBytes = Util::ASN1::GetBytes(data);
 
                 if (retBytes) {
                     attSignatureDigests.push_back(retBytes.value());
@@ -420,19 +421,19 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             AttestationApplicationIDType attAppID{};
             auto p = data.data();
             auto end = p + data.size();
-            auto retBytes = Util::Crypto::ASN1GetBytes(p);
+            auto retBytes = Util::ASN1::GetBytes(p);
 
             if (!retBytes || p != end) {
                 return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
             }
             p = retBytes.value().data();
             end = p + retBytes.value().size();
-            auto retSequence = Util::Crypto::ASN1GetSequence(p);
+            auto retSequence = Util::ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end) {
                 return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
             }
-            auto retSet = Util::Crypto::ASN1GetSet(p);
+            auto retSet = Util::ASN1::GetSet(p);
 
             if (retSet) {
 
@@ -445,7 +446,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             } else {
                 return unexpected("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s);
             }
-            retSet = p < end ? Util::Crypto::ASN1GetSet(p) : unexpected(""s);
+            retSet = p < end ? Util::ASN1::GetSet(p) : unexpected(""s);
 
             if (retSet) {
 
@@ -474,34 +475,34 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             }
             auto p = data.data();
             auto end = p + data.size();
-            auto retSequence = Util::Crypto::ASN1GetSequence(p);
+            auto retSequence = Util::ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end) {
                 return unexpected("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s);
             }
             RootOfTrustType rootOfTrust{};
-            auto retBytes = Util::Crypto::ASN1GetBytes(p);
+            auto retBytes = Util::ASN1::GetBytes(p);
 
             if (retBytes) {
                 rootOfTrust.VerifiedBootKey = retBytes.value();
             } else {
                 return unexpected("ASN1 parsing error of RootOfTrustType::VerifiedBootKey in Android Key Attestation"s);
             }
-            auto retInt = p < end ? Util::Crypto::ASN1GetInt(p) : unexpected(""s);
+            auto retInt = p < end ? Util::ASN1::GetInt(p) : unexpected(""s);
 
             if (retInt) {
                 rootOfTrust.DeviceLocked = retInt.value() != 0;
             } else {
                 return unexpected("ASN1 parsing error of RootOfTrustType::DeviceLocked in Android Key Attestation"s);
             }
-            retInt = p < end ? Util::Crypto::ASN1GetInt(p) : unexpected(""s);
+            retInt = p < end ? Util::ASN1::GetInt(p) : unexpected(""s);
 
             if (retInt) {
                 rootOfTrust.VerifiedBootState = static_cast<VerifiedBootStateType>(retInt.value());
             } else {
                 return unexpected("ASN1 parsing error of RootOfTrustType::VerifiedBootState in Android Key Attestation"s);
             }
-            retBytes = p < end ? Util::Crypto::ASN1GetBytes(p) : unexpected(""s);
+            retBytes = p < end ? Util::ASN1::GetBytes(p) : unexpected(""s);
 
             if (retBytes) {
                 rootOfTrust.VerifiedBootHash = retBytes.value();
@@ -516,7 +517,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         _ASN1UnmarshalAuthorizationList(const uint8_t*& data, size_t size) noexcept {
 
             AuthorizationListType authList{};
-            auto asn1MapResult = Util::Crypto::ASN1GetMap(data, size);
+            auto asn1MapResult = Util::ASN1::GetMap(data, size);
 
             if (!asn1MapResult) {
                 return unexpected("ASN1 map parsing error"s);
@@ -577,54 +578,54 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             KeyDescriptionType keyDesc{};
             auto p = data.data();
             auto end = p + data.size();
-            auto retSequence = Util::Crypto::ASN1GetSequence(p);
+            auto retSequence = Util::ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end) {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s);
             }
-            auto retInt = Util::Crypto::ASN1GetInt(p);
+            auto retInt = Util::ASN1::GetInt(p);
 
             if (retInt) {
                 keyDesc.AttestationVersion = retInt.value();
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s);
             }
-            retInt = p < end ? Util::Crypto::ASN1GetInt(p) : unexpected(""s);
+            retInt = p < end ? Util::ASN1::GetInt(p) : unexpected(""s);
 
             if (retInt) {
                 keyDesc.AttestationSecurityLevel = static_cast<SecurityLevelType>(retInt.value());
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationSecurityLevel in Android Key Attestation"s);
             }
-            retInt = p < end ? Util::Crypto::ASN1GetInt(p) : unexpected(""s);
+            retInt = p < end ? Util::ASN1::GetInt(p) : unexpected(""s);
 
             if (retInt) {
                 keyDesc.KeymasterVersion = retInt.value();
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::KeymasterVersion in Android Key Attestation"s);
             }
-            retInt = p < end ? Util::Crypto::ASN1GetInt(p) : unexpected(""s);
+            retInt = p < end ? Util::ASN1::GetInt(p) : unexpected(""s);
 
             if (retInt) {
                 keyDesc.KeymasterSecurityLevel = static_cast<SecurityLevelType>(retInt.value());
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::KeymasterSecurityLevel in Android Key Attestation"s);
             }
-            auto retBytes = p < end ? Util::Crypto::ASN1GetBytes(p) : unexpected(""s);
+            auto retBytes = p < end ? Util::ASN1::GetBytes(p) : unexpected(""s);
 
             if (retBytes) {
                 keyDesc.AttestationChallenge = retBytes.value();
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationChallenge in Android Key Attestation"s);
             }
-            retBytes = p < end ? Util::Crypto::ASN1GetBytes(p) : unexpected(""s);
+            retBytes = p < end ? Util::ASN1::GetBytes(p) : unexpected(""s);
 
             if (retBytes) {
                 keyDesc.UniqueID = retBytes.value();
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::UniqueID in Android Key Attestation"s);
             }
-            retSequence = p < end ? Util::Crypto::ASN1GetSequence(p) : unexpected(""s);
+            retSequence = p < end ? Util::ASN1::GetSequence(p) : unexpected(""s);
 
             if (retSequence) {
 
@@ -638,7 +639,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             } else {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::SoftwareEnforced in Android Key Attestation"s);
             }
-            retSequence = p < end ? Util::Crypto::ASN1GetSequence(p) : unexpected(""s);
+            retSequence = p < end ? Util::ASN1::GetSequence(p) : unexpected(""s);
 
             if (retSequence) {
 
