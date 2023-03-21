@@ -97,7 +97,7 @@ namespace WebAuthN::Protocol {
         // appleStmtFormat = {
         //      x5c: [ credCert: bytes, * (caCert: bytes) ]
         // }
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _VerifyAppleFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined

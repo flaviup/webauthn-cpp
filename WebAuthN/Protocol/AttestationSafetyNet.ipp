@@ -168,7 +168,7 @@ namespace WebAuthN::Protocol {
         //
         // provide information regarding provenance of the authenticator and its associated data. Therefore platform-provided
         // authenticators SHOULD make use of the Android Key Attestation when available, even if the SafetyNet API is also present.
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _VerifySafetyNetFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // The syntax of an Android Attestation statement is defined as follows:

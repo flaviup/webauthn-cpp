@@ -674,7 +674,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         //      sig: bytes,
         //      x5c: [ credCert: bytes, * (caCert: bytes) ]
         //  }
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _VerifyAndroidKeyFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Given the verification procedure inputs attStmt, authenticatorData and clientDataHash, the verification procedure is as follows:
@@ -835,6 +835,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 if ((decoded.SoftwareEnforced.Origin && decoded.SoftwareEnforced.Origin.value() != KmKeyOriginType::Generated) ||
                     (decoded.TeeEnforced.Origin && decoded.TeeEnforced.Origin.value() != KmKeyOriginType::Generated) ||
                     (!decoded.SoftwareEnforced.Origin && !decoded.TeeEnforced.Origin)) {
+
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with origin not equal KM_ORIGIN_GENERATED"));
                 }
 
@@ -843,6 +844,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                      ((static_cast<int32_t>(decoded.SoftwareEnforced.Purpose.value()) & static_cast<int32_t>(KmPurposeType::Sign)) == 0)) && 
                     (!decoded.TeeEnforced.Purpose || 
                      ((static_cast<int32_t>(decoded.TeeEnforced.Purpose.value()) & static_cast<int32_t>(KmPurposeType::Sign)) == 0))) {
+
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with purpose not equal KM_PURPOSE_SIGN"));
                 }
 

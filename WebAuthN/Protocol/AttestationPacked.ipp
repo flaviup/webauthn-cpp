@@ -29,7 +29,7 @@ namespace WebAuthN::Protocol {
     namespace {
 
         // Handle the attestation steps laid out in
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _HandleBasicAttestation(const std::vector<uint8_t>& signature,
                                 const std::vector<uint8_t>& clientDataHash,
                                 const std::vector<uint8_t>& authData,
@@ -210,7 +210,7 @@ namespace WebAuthN::Protocol {
             return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
         }
 
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _HandleECDAAAttestation(const std::vector<uint8_t>& signature, 
                                 const std::vector<uint8_t>& clientDataHash, 
                                 const std::vector<uint8_t>& ecdaaKeyID) noexcept {
@@ -229,7 +229,7 @@ namespace WebAuthN::Protocol {
             return std::nullopt;
         }
 
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _HandleSelfAttestation(const int64_t alg,
                                const std::vector<uint8_t>& pubKey,
                                const std::vector<uint8_t>& authData,
@@ -300,7 +300,7 @@ namespace WebAuthN::Protocol {
         // }
         //
         // Specification: §8.2. Packed Attestation Statement Format (https://www.w3.org/TR/webauthn/#sctn-packed-attestation)
-        static inline expected<std::tuple<std::string, std::optional<json::object_t>>>
+        static inline expected<std::tuple<std::string, std::optional<json>>>
         _VerifyPackedFormat(const AttestationObjectType& att, const std::vector<uint8_t>& clientDataHash) noexcept {
 
             // Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined
