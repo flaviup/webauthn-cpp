@@ -214,7 +214,7 @@ namespace WebAuthN::Util::Crypto {
                 }
                 parsedExtension.ID = extensionName;
             }
-            auto ex = X509_EXTENSION_get_data(extension); //reinterpret_cast<ASN1_OCTET_STRING*>(X509V3_EXT_d2i(extension));
+            auto ex = X509_EXTENSION_get_data(extension);
 
             if (ex != nullptr) {
                 parsedExtension.Value = std::vector<uint8_t>(ex->data, ex->data + ex->length);
@@ -244,8 +244,6 @@ namespace WebAuthN::Util::Crypto {
             auto mdCtx = EVP_MD_CTX_new();
 
             if (mdCtx == nullptr) {
-
-                EVP_PKEY_free(pKey);
                 return unexpected("Could not create MD context"s);
             }
             auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
@@ -253,13 +251,10 @@ namespace WebAuthN::Util::Crypto {
             if (result != 1) {
 
                 EVP_MD_CTX_free(mdCtx);
-                EVP_PKEY_free(pKey);
-
                 return unexpected("Unable to init signature checking"s);
             }
             result = EVP_DigestVerify(mdCtx, signature.data(), signature.size(), data.data(), data.size());
             EVP_MD_CTX_free(mdCtx);
-            EVP_PKEY_free(pKey);
 
             if (result == 0 || result == 1) {
                 return result == 1;
@@ -299,13 +294,6 @@ namespace WebAuthN::Util::Crypto {
         auto subjectNameResult = _ExtractNameEntry(subject, NID_commonName);
         auto issuerNameResult  = _ExtractNameEntry(issuer, NID_commonName);
 
-        if (subject != nullptr) {
-            X509_NAME_free(subject);
-        }
-
-        if (issuer != nullptr) {
-            X509_NAME_free(issuer);
-        }
         X509_free(certificate);
         BIO_free_all(bio);
 
@@ -409,10 +397,6 @@ namespace WebAuthN::Util::Crypto {
         }
         parsedCertificate.Version = X509_get_version(certificate);
         parsedCertificate.IsCA = X509_check_ca(certificate) > 0;
-        
-        if (subject != nullptr) {
-            X509_NAME_free(subject);
-        }
 
         X509_free(certificate);
         BIO_free_all(bio);
@@ -488,7 +472,6 @@ namespace WebAuthN::Util::Crypto {
         
         if (bioKey == nullptr) {
 
-            EVP_PKEY_free(pKey);
             X509_free(certificate);
             BIO_free_all(bio);
 
@@ -511,7 +494,6 @@ namespace WebAuthN::Util::Crypto {
         }
 
         BIO_free_all(bioKey);
-        EVP_PKEY_free(pKey);
         X509_free(certificate);
         BIO_free_all(bio);
 
