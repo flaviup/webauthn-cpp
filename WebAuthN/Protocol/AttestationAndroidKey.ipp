@@ -791,7 +791,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     return unexpected(err.value());
                 }
 
-                constexpr auto ID_FIDO = "1.3.6.1.4.1.11129.2.1.1"; //asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 1, 17};
+                constexpr auto ID_FIDO = "1.3.6.1.4.1.11129.2.1.17"; //asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 1, 17};
                 std::vector<uint8_t> attExtBytes{};
 
                 for (const auto& extension : attCert.Extensions) {

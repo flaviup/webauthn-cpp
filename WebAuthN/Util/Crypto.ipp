@@ -217,8 +217,8 @@ namespace WebAuthN::Util::Crypto {
                     ASN1_OBJECT_free(obj);
                     return unexpected("Invalid extension name length"s);
                 }
-                char* extensionName = new char[size + 2]{0};
-                OBJ_obj2txt(extensionName, size, obj, 0);
+                char* extensionName = new char[size + 1]{0};
+                OBJ_obj2txt(extensionName, size + 1, obj, 0);
                 parsedExtension.ID = extensionName;
                 delete [] extensionName;
             } else {
