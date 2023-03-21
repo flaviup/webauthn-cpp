@@ -36,7 +36,7 @@ namespace WebAuthN::Protocol {
             SafetyNetResponseType() noexcept = default;
 
             SafetyNetResponseType(const json& j) :
-                Nonce(j["nonce"].get<std::string>()),
+                Nonce(j["nonce"].get<Base64EncodedType>()),
                 TimestampMs(j["timestampMs"].get<int64_t>()),
                 ApkPackageName(j["apkPackageName"].get<std::string>()),
                 ApkDigestSha256(j["apkDigestSha256"].get<std::string>()),
@@ -52,7 +52,7 @@ namespace WebAuthN::Protocol {
             SafetyNetResponseType& operator =(const SafetyNetResponseType& other) noexcept = default;
             SafetyNetResponseType& operator =(SafetyNetResponseType&& other) noexcept = default;
 
-            std::string Nonce;
+            Base64EncodedType Nonce;
             int64_t TimestampMs;
             std::string ApkPackageName;
             std::string ApkDigestSha256;
@@ -85,7 +85,7 @@ namespace WebAuthN::Protocol {
             j.at("basicIntegrity").get_to(safetyNetResponse.BasicIntegrity);
         }
 
-        static int _JwtKeyProvider(const jwt_t* jwt, jwt_key_t* jwtKey) {
+        static int _SafetyNetJwtKeyProvider(const jwt_t* jwt, jwt_key_t* jwtKey) {
 
             auto x5c = jwt_get_headers_json(const_cast<jwt_t*>(jwt), "x5c");
 
@@ -96,7 +96,7 @@ namespace WebAuthN::Protocol {
 
                     if (!j.empty() && j.is_array()) {
 
-                        auto cert = j[0].get<std::string>();
+                        auto cert = j[0].get<Base64EncodedType>();
                         auto decoded = Base64_DecodeAsBinary(cert);
 
                         if (decoded) {
@@ -129,7 +129,7 @@ namespace WebAuthN::Protocol {
             return EINVAL;
         }
 
-        static inline std::vector<uint8_t> _GetFirstCertData(const jwt_t* jwt) {
+        static inline std::vector<uint8_t> _SafetyNetGetFirstCertData(const jwt_t* jwt) {
 
             auto x5c = jwt_get_headers_json(const_cast<jwt_t*>(jwt), "x5c");
 
@@ -140,7 +140,7 @@ namespace WebAuthN::Protocol {
 
                     if (!j.empty() && j.is_array()) {
 
-                        auto cert = j[0].get<std::string>();
+                        auto cert = j[0].get<Base64EncodedType>();
                         auto decoded = Base64_DecodeAsBinary(cert);
 
                         if (decoded) {
@@ -208,7 +208,7 @@ namespace WebAuthN::Protocol {
                 auto response = atts["response"].get_binary();
                 jwt_t* jwt = nullptr;
                 auto responseStr = std::string(reinterpret_cast<const char*>(response.data()), response.size());
-                auto ret = jwt_decode_2(&jwt, responseStr.data(), _JwtKeyProvider);
+                auto ret = jwt_decode_2(&jwt, responseStr.data(), _SafetyNetJwtKeyProvider);
 
                 if (ret != 0 || jwt == nullptr) {
                     return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
@@ -249,7 +249,7 @@ namespace WebAuthN::Protocol {
                 }
 
                 // §8.5.4 Let attestationCert be the attestation certificate (https://www.w3.org/TR/webauthn/#attestation-certificate)
-                auto certData = _GetFirstCertData(jwt);
+                auto certData = _SafetyNetGetFirstCertData(jwt);
                 jwt_free(jwt);
 
                 if (certData.empty()) {
