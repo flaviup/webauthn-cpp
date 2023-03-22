@@ -95,6 +95,23 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         };
     }
 
+    inline std::optional<COSEAlgorithmIdentifierType> COSEAlgorithmIdentifierTypeFromNID(int nid) noexcept {
+
+        switch (nid) {
+            case NID_ecdsa_with_SHA256:       return COSEAlgorithmIdentifierType::AlgES256;
+            case NID_ecdsa_with_SHA384:       return COSEAlgorithmIdentifierType::AlgES384;
+            case NID_ecdsa_with_SHA512:       return COSEAlgorithmIdentifierType::AlgES512;
+            case NID_pkcs1:                   ;
+            case NID_rsa:                     return COSEAlgorithmIdentifierType::AlgRS1;
+            case NID_sha256WithRSAEncryption: return COSEAlgorithmIdentifierType::AlgRS256;
+            case NID_sha384WithRSAEncryption: return COSEAlgorithmIdentifierType::AlgRS384;
+            case NID_sha512WithRSAEncryption: return COSEAlgorithmIdentifierType::AlgRS512;
+            //case NID_ecdsa_with_SHA256:     ;
+            case NID_secp256k1:               return COSEAlgorithmIdentifierType::AlgES256K;
+            default:                          return std::nullopt;
+        }
+    }
+
     // COSEKeyType is The Key type derived from the IANA COSE AuthData.
     enum class COSEKeyType : int {
 
@@ -181,6 +198,22 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         j = json{
             static_cast<int>(coseEllipticCurve)
         };
+    }
+
+    inline std::optional<COSEEllipticCurveType> COSEEllipticCurveTypeFromNID(int nid) noexcept {
+
+        switch (nid) {
+            //case NID_secp256r1: return COSEEllipticCurveType::P256;
+            case NID_secp256k1:   return COSEEllipticCurveType::P256;
+            case NID_secp384r1:   return COSEEllipticCurveType::P384;
+            case NID_secp521r1:   return COSEEllipticCurveType::P521;
+            case NID_X25519:      return COSEEllipticCurveType::X25519;
+            case NID_X448:        return COSEEllipticCurveType::X448;
+            case NID_ED25519:     return COSEEllipticCurveType::Ed25519;
+            case NID_ED448:       return COSEEllipticCurveType::Ed448;
+            //case NID_secp256k1: return COSEEllipticCurveType::Secp256k1;
+            default:              return std::nullopt;
+        }
     }
 
     // SignatureAlgorithmType represents algorithm enumerations used for COSE signatures.
@@ -331,6 +364,11 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         PublicKeyDataType() noexcept = default;
 
+        PublicKeyDataType(int64_t keyType, int64_t algorithm) noexcept :
+            KeyType(keyType), 
+            Algorithm(algorithm) {
+        }
+
         PublicKeyDataType(const json& j) :
             _struct(j["public_key"].get<bool>()),
             KeyType(j["kty"].get<int64_t>()),
@@ -377,6 +415,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     struct EC2PublicKeyDataType : public PublicKeyDataType {
 
         EC2PublicKeyDataType() noexcept = default;
+
+        EC2PublicKeyDataType(const PublicKeyDataType& publicKeyData,
+            const std::optional<int64_t>& curve, 
+            const std::optional<std::vector<uint8_t>>& xCoord,
+            const std::optional<std::vector<uint8_t>>& yCoord) noexcept :
+            PublicKeyDataType(publicKeyData),
+            Curve(curve),
+            XCoord(xCoord),
+            YCoord(yCoord) {
+        }
 
         EC2PublicKeyDataType(const PublicKeyDataType& pk) noexcept :
             PublicKeyDataType(pk) {

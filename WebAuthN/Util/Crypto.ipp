@@ -19,6 +19,8 @@
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/core_names.h>
 
 #include "../Core.ipp"
 #include "SSLHostCheck/openssl_hostname_validation.h"
@@ -502,6 +504,100 @@ namespace WebAuthN::Util::Crypto {
         }
 
         return s;
+    }
+
+    using ECPublicKeyInfo = std::tuple<int, std::optional<int>, std::optional<std::vector<uint8_t>>, std::optional<std::vector<uint8_t>>>;
+
+    inline expected<ECPublicKeyInfo>
+    ParseCertificateECPublicKeyInfo(const std::vector<uint8_t>& certData) noexcept {
+
+        auto bio = BIO_new(BIO_s_mem());
+
+        if (bio == nullptr) {
+            return unexpected("Null BIO"s);
+        }
+
+        if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate certificate data"s);
+        }
+        X509* certificate = nullptr;
+        d2i_X509_bio(bio, &certificate);
+
+        if (certificate == nullptr) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not parse X509 certificate"s);
+        }
+        auto pKey = X509_get0_pubkey(certificate);
+            
+        if (pKey == nullptr) {
+
+            X509_free(certificate);
+            BIO_free_all(bio);
+
+            return unexpected("Could not get the EC public key from certificate"s);
+        }
+        auto algo = 0;
+        std::optional<int> curve = std::nullopt;
+        char curveName[64]{0};
+        size_t size = 0;
+
+        if (EVP_PKEY_get_utf8_string_param(pKey, OSSL_PKEY_PARAM_GROUP_NAME,
+                                           curveName, sizeof(curveName), &size) == 1) {
+
+            char CURVE_P521[] = "P-521";
+            char CURVE_P384[] = "P-384";
+            char CURVE_P256[] = "P-256";
+
+            if (strcmp(curveName, CURVE_P521) == 0) {
+                curve = NID_secp521r1;
+                algo = NID_ecdsa_with_SHA512;
+            } else if (strcmp(curveName, CURVE_P384) == 0) {
+                curve = NID_secp384r1;
+                algo = NID_ecdsa_with_SHA384;
+            } else if (strcmp(curveName, CURVE_P256) == 0) {
+                curve = NID_secp256k1;
+                algo = NID_secp256k1;
+            }
+        }
+        std::optional<std::vector<uint8_t>> x = std::nullopt;
+        BIGNUM* bnX = nullptr;
+
+        if (EVP_PKEY_get_bn_param(pKey, OSSL_PKEY_PARAM_EC_PUB_X, &bnX) == 1) {
+
+            uint8_t buff[BN_num_bytes(bnX)];
+            auto length = BN_bn2bin(bnX, buff);
+            x = std::vector<uint8_t>(buff, buff + length);
+        }
+        std::optional<std::vector<uint8_t>> y = std::nullopt;
+        BIGNUM* bnY = nullptr;
+
+        if (EVP_PKEY_get_bn_param(pKey, OSSL_PKEY_PARAM_EC_PUB_X, &bnY) == 1) {
+
+            uint8_t buff[BN_num_bytes(bnY)];
+            auto length = BN_bn2bin(bnY, buff);
+            y = std::vector<uint8_t>(buff, buff + length);
+        }
+
+        if (bnX != nullptr) {
+            BN_clear_free(bnX);
+        }
+
+        if (bnY != nullptr) {
+            BN_clear_free(bnY);
+        }
+
+        X509_free(certificate);
+        BIO_free_all(bio);
+
+        return ECPublicKeyInfo{
+            algo,
+            curve,
+            x,
+            y
+        };
     }
 
     inline expected<bool>
