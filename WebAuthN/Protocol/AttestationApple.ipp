@@ -164,12 +164,8 @@ namespace WebAuthN::Protocol {
                         err = ErrInvalidAttestation().WithDetails(fmt::format("Error parsing certificate public key from ASN.1 data: {}", std::string(attCertPubKeyResult.error())));
                     } else {
 
-                        auto attCertKeyInfo = attCertPubKeyResult.value();
-
-                        auto algoNid = std::get<0>(attCertKeyInfo);
+                        const auto& [algoNid, curveNid, x, y] = attCertPubKeyResult.value();
                         auto algo = WebAuthNCOSE::COSEAlgorithmIdentifierTypeFromNID(algoNid);
-
-                        auto curveNid = std::get<1>(attCertKeyInfo);
                         auto curve = curveNid ? WebAuthNCOSE::COSEEllipticCurveTypeFromNID(curveNid.value()) : 
                                                 std::nullopt;
 
@@ -179,8 +175,8 @@ namespace WebAuthN::Protocol {
                                 algo ? static_cast<int64_t>(algo.value()) : 0LL
                             ),
                             curve ? std::optional(static_cast<int64_t>(curve.value())) : std::nullopt,
-                            std::get<2>(attCertKeyInfo),
-                            std::get<3>(attCertKeyInfo)
+                            x,
+                            y
                         );
 
                         if (credKey != subjectKey) {

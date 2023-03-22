@@ -16,5 +16,6 @@
 #include "WebAuthN/Protocol/AttestationPacked.ipp"
 #include "WebAuthN/Protocol/AttestationSafetyNet.ipp"
 #include "WebAuthN/Protocol/AttestationPlayIntegrity.ipp"
+#include "WebAuthN/Protocol/AttestationU2F.ipp"
 
 #endif /* WEBAUTHN_HPP */
