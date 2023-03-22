@@ -87,28 +87,23 @@ namespace WebAuthN::Protocol {
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("x5c") == atts.cend()) { // If x5c is not present, return an error
-
                     return unexpected(ErrAttestationFormat().WithDetails("Error retrieving x5c value"));
                 }
                 auto x5c = atts["x5c"];
 
                 if (x5c.empty()) {
-
                     return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
                 std::vector<uint8_t> attCertBytes{};
 
                 try {
-
                     attCertBytes = x5c[0].get_binary();
                 } catch (const std::exception&) {
-
                     return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
                 auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
 
                 if (!attCertResult) {
-
                     return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
                 }
                 auto attCert = attCertResult.value();
@@ -138,7 +133,6 @@ namespace WebAuthN::Protocol {
                 }
 
                 if (attExtBytes.empty()) {
-
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.2.840.113635.100.8.2"));
                 }
                 auto decodedResult = _ASN1UnmarshalAppleAnonymousAttestation(attExtBytes);
@@ -156,7 +150,6 @@ namespace WebAuthN::Protocol {
                 auto ok = WebAuthNCOSE::ParsePublicKey(att.AuthData.AttData.CredentialPublicKey);
 
                 if (!ok) {
-
                     return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
                 }
                 auto pubKey = ok.value();
@@ -204,10 +197,9 @@ namespace WebAuthN::Protocol {
 
                 // Step 6. If successful, return implementation-specific values representing attestation type Anonymization CA and attestation trust path x5c.
                 return std::tuple{json(Metadata::AuthenticatorAttestationType::AnonCA).get<std::string>(), std::optional<json>{x5c}};
-            } else {
-
-                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
+
+            return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
         }
     } // namespace
 
