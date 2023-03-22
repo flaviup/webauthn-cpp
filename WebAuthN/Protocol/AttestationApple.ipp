@@ -179,13 +179,6 @@ namespace WebAuthN::Protocol {
                         auto curveNid = std::get<1>(attCertKeyInfo);
                         auto curve = curveNid ? WebAuthNCOSE::COSEEllipticCurveTypeFromNID(curveNid.value()) : 
                                                 std::nullopt;
-                        
-                        /*if (curve &&
-                            curve.value() ==  WebAuthNCOSE::COSEEllipticCurveType::P256 &&
-                            algo &&
-                            algo.value() == WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256) {
-                            algo =  WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K;
-                        }*/
 
                         WebAuthNCOSE::EC2PublicKeyDataType subjectKey(
                             WebAuthNCOSE::PublicKeyDataType(

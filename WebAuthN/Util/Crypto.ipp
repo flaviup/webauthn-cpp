@@ -547,17 +547,19 @@ namespace WebAuthN::Util::Crypto {
         if (EVP_PKEY_get_utf8_string_param(pKey, OSSL_PKEY_PARAM_GROUP_NAME,
                                            curveName, sizeof(curveName), &size) == 1) {
 
-            char CURVE_P521[] = "P-521";
-            char CURVE_P384[] = "P-384";
-            char CURVE_P256[] = "P-256";
+            auto strCurve = std::string(curveName);
 
-            if (strcmp(curveName, CURVE_P521) == 0) {
+            if (strCurve.find("521") != std::string::npos || 
+                strCurve.find("512") != std::string::npos) {
+
                 curve = NID_secp521r1;
                 algo = NID_ecdsa_with_SHA512;
-            } else if (strcmp(curveName, CURVE_P384) == 0) {
+            } else if (strCurve.find("384") != std::string::npos) {
+
                 curve = NID_secp384r1;
                 algo = NID_ecdsa_with_SHA384;
-            } else if (strcmp(curveName, CURVE_P256) == 0) {
+            } else if (strCurve.find("256") != std::string::npos) {
+
                 curve = NID_secp256k1;
                 algo = NID_secp256k1;
             }
@@ -574,7 +576,7 @@ namespace WebAuthN::Util::Crypto {
         std::optional<std::vector<uint8_t>> y = std::nullopt;
         BIGNUM* bnY = nullptr;
 
-        if (EVP_PKEY_get_bn_param(pKey, OSSL_PKEY_PARAM_EC_PUB_X, &bnY) == 1) {
+        if (EVP_PKEY_get_bn_param(pKey, OSSL_PKEY_PARAM_EC_PUB_Y, &bnY) == 1) {
 
             uint8_t buff[BN_num_bytes(bnY)];
             auto length = BN_bn2bin(bnY, buff);
