@@ -635,6 +635,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 } catch(const std::bad_any_cast&) {
                     err = ErrUnsupportedKey();
                 }
+                // A more generic version of the above code
                 /*auto success = false;
                 auto vpk = WebAuthNCOSE::KeyCast(pubKey, success);
 

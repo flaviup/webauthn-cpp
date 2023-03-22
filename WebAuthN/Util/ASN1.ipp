@@ -34,6 +34,19 @@ namespace WebAuthN::Util::ASN1 {
         return length;
     }
 
+    inline expected<long> GetBooleanSequence(const uint8_t*& data) noexcept {
+
+        auto length = 0L;
+        auto tagID = 0, classID = 0;
+        auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
+
+        if ((ret != V_ASN1_CONSTRUCTED && ret != 0) || tagID != V_ASN1_BOOLEAN) {
+            return unexpected("Could not parse ASN1 data as boolean"s);
+        }
+
+        return length;
+    }
+
     inline expected<long> GetSet(const uint8_t*& data) noexcept {
 
         auto length = 0L;

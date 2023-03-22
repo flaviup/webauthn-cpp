@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 #include "Attestation.ipp"
 #include "../Util/Crypto.ipp"
+#include "../Util/ASN1.ipp"
 #include "../Util/StringCompare.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
@@ -21,6 +22,7 @@ namespace WebAuthN::Protocol {
 
     using namespace std::string_literals;
     using json = nlohmann::json;
+     namespace ASN1 = Util::ASN1;
     
     inline const std::string APPLE_ATTESTATION_KEY = "apple";
 
@@ -35,54 +37,32 @@ namespace WebAuthN::Protocol {
         };
 
         static inline expected<AppleAnonymousAttestationType>
-        _ParseAppleAnonymousAttestation(const std::vector<uint8_t>& keyBytes) noexcept {
+        _ASN1UnmarshalAppleAnonymousAttestation(const std::vector<uint8_t>& data) noexcept {
 
-            auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
-
-            if (!unmarshalResult) {
-
-                return unexpected("Could not CBOR-decode AppleAnonymousAttestation"s);
+            if (data.size() < 4) {
+                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
-            auto cborItem = unmarshalResult.value();
+            auto p = data.data();
+            auto end = p + data.size();
+            auto retSequence = ASN1::GetSequence(p);
 
-            if (cbor_isa_map(cborItem) && cbor_map_is_definite(cborItem)) {
-
-                auto size = cbor_map_size(cborItem);
-                auto items = cbor_map_handle(cborItem);
-
-                if (items == nullptr || size == 0) {
-
-                    cbor_decref(&cborItem);
-                    return unexpected("No CBOR data available to parse AppleAnonymousAttestation"s);
-                }
-
-                for (decltype(size) i = 0; i < size; ++i) {
-
-                    auto item = *(items + i);
-
-                    if (cbor_isa_uint(item.key) && 
-                        cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8) {
-
-                        auto k = cbor_get_uint8(item.key);
-
-                        if (k == 1 && 
-                            cbor_isa_bytestring(item.value) && 
-                            cbor_bytestring_is_definite(item.value)) {
-                            
-                            auto dataSize = cbor_bytestring_length(item.value);
-                            auto data = dataSize > 0 ? cbor_bytestring_handle(item.value) : nullptr;
-                            AppleAnonymousAttestationType aaa{
-
-                                .Nonce = dataSize > 0 ? std::vector<uint8_t>(data, data + dataSize) : std::vector<uint8_t>{}
-                            };
-                            cbor_decref(&cborItem);
-                            return aaa;
-                        }
-                    }
-                }
+            if (!retSequence || p + retSequence.value() != end) {
+                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
-            cbor_decref(&cborItem);
-            return unexpected("Could not CBOR-decode AppleAnonymousAttestation: root element is not a map"s);
+            auto retBoolSeq = ASN1::GetBooleanSequence(p);
+
+            if (!retBoolSeq || p + retBoolSeq.value() != end) {
+                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
+            }
+            auto retBytes = ASN1::GetBytes(p);
+    
+            if (!retBytes/* || p != end*/) {
+                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
+            }
+
+            return AppleAnonymousAttestationType{
+                .Nonce = retBytes.value()
+            };
         }
 
         // From §8.8. https://www.w3.org/TR/webauthn-2/#sctn-apple-anonymous-attestation
@@ -161,11 +141,10 @@ namespace WebAuthN::Protocol {
 
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.2.840.113635.100.8.2"));
                 }
-                auto decodedResult = _ParseAppleAnonymousAttestation(attExtBytes);
+                auto decodedResult = _ASN1UnmarshalAppleAnonymousAttestation(attExtBytes);
 
                 if (!decodedResult) {
-
-                    unexpected(ErrAttestationFormat().WithDetails("Unable to parse Apple attestation certificate extensions"));
+                    return unexpected(ErrAttestationFormat().WithDetails("Unable to parse Apple attestation certificate extensions"));
                 }
                 auto decoded = decodedResult.value();
 
