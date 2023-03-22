@@ -141,7 +141,6 @@ namespace WebAuthN::Protocol {
                 for (const auto& s : meta.StatusReports) {
                     
                     if (Metadata::IsUndesiredAuthenticatorStatus(s.Status)) {
-
                         return ErrInvalidAttestation().WithDetails("Authenticator with undesirable status encountered");
                     }
                 }
@@ -151,7 +150,6 @@ namespace WebAuthN::Protocol {
                     auto namesResult = Util::Crypto::GetNamesX509(x5c.value()[0]);
                     
                     if (!namesResult) {
-
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
                     auto [subjectName, issuerName] = namesResult.value();
@@ -165,7 +163,6 @@ namespace WebAuthN::Protocol {
                             for (const auto& a : meta.MetadataStatement.value().AttestationTypes) {
                                 
                                 if (a == Metadata::AuthenticatorAttestationType::BasicFull) {
-
                                     hasBasicFull = true;
                                 }
                             }
@@ -296,6 +293,7 @@ namespace WebAuthN::Protocol {
             // structure to obtain the attestation statement format fmt, the authenticator data authData, and
             // the attestation statement attStmt.
             auto err = attestationObject.AuthData.Unmarshal(attestationObject.RawAuthData);
+
             if (err) {
                 return unexpected(fmt::format("error decoding auth data: {}", std::string(err.value())));
             }
@@ -309,6 +307,7 @@ namespace WebAuthN::Protocol {
             if (Transports) {
 
                 for (const auto& t : Transports.value()) {
+
                     auto authT = json(t).get<AuthenticatorTransportType>();
                     transports.push_back(authT);
                 }
