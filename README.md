@@ -1,11 +1,32 @@
 # webauthn-cpp
-WebAuthN/FIDO2 server side C++ implementation.
+WebAuthN/FIDO2 Relying Party (server side) C++ implementation library.
 
 Based on [this](https://github.com/go-webauthn/webauthn) Go implementation.
 
 Currently there is no testing code and overall it hasn't been tested thoroughly.
 
 TPM attestation support is in progress.
+
+In order to build the library you need to have premake5 installed. You also need to have the dependencies specified in premake5.lua script installed on your system.
+
+To build as static library:
+```
+premake5 --os=macosx gmake2 &&
+make config=staticlib-release  
+```
+
+To build as shared library:
+
+```
+premake5 --os=macosx gmake2 &&
+make config=sharedlib-release  
+```
+
+To generate the XCode workspace:
+
+```
+premake5 --os=macosx xcode4
+```
 
 Usage example:
 
