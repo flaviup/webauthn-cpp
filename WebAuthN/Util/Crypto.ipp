@@ -31,21 +31,33 @@ namespace WebAuthN::Util::Crypto {
 
     using namespace std::string_literals;
 
-    inline std::vector<uint8_t> SHA1(const std::string& str) {
+    // SHA1
+
+    inline std::vector<uint8_t> SHA1(const unsigned char* str, const size_t size) noexcept {
 
         const constexpr auto HASH_SIZE_BYTES = 20U;
         unsigned char out[HASH_SIZE_BYTES];
 
-        crypto_generichash(out,
-                           HASH_SIZE_BYTES,
-                           reinterpret_cast<const unsigned char*>(str.data()), str.size(),
-                           nullptr, 
-                           0);
+        crypto_generichash(out, HASH_SIZE_BYTES,
+                           str, size,
+                           nullptr, 0);
 
         return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
     }
 
-    inline std::vector<uint8_t> SHA256(const unsigned char* str, const size_t size) {
+    inline std::vector<uint8_t> SHA1(const std::string& str) noexcept {
+
+        return SHA1(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    }
+
+    inline std::vector<uint8_t> SHA1(const std::vector<uint8_t>& data) noexcept {
+
+        return SHA1(data.data(), data.size());
+    }
+
+    // SHA256
+
+    inline std::vector<uint8_t> SHA256(const unsigned char* str, const size_t size) noexcept {
 
         unsigned char out[crypto_hash_sha256_BYTES];
         crypto_hash_sha256(out, str, size);
@@ -53,37 +65,61 @@ namespace WebAuthN::Util::Crypto {
         return std::vector<uint8_t>(out, out + crypto_hash_sha256_BYTES);
     }
 
-    inline std::vector<uint8_t> SHA256(const std::string& str) {
+    inline std::vector<uint8_t> SHA256(const std::string& str) noexcept {
 
         return SHA256(reinterpret_cast<const unsigned char*>(str.data()), str.size());
     }
 
-    inline std::vector<uint8_t> SHA256(const std::vector<uint8_t>& data) {
+    inline std::vector<uint8_t> SHA256(const std::vector<uint8_t>& data) noexcept {
 
         return SHA256(data.data(), data.size());
     }
 
-    inline std::vector<uint8_t> SHA384(const std::string& str) {
+    // SHA384
+
+    inline std::vector<uint8_t> SHA384(const unsigned char* str, const size_t size) noexcept {
 
         const constexpr auto HASH_SIZE_BYTES = 48U;
         unsigned char out[HASH_SIZE_BYTES];
 
-        crypto_generichash(out,
-                           HASH_SIZE_BYTES,
-                           reinterpret_cast<const unsigned char*>(str.data()), str.size(),
-                           nullptr, 
-                           0);
+        crypto_generichash(out, HASH_SIZE_BYTES,
+                           str, size,
+                           nullptr, 0);
 
         return std::vector<uint8_t>(out, out + HASH_SIZE_BYTES);
     }
 
-    inline std::vector<uint8_t> SHA512(const std::string& str) {
+    inline std::vector<uint8_t> SHA384(const std::string& str) noexcept {
+
+        return SHA384(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    }
+
+    inline std::vector<uint8_t> SHA384(const std::vector<uint8_t>& data) noexcept {
+
+        return SHA384(data.data(), data.size());
+    }
+
+    // SHA512
+
+    inline std::vector<uint8_t> SHA512(const unsigned char* str, const size_t size) noexcept {
 
         unsigned char out[crypto_hash_sha512_BYTES];
-        crypto_hash_sha512(out, reinterpret_cast<const unsigned char*>(str.data()), str.size());
+        crypto_hash_sha512(out, str, size);
 
         return std::vector<uint8_t>(out, out + crypto_hash_sha512_BYTES);
     }
+
+    inline std::vector<uint8_t> SHA512(const std::string& str) noexcept {
+
+        return SHA512(reinterpret_cast<const unsigned char*>(str.data()), str.size());
+    }
+
+    inline std::vector<uint8_t> SHA512(const std::vector<uint8_t>& data) noexcept {
+
+        return SHA512(data.data(), data.size());
+    }
+
+    // X509 Certificates
 
     struct X509CertificateType {
 

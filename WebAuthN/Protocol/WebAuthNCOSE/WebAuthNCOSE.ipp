@@ -307,7 +307,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // Structs
 
-    using HasherHandlerType = std::vector<uint8_t> (*)(const std::string& str);
+    using HasherHandlerType = std::vector<uint8_t> (*)(const std::vector<uint8_t>& data);
+    inline constexpr HasherHandlerType DEFAULT_HASHER = Util::Crypto::SHA256;
 
     inline const struct {
         SignatureAlgorithmType algo;
@@ -339,11 +340,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
     }
 
-    std::vector<uint8_t> SHA256Hasher(const std::string& str) {
-
-        return Util::Crypto::SHA256(reinterpret_cast<const unsigned char*>(str.data()), str.size());
-    }
-
     // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
     inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
 
@@ -352,7 +348,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
                                SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
 
-        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : SHA256Hasher;  // default to SHA256?  Why not.
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : DEFAULT_HASHER;  // default to SHA256?  Why not.
     }
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated
@@ -745,8 +741,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             //pubKeyData[pubKeyData.data() + Modulus.value().size() + 2] = Exponent.value()[1];
             //pubKeyData[pubKeyData.data() + Modulus.value().size() + 3] = Exponent.value()[2];
             auto exponent = static_cast<int32_t>(static_cast<uint32_t>(Exponent.value()[2]) |
-                                                 static_cast<uint32_t>(Exponent.value()[1])<<8 |
-                                                 static_cast<uint32_t>(Exponent.value()[0])<<16);
+                                                 (static_cast<uint32_t>(Exponent.value()[1]) << 8) |
+                                                 (static_cast<uint32_t>(Exponent.value()[0]) << 16));
             OSSL_PARAM params[]{
                 OSSL_PARAM_BN(OSSL_PKEY_PARAM_RSA_N,
                               const_cast<uint8_t*>(Modulus.value().data()), 

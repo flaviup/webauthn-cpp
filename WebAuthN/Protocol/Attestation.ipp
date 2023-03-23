@@ -252,7 +252,7 @@ namespace WebAuthN::Protocol {
 
         AuthenticatorAttestationResponseType(const json& j) :
             AuthenticatorResponseType(j), // // The byte slice of clientDataJSON, which becomes CollectedClientData
-            AttestationObject(j["attestationObject"].get<URLEncodedBase64Type>()) {
+            AttestationObject(j["attestationObject"].get<Util::URLEncodedBase64Type>()) {
             
             if (j.find("transports") != j.end()) {
                 Transports.emplace(j["transports"].get<std::vector<std::string>>());
@@ -271,13 +271,13 @@ namespace WebAuthN::Protocol {
         // used to verify the user and credential that was created.
         inline expected<ParsedAttestationResponseType> Parse() const noexcept {
 
-            auto decodedClientData = URLEncodedBase64_Decode(ClientDataJSON);
+            auto decodedClientData = Util::URLEncodedBase64_Decode(ClientDataJSON);
 
             if (!decodedClientData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
             auto collectedClientData = decodedClientData.value(); //WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
-            auto decodedAttestationData = URLEncodedBase64_DecodeAsBinary(AttestationObject);
+            auto decodedAttestationData = Util::URLEncodedBase64_DecodeAsBinary(AttestationObject);
 
             if (!decodedAttestationData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling attestation data"));
@@ -330,7 +330,7 @@ namespace WebAuthN::Protocol {
         // It also contains any additional information that the Relying Party's server
         // requires to validate the attestation statement, as well as to decode and
         // validate the authenticator data along with the JSON-serialized client data.
-        URLEncodedBase64Type AttestationObject;
+        Util::URLEncodedBase64Type AttestationObject;
         std::optional<std::vector<std::string>> Transports;
     };
 

@@ -78,7 +78,7 @@ namespace WebAuthN::Protocol {
 
         PublicKeyCredentialType(const json& j) :
             CredentialType(j),
-            RawID(j["rawId"].get<URLEncodedBase64Type>()) {
+            RawID(j["rawId"].get<Util::URLEncodedBase64Type>()) {
             
             if (j.find("clientExtensionResults") != j.end()) {
                 ClientExtensionResults.emplace(j["clientExtensionResults"].get<AuthenticationExtensionsClientOutputsType>());
@@ -96,7 +96,7 @@ namespace WebAuthN::Protocol {
         PublicKeyCredentialType& operator =(const PublicKeyCredentialType& other) noexcept = default;
         PublicKeyCredentialType& operator =(PublicKeyCredentialType&& other) noexcept = default;
 
-        URLEncodedBase64Type RawID;
+        Util::URLEncodedBase64Type RawID;
         std::optional<AuthenticationExtensionsClientOutputsType> ClientExtensionResults;
         std::optional<AuthenticatorAttachmentType> AuthenticatorAttachment;
     };
@@ -333,7 +333,7 @@ namespace WebAuthN::Protocol {
             if (credentialCreationResponse.ID.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing ID"));
             }
-            auto testB64Result = URLEncodedBase64_Decode(credentialCreationResponse.ID);
+            auto testB64Result = Util::URLEncodedBase64_Decode(credentialCreationResponse.ID);
 
             if (!testB64Result || testB64Result.value().empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("ID not base64 URL Encoded"));
@@ -400,7 +400,7 @@ namespace WebAuthN::Protocol {
             if (err) {
                 return err;
             }
-            auto decodedClientDataJson = URLEncodedBase64_Decode(Raw.AttestationResponse.ClientDataJSON);
+            auto decodedClientDataJson = Util::URLEncodedBase64_Decode(Raw.AttestationResponse.ClientDataJSON);
 
             if (!decodedClientDataJson) {
                 return decodedClientDataJson.error();

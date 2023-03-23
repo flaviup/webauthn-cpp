@@ -169,15 +169,15 @@ namespace WebAuthN::Protocol {
                         auto curve = curveNid ? WebAuthNCOSE::COSEEllipticCurveTypeFromNID(curveNid.value()) : 
                                                 std::nullopt;
 
-                        WebAuthNCOSE::EC2PublicKeyDataType subjectKey(
-                            WebAuthNCOSE::PublicKeyDataType(
+                        WebAuthNCOSE::EC2PublicKeyDataType subjectKey{
+                            WebAuthNCOSE::PublicKeyDataType{
                                 static_cast<int64_t>(WebAuthNCOSE::COSEKeyType::EllipticKey),
                                 algo ? static_cast<int64_t>(algo.value()) : 0LL
-                            ),
+                            },
                             curve ? std::optional(static_cast<int64_t>(curve.value())) : std::nullopt,
                             x,
                             y
-                        );
+                        };
 
                         if (credKey != subjectKey) {
                             err = ErrInvalidAttestation().WithDetails("Certificate public key does not match public key in authData");

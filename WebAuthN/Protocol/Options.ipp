@@ -246,8 +246,8 @@ namespace WebAuthN::Protocol {
         CredentialDescriptorType(const json& j) :
             Type(j["type"].get<CredentialTypeType>()) {
             
-            auto id = j["id"].get<URLEncodedBase64Type>();
-            CredentialID = URLEncodedBase64_DecodeAsBinary(id).value();
+            auto id = j["id"].get<Util::URLEncodedBase64Type>();
+            CredentialID = Util::URLEncodedBase64_DecodeAsBinary(id).value();
 
             if (j.find("transports") != j.end()) {
                 Transports.emplace(j["transports"].get<std::vector<AuthenticatorTransportType>>());
@@ -277,8 +277,8 @@ namespace WebAuthN::Protocol {
     inline void to_json(json& j, const CredentialDescriptorType& credentialDescriptor) {
 
         j = json{
-            { "type",                                        credentialDescriptor.Type },
-            { "id", URLEncodedBase64_Encode(credentialDescriptor.CredentialID).value() }
+            { "type",                                              credentialDescriptor.Type },
+            { "id", Util::URLEncodedBase64_Encode(credentialDescriptor.CredentialID).value() }
         };
 
         if (credentialDescriptor.Transports) {
@@ -290,8 +290,8 @@ namespace WebAuthN::Protocol {
 
         j.at("type").get_to(credentialDescriptor.Type);
 
-        auto id = j["id"].get<URLEncodedBase64Type>();
-        credentialDescriptor.CredentialID = URLEncodedBase64_DecodeAsBinary(id).value();
+        auto id = j["id"].get<Util::URLEncodedBase64Type>();
+        credentialDescriptor.CredentialID = Util::URLEncodedBase64_DecodeAsBinary(id).value();
 
         if (j.find("transports") != j.end()) {
             credentialDescriptor.Transports.emplace(j["transports"].get<std::vector<AuthenticatorTransportType>>());
@@ -418,7 +418,7 @@ namespace WebAuthN::Protocol {
 
         PublicKeyCredentialCreationOptionsType(const RelyingPartyEntityType& relyingParty,
             const UserEntityType& user,
-            const URLEncodedBase64Type& challenge,
+            const Util::URLEncodedBase64Type& challenge,
             const std::optional<std::vector<CredentialParameterType>>& parameters = std::nullopt,
             const std::optional<int64_t>& timeout = std::nullopt,
             const std::optional<std::vector<CredentialDescriptorType>>& credentialExcludeList = std::nullopt,
@@ -439,7 +439,7 @@ namespace WebAuthN::Protocol {
         PublicKeyCredentialCreationOptionsType(const json& j) :
             RelyingParty(j["rp"].get<RelyingPartyEntityType>()),
             User(j["user"].get<UserEntityType>()),
-            Challenge(j["challenge"].get<URLEncodedBase64Type>()) {
+            Challenge(j["challenge"].get<Util::URLEncodedBase64Type>()) {
 
             if (j.find("pubKeyCredParams") != j.end()) {
                 Parameters.emplace(j["pubKeyCredParams"].get<std::vector<CredentialParameterType>>());
@@ -475,7 +475,7 @@ namespace WebAuthN::Protocol {
 
         RelyingPartyEntityType RelyingParty;
         UserEntityType User;
-        URLEncodedBase64Type Challenge;
+        Util::URLEncodedBase64Type Challenge;
         std::optional<std::vector<CredentialParameterType>> Parameters;
         std::optional<int64_t> Timeout;
         std::optional<std::vector<CredentialDescriptorType>> CredentialExcludeList;
@@ -559,7 +559,7 @@ namespace WebAuthN::Protocol {
 
         PublicKeyCredentialRequestOptionsType() noexcept = default;
 
-        PublicKeyCredentialRequestOptionsType(const URLEncodedBase64Type& challenge,
+        PublicKeyCredentialRequestOptionsType(const Util::URLEncodedBase64Type& challenge,
             const std::optional<int>& timeout = std::nullopt,
             const std::optional<std::string>& relyingPartyID = std::nullopt,
             const std::optional<std::vector<CredentialDescriptorType>>& allowedCredentials = std::nullopt,
@@ -574,7 +574,7 @@ namespace WebAuthN::Protocol {
         }
 
         PublicKeyCredentialRequestOptionsType(const json& j) :
-            Challenge(j["challenge"].get<URLEncodedBase64Type>()) {
+            Challenge(j["challenge"].get<Util::URLEncodedBase64Type>()) {
 
             if (j.find("timeout") != j.end()) {
                 Timeout.emplace(j["timeout"].get<int>());
@@ -620,7 +620,7 @@ namespace WebAuthN::Protocol {
             return std::vector<std::vector<uint8_t>>(0);
         }
 
-        URLEncodedBase64Type Challenge;
+        Util::URLEncodedBase64Type Challenge;
         std::optional<int> Timeout;
         std::optional<std::string> RelyingPartyID;
         std::optional<std::vector<CredentialDescriptorType>> AllowedCredentials;

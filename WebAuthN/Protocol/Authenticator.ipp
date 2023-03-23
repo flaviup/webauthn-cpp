@@ -381,7 +381,7 @@ namespace WebAuthN::Protocol {
         AuthenticatorResponseType() noexcept = default;
 
         AuthenticatorResponseType(const json& j) :
-            ClientDataJSON(j["clientDataJSON"].get<URLEncodedBase64Type>()) {
+            ClientDataJSON(j["clientDataJSON"].get<Util::URLEncodedBase64Type>()) {
         }
 
         AuthenticatorResponseType(const AuthenticatorResponseType& authenticatorResponse) noexcept = default;
@@ -394,7 +394,7 @@ namespace WebAuthN::Protocol {
         // From the spec https://www.w3.org/TR/webauthn/#dom-authenticatorresponse-clientdatajson
         // This attribute contains a JSON serialization of the client data passed to the authenticator
         // by the client in its call to either create() or get().
-        URLEncodedBase64Type ClientDataJSON;
+        Util::URLEncodedBase64Type ClientDataJSON;
     };
 
     inline void to_json(json& j, const AuthenticatorResponseType& authenticatorResponse) {

@@ -104,7 +104,6 @@ namespace WebAuthN::WebAuthN {
             auto err = _config.Validate();
 
             if (err) {
-
                 return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
             }
 
@@ -113,16 +112,14 @@ namespace WebAuthN::WebAuthN {
             if (!challengeCreationResult) {
                 return unexpected(challengeCreationResult.error());
             }
-            Protocol::URLEncodedBase64Type challenge = challengeCreationResult.value();
-
-            Protocol::URLEncodedBase64Type entityUserID{};
+            Util::URLEncodedBase64Type challenge = challengeCreationResult.value();
+            Util::URLEncodedBase64Type entityUserID{};
 
             if (_config.EncodeUserIDAsString) {
-
                 entityUserID = std::string(reinterpret_cast<const char*>(user.GetWebAuthNID().data()));
             } else {
 
-                auto idEncodingResult = Protocol::URLEncodedBase64_Encode(user.GetWebAuthNID());
+                auto idEncodingResult = Util::URLEncodedBase64_Encode(user.GetWebAuthNID());
 
                 if (!idEncodingResult) {
                     return unexpected(idEncodingResult.error());
@@ -196,7 +193,6 @@ namespace WebAuthN::WebAuthN {
             auto parsedResponse = Protocol::ParseCredentialCreationResponse(response);
 
             if (!parsedResponse) {
-
                 return unexpected(parsedResponse.error());
             }
 
@@ -208,7 +204,6 @@ namespace WebAuthN::WebAuthN {
         inline static RegistrationOptionHandlerType WithAuthenticatorSelection(const Protocol::AuthenticatorSelectionType& authenticatorSelection) noexcept {
 
             return [&authenticatorSelection](Protocol::PublicKeyCredentialCreationOptionsType& cco) {
-
 
                 cco.AuthenticatorSelection = authenticatorSelection;
             };

@@ -59,11 +59,11 @@ namespace WebAuthN::Protocol {
 
         AuthenticatorAssertionResponseType(const json& j) :
             AuthenticatorResponseType(j),
-            AuthenticatorData(j["authenticatorData"].get<URLEncodedBase64Type>()),
-            Signature(j["signature"].get<URLEncodedBase64Type>()) {
+            AuthenticatorData(j["authenticatorData"].get<Util::URLEncodedBase64Type>()),
+            Signature(j["signature"].get<Util::URLEncodedBase64Type>()) {
 
             if (j.find("userHandle") != j.end()) {
-                UserHandle.emplace(j["userHandle"].get<URLEncodedBase64Type>());
+                UserHandle.emplace(j["userHandle"].get<Util::URLEncodedBase64Type>());
             }
         }
 
@@ -81,19 +81,19 @@ namespace WebAuthN::Protocol {
 
             // Step 5. Let JSONtext be the result of running UTF-8 decode on the value of cData.
             // We don't call it cData but this is Step 5 in the spec.
-            auto decodedClientData = URLEncodedBase64_Decode(ClientDataJSON);
+            auto decodedClientData = Util::URLEncodedBase64_Decode(ClientDataJSON);
 
             if (!decodedClientData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
             auto collectedClientData = decodedClientData.value(); // WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
             AuthenticatorDataType auth{};
-            auto binaryData = URLEncodedBase64_DecodeAsBinary(AuthenticatorData);
+            auto binaryData = Util::URLEncodedBase64_DecodeAsBinary(AuthenticatorData);
 
             if (!binaryData || auth.Unmarshal(binaryData.value())) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling auth data"));
             }
-            binaryData = URLEncodedBase64_DecodeAsBinary(Signature);
+            binaryData = Util::URLEncodedBase64_DecodeAsBinary(Signature);
 
             if (!binaryData) {
                 return unexpected(ErrParsingData().WithDetails("Error unmarshalling signature"));
@@ -102,7 +102,7 @@ namespace WebAuthN::Protocol {
             std::vector<uint8_t> userHandle{};
 
             if (UserHandle) {
-                binaryData = URLEncodedBase64_DecodeAsBinary(UserHandle.value());
+                binaryData = Util::URLEncodedBase64_DecodeAsBinary(UserHandle.value());
 
                 if (!binaryData) {
                     return unexpected(ErrParsingData().WithDetails("Error unmarshalling user handle"));
@@ -118,9 +118,9 @@ namespace WebAuthN::Protocol {
             };
         }
 
-        URLEncodedBase64Type AuthenticatorData;
-        URLEncodedBase64Type Signature;
-        std::optional<URLEncodedBase64Type> UserHandle; 
+        Util::URLEncodedBase64Type AuthenticatorData;
+        Util::URLEncodedBase64Type Signature;
+        std::optional<Util::URLEncodedBase64Type> UserHandle;
     };
 
     inline void to_json(json& j, const AuthenticatorAssertionResponseType& authenticatorAssertionResponse) {
@@ -143,7 +143,7 @@ namespace WebAuthN::Protocol {
         j.at("signature").get_to(authenticatorAssertionResponse.Signature);
 
         if (j.find("userHandle") != j.end()) {
-            authenticatorAssertionResponse.UserHandle.emplace(j["userHandle"].get<URLEncodedBase64Type>());
+            authenticatorAssertionResponse.UserHandle.emplace(j["userHandle"].get<Util::URLEncodedBase64Type>());
         }
     }
 
@@ -213,7 +213,7 @@ namespace WebAuthN::Protocol {
             if (credentialAssertionResponse.ID.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing ID"));
             }
-            auto testB64Result = URLEncodedBase64_Decode(credentialAssertionResponse.ID);
+            auto testB64Result = Util::URLEncodedBase64_Decode(credentialAssertionResponse.ID);
 
             if (!testB64Result || testB64Result.value().empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("ID not base64 URL Encoded"));
@@ -242,7 +242,7 @@ namespace WebAuthN::Protocol {
                         credentialAssertionResponse.ID, 
                         credentialAssertionResponse.Type
                     },
-                    URLEncodedBase64_DecodeAsBinary(credentialAssertionResponse.RawID).value(),
+                    Util::URLEncodedBase64_DecodeAsBinary(credentialAssertionResponse.RawID).value(),
                     credentialAssertionResponse.ClientExtensionResults,
                     credentialAssertionResponse.AuthenticatorAttachment
                 },
@@ -290,14 +290,14 @@ namespace WebAuthN::Protocol {
                 return err;
             }
 
-            auto decodedAuthenticatorData = URLEncodedBase64_DecodeAsBinary(Raw.AssertionResponse.AuthenticatorData);
+            auto decodedAuthenticatorData = Util::URLEncodedBase64_DecodeAsBinary(Raw.AssertionResponse.AuthenticatorData);
 
             if (!decodedAuthenticatorData) {
                 return decodedAuthenticatorData.error();
             }
             auto authenticatorData = decodedAuthenticatorData.value();
 
-            auto decodedClientDataJson = URLEncodedBase64_Decode(Raw.AssertionResponse.ClientDataJSON);
+            auto decodedClientDataJson = Util::URLEncodedBase64_Decode(Raw.AssertionResponse.ClientDataJSON);
 
             if (!decodedClientDataJson) {
                 return decodedClientDataJson.error();
