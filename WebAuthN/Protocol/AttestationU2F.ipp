@@ -9,12 +9,9 @@
 #ifndef WEBAUTHN_PROTOCOL_ATTESTATION_U2F_IPP
 #define WEBAUTHN_PROTOCOL_ATTESTATION_U2F_IPP
 
-#include <algorithm>
 #include <fmt/format.h>
 #include "Attestation.ipp"
 #include "../Util/Crypto.ipp"
-#include "../Util/ASN1.ipp"
-#include "../Util/StringCompare.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
 #pragma GCC visibility push(default)
@@ -136,11 +133,11 @@ namespace WebAuthN::Protocol {
                 // to Raw ANSI X9.62 public key format (see ALG_KEY_ECC_X962_RAW in Section 3.6.2 Public Key
                 // Representation Formats of FIDO-Registry [https://www.w3.org/TR/webauthn/#biblio-fido-registry]).
 
-                // Let x be the value corresponding to the "-2" key (representing x coordinate) in credentialPublicKey, and confirm
+                // Let xCoord be the value corresponding to the "-2" key (representing x coordinate) in credentialPublicKey, and confirm
                 // its size to be of 32 bytes. If size differs or "-2" key is not found, terminate this algorithm and
                 // return an appropriate error.
 
-                // Let y be the value corresponding to the "-3" key (representing y coordinate) in credentialPublicKey, and confirm
+                // Let yCoord be the value corresponding to the "-3" key (representing y coordinate) in credentialPublicKey, and confirm
                 // its size to be of 32 bytes. If size differs or "-3" key is not found, terminate this algorithm and
                 // return an appropriate error.
 
