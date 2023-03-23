@@ -18,4 +18,20 @@
 #include "WebAuthN/Protocol/AttestationPlayIntegrity.ipp"
 #include "WebAuthN/Protocol/AttestationU2F.ipp"
 
+inline WebAuthN::expected<WebAuthN::WebAuthN::WebAuthNType>
+GetWebAuthN(const WebAuthN::WebAuthN::ConfigType& config, bool registerAllAttestations = true) noexcept {
+
+    if (registerAllAttestations) {
+
+        WebAuthN::Protocol::RegisterAndroidKeyAttestation();
+        WebAuthN::Protocol::RegisterAppleAttestation();
+        WebAuthN::Protocol::RegisterPackedAttestation();
+        WebAuthN::Protocol::RegisterSafetyNetAttestation();
+        WebAuthN::Protocol::RegisterPlayIntegrityAttestation();
+        WebAuthN::Protocol::RegisterU2FAttestation();
+    }
+
+    return WebAuthN::WebAuthN::WebAuthNType::New(config);
+}
+
 #endif /* WEBAUTHN_HPP */
