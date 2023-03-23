@@ -89,7 +89,7 @@ std::string loadTextFromFile(const std::string& filePath) {
 
 int main(int argc, const char * argv[]) {
 
-    std::string webAuthNFilePath = argc > 1 ? std::string(argv[1]) : "WebAuthN.json.txt";
+    //std::string webAuthNFilePath = argc > 1 ? std::string(argv[1]) : "WebAuthN.json.txt";
     //std::ifstream webAuthNFileStream(webAuthNFilePath);
     //json j;
     //webAuthNFileStream >> j;
