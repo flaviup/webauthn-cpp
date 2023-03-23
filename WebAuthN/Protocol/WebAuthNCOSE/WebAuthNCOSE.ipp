@@ -98,6 +98,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     inline std::optional<COSEAlgorithmIdentifierType> COSEAlgorithmIdentifierTypeFromNID(int nid) noexcept {
 
         switch (nid) {
+
             case NID_ecdsa_with_SHA256:       return COSEAlgorithmIdentifierType::AlgES256;
             case NID_ecdsa_with_SHA384:       return COSEAlgorithmIdentifierType::AlgES384;
             case NID_ecdsa_with_SHA512:       return COSEAlgorithmIdentifierType::AlgES512;
@@ -203,6 +204,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     inline std::optional<COSEEllipticCurveType> COSEEllipticCurveTypeFromNID(int nid) noexcept {
 
         switch (nid) {
+
             //case NID_secp256r1: return COSEEllipticCurveType::P256;
             case NID_secp256k1:   return COSEEllipticCurveType::P256;
             case NID_secp384r1:   return COSEEllipticCurveType::P384;
@@ -270,7 +272,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             case SignatureAlgorithmType::SHA256WithRSAPSS:          return "SHA256"s;
             case SignatureAlgorithmType::SHA384WithRSAPSS:          return "SHA384"s;
             case SignatureAlgorithmType::SHA512WithRSAPSS:          return "SHA512"s;
-            default: return ""s;
+            default:                                                return ""s;
         }
     }
 
@@ -604,20 +606,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
         }
 
-        /*inline tpm2.EllipticCurveType TPMCurveID() const noexcept {
-
-            switch COSEEllipticCurve(Curve) {
-            case P256:
-                return tpm2.CurveNISTP256 // TPM_ECC_NIST_P256.
-            case P384:
-                return tpm2.CurveNISTP384 // TPM_ECC_NIST_P384.
-            case P521:
-                return tpm2.CurveNISTP521 // TPM_ECC_NIST_P521.
-            default:
-                return tpm2.EllipticCurve(0) // TPM_ECC_NONE.
-            }
-        }*/
-
         // If the key type is EC2, the curve on which we derive the signature from.
         std::optional<int64_t> Curve; // cbor:"-1,keyasint,omitempty"
         // A byte string 32 bytes in length that holds the x coordinate of the key.
@@ -718,8 +706,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
             EVP_PKEY_CTX* pKeyCtx = nullptr;
 
-            switch (Algorithm)
-            {
+            switch (Algorithm) {
+
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgPS256):
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgPS384):
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgPS512):
@@ -1008,15 +996,21 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
                     switch (k) {
 
-                        case 1: pk.KeyType = cbor_isa_uint(item.value) ? cbor_get_uint8(item.value) : 0;
+                        case 1: {
+
+                            pk.KeyType = cbor_isa_uint(item.value) ? cbor_get_uint8(item.value) : 0;
                             ++fieldCount;
                             break;
+                        }
 
-                        case 3: pk.Algorithm = cbor_isa_negint(item.value) ? 
+                        case 3: {
+
+                            pk.Algorithm = cbor_isa_negint(item.value) ? 
                                                 -(cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8 ? cbor_get_uint8(item.value) : cbor_get_uint16(item.value)) - 1
                                                 : 0;
                             ++fieldCount;
                             break;
+                        }
 
                         default:
                             break;
@@ -1053,8 +1047,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                             ++fieldCount;
                             break;
 
-                        case -2:
-                        {
+                        case -2: {
+
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1104,8 +1098,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                             ++fieldCount;
                             break;
 
-                        case -2:
-                        {
+                        case -2: {
+
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1119,9 +1113,9 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                             }
                             break;
                         }
+                        
+                        case -3: {
 
-                       case -3:
-                        {
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1167,8 +1161,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
                     switch (k) {
 
-                        case -1:
-                        {
+                        case -1: {
+
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1183,8 +1177,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                             break;
                         }
 
-                        case -2:
-                        {
+                        case -2: {
+
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1242,8 +1236,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
             switch (pk.KeyType) {
 
-                case static_cast<int64_t>(COSEKeyType::OctetKey):
-                {
+                case static_cast<int64_t>(COSEKeyType::OctetKey): {
+
                     auto okpPkResult = _OKPPublicKeyDataFromCBOR(pk, items, size);
 
                     if (!okpPkResult) {
@@ -1257,8 +1251,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     return okp;
                 }
 
-                case static_cast<int64_t>(COSEKeyType::EllipticKey):
-                {
+                case static_cast<int64_t>(COSEKeyType::EllipticKey): {
+
                     auto ec2PkResult = _EC2PublicKeyDataFromCBOR(pk, items, size);
 
                     if (!ec2PkResult) {
@@ -1272,8 +1266,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     return ec2;
                 }
 
-                case static_cast<int64_t>(COSEKeyType::RSAKey):
-                {
+                case static_cast<int64_t>(COSEKeyType::RSAKey): {
+
                     auto rsaPkResult = _RSAPublicKeyDataFromCBOR(pk, items, size);
 
                     if (!rsaPkResult) {
@@ -1287,8 +1281,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     return rsa;
                 }
 
-                default:
-                {
+                default: {
+
                     cbor_decref(&cborItem);
                     return unexpected(std::string(ErrUnsupportedKey()));
                 }
@@ -1338,8 +1332,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                         case -1: ec2.Curve = cbor_isa_uint(item.value) ? cbor_get_uint64(item.value) : -cbor_get_uint64(item.value) - 1;
                             break;
 
-                        case -2:
-                        {
+                        case -2: {
+
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1352,9 +1346,9 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                             }
                             break;
                         }
+                        
+                        case -3: {
 
-                       case -3:
-                        {
                             if (cbor_isa_bytestring(item.value) && cbor_bytestring_is_definite(item.value)) {
 
                                 auto dataSize = cbor_bytestring_length(item.value);
@@ -1460,90 +1454,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
 
         return unexpected(ErrUnsupportedKey());
-    }
-
-    inline std::string DisplayPublicKey(const std::vector<uint8_t>& cpk) {
-
-        return "";
-        
-        /*parsedKey, err := ParsePublicKey(cpk)
-        if err != nil {
-            return keyCannotDisplay
-        }
-
-        switch k := parsedKey.(type) {
-        case RSAPublicKeyData:
-            rKey := &rsa.PublicKey{
-                N: big.NewInt(0).SetBytes(k.Modulus),
-                E: int(uint(k.Exponent[2]) | uint(k.Exponent[1])<<8 | uint(k.Exponent[0])<<16),
-            }
-
-            data, err := x509.MarshalPKIXPublicKey(rKey)
-            if err != nil {
-                return keyCannotDisplay
-            }
-
-            pemBytes := pem.EncodeToMemory(&pem.Block{
-                Type:  "RSA PUBLIC KEY",
-                Bytes: data,
-            })
-
-            return string(pemBytes)
-        case EC2PublicKeyData:
-            var curve elliptic.Curve
-
-            switch COSEAlgorithmIdentifier(k.Algorithm) {
-            case AlgES256:
-                curve = elliptic.P256()
-            case AlgES384:
-                curve = elliptic.P384()
-            case AlgES512:
-                curve = elliptic.P521()
-            default:
-                return keyCannotDisplay
-            }
-
-            eKey := &ecdsa.PublicKey{
-                Curve: curve,
-                X:     big.NewInt(0).SetBytes(k.XCoord),
-                Y:     big.NewInt(0).SetBytes(k.YCoord),
-            }
-
-            data, err := x509.MarshalPKIXPublicKey(eKey)
-            if err != nil {
-                return keyCannotDisplay
-            }
-
-            pemBytes := pem.EncodeToMemory(&pem.Block{
-                Type:  "PUBLIC KEY",
-                Bytes: data,
-            })
-
-            return string(pemBytes)
-        case OKPPublicKeyData:
-            if len(k.XCoord) != ed25519.PublicKeySize {
-                return keyCannotDisplay
-            }
-
-            var oKey ed25519.PublicKey = make([]byte, ed25519.PublicKeySize)
-
-            copy(oKey, k.XCoord)
-
-            data, err := MarshalEd25519PublicKey(oKey)
-            if err != nil {
-                return keyCannotDisplay
-            }
-
-            pemBytes := pem.EncodeToMemory(&pem.Block{
-                Type:  "PUBLIC KEY",
-                Bytes: data,
-            })
-
-            return string(pemBytes)
-
-        default:
-            return "Cannot display key of this type"
-        }*/
     }
 } // namespace WebAuthN::Protocol::WebAuthNCOSE
 

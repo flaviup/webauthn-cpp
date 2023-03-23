@@ -12,8 +12,8 @@
 #include <fmt/format.h>
 #include <jwt.h>
 #include "Attestation.ipp"
-#include "Base64.ipp"
 #include "../Metadata/Metadata.ipp"
+#include "../Util/Base64.ipp"
 #include "../Util/Crypto.ipp"
 #include "../Util/Time.ipp"
 #include "../Util/StringCompare.ipp"
@@ -88,7 +88,7 @@ namespace WebAuthN::Protocol {
             // request.
             std::string RequestPackageName;
             // base64-encoded URL-safe no-wrap nonce provided by the developer.
-            URLEncodedBase64Type Nonce;
+            Util::URLEncodedBase64Type Nonce;
             // The timestamp in milliseconds when the request was made
             // (computed on the server).
             int64_t TimestampMillis;
@@ -234,8 +234,8 @@ namespace WebAuthN::Protocol {
 
                     if (!j.empty() && j.is_array()) {
 
-                        auto cert = j[0].get<URLEncodedBase64Type>();
-                        auto decoded = URLEncodedBase64_DecodeAsBinary(cert);
+                        auto cert = j[0].get<Util::URLEncodedBase64Type>();
+                        auto decoded = Util::URLEncodedBase64_DecodeAsBinary(cert);
 
                         if (decoded) {
 
@@ -278,8 +278,8 @@ namespace WebAuthN::Protocol {
 
                     if (!j.empty() && j.is_array()) {
 
-                        auto cert = j[0].get<URLEncodedBase64Type>();
-                        auto decoded = URLEncodedBase64_DecodeAsBinary(cert);
+                        auto cert = j[0].get<Util::URLEncodedBase64Type>();
+                        auto decoded = Util::URLEncodedBase64_DecodeAsBinary(cert);
 
                         if (decoded) {
 
@@ -366,7 +366,7 @@ namespace WebAuthN::Protocol {
                 std::memcpy(nonce.data(), att.RawAuthData.data(), att.RawAuthData.size());
                 std::memcpy(nonce.data() + att.RawAuthData.size(), clientDataHash.data(), clientDataHash.size());
                 auto nonceBuffer = Util::Crypto::SHA256(nonce);
-                auto nonceBytesResult = URLEncodedBase64_DecodeAsBinary(playIntegrityResponse.RequestDetails.Nonce, false);
+                auto nonceBytesResult = Util::URLEncodedBase64_DecodeAsBinary(playIntegrityResponse.RequestDetails.Nonce, false);
 
                 if (!nonceBytesResult || !Util::StringCompare::ConstantTimeEqual(nonceBuffer, nonceBytesResult.value())) {
 

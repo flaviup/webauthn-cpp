@@ -12,8 +12,8 @@
 #include <cstddef>
 #include <string>
 #include <sodium.h>
-#include "Base64.ipp"
 #include "../Core.ipp"
+#include "../Util/Base64.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -24,12 +24,12 @@ namespace WebAuthN::Protocol {
 
     // CreateChallenge creates a new challenge that should be signed and returned by the authenticator. The spec recommends
     // using at least 16 bytes with 100 bits of entropy. We use 33 bytes.
-    inline expected<URLEncodedBase64Type> CreateChallenge() noexcept {
+    inline expected<Util::URLEncodedBase64Type> CreateChallenge() noexcept {
         
         unsigned char challenge[CHALLENGE_LENGTH]{0};
         randombytes_buf(challenge, CHALLENGE_LENGTH);
 
-        return URLEncodedBase64_Encode(challenge, CHALLENGE_LENGTH);
+        return Util::URLEncodedBase64_Encode(challenge, CHALLENGE_LENGTH);
     }
 } // namespace WebAuthN::Protocol
 

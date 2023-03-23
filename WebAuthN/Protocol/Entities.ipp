@@ -11,8 +11,8 @@
 
 #include <optional>
 #include <nlohmann/json.hpp>
-#include "Base64.ipp"
 #include "../Core.ipp"
+#include "../Util/Base64.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -142,7 +142,7 @@ namespace WebAuthN::Protocol {
 
         UserEntityType() noexcept = default;
 
-        UserEntityType(const URLEncodedBase64Type& id, 
+        UserEntityType(const Util::URLEncodedBase64Type& id, 
             const std::string& name, 
             const std::optional<std::string>& displayName = std::nullopt, 
             const std::optional<std::string>& icon = std::nullopt) noexcept : 
@@ -153,7 +153,7 @@ namespace WebAuthN::Protocol {
 
         UserEntityType(const json& j) :
             CredentialEntityType(j),
-            ID(j["id"].get<URLEncodedBase64Type>()) {
+            ID(j["id"].get<Util::URLEncodedBase64Type>()) {
 
             if (j.find("displayName") != j.end()) {
                 DisplayName.emplace(j["displayName"].get<std::string>());
@@ -171,7 +171,7 @@ namespace WebAuthN::Protocol {
         // authentication and authorization decisions MUST be made on the basis of this id
         // member, not the displayName nor name members. See Section 6.1 of
         // [RFC8266](https://www.w3.org/TR/webauthn/#biblio-rfc8266).
-        URLEncodedBase64Type ID;
+        Util::URLEncodedBase64Type ID;
 
         // A human-palatable name for the user account, intended only for display.
         // For example, "Alex P. Müller" or "田中 倫". The Relying Party SHOULD let

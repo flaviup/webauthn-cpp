@@ -12,8 +12,8 @@
 #include <fmt/format.h>
 #include <jwt.h>
 #include "Attestation.ipp"
-#include "Base64.ipp"
 #include "../Metadata/Metadata.ipp"
+#include "../Util/Base64.ipp"
 #include "../Util/Crypto.ipp"
 #include "../Util/Time.ipp"
 #include "../Util/StringCompare.ipp"
@@ -36,7 +36,7 @@ namespace WebAuthN::Protocol {
             SafetyNetResponseType() noexcept = default;
 
             SafetyNetResponseType(const json& j) :
-                Nonce(j["nonce"].get<Base64EncodedType>()),
+                Nonce(j["nonce"].get<Util::Base64EncodedType>()),
                 TimestampMs(j["timestampMs"].get<int64_t>()),
                 ApkPackageName(j["apkPackageName"].get<std::string>()),
                 ApkDigestSha256(j["apkDigestSha256"].get<std::string>()),
@@ -52,7 +52,7 @@ namespace WebAuthN::Protocol {
             SafetyNetResponseType& operator =(const SafetyNetResponseType& other) noexcept = default;
             SafetyNetResponseType& operator =(SafetyNetResponseType&& other) noexcept = default;
 
-            Base64EncodedType Nonce;
+            Util::Base64EncodedType Nonce;
             int64_t TimestampMs;
             std::string ApkPackageName;
             std::string ApkDigestSha256;
@@ -96,8 +96,8 @@ namespace WebAuthN::Protocol {
 
                     if (!j.empty() && j.is_array()) {
 
-                        auto cert = j[0].get<Base64EncodedType>();
-                        auto decoded = Base64_DecodeAsBinary(cert);
+                        auto cert = j[0].get<Util::Base64EncodedType>();
+                        auto decoded = Util::Base64_DecodeAsBinary(cert);
 
                         if (decoded) {
 
@@ -140,8 +140,8 @@ namespace WebAuthN::Protocol {
 
                     if (!j.empty() && j.is_array()) {
 
-                        auto cert = j[0].get<Base64EncodedType>();
-                        auto decoded = Base64_DecodeAsBinary(cert);
+                        auto cert = j[0].get<Util::Base64EncodedType>();
+                        auto decoded = Util::Base64_DecodeAsBinary(cert);
 
                         if (decoded) {
 
@@ -240,7 +240,7 @@ namespace WebAuthN::Protocol {
                 std::memcpy(nonce.data(), att.RawAuthData.data(), att.RawAuthData.size());
                 std::memcpy(nonce.data() + att.RawAuthData.size(), clientDataHash.data(), clientDataHash.size());
                 auto nonceBuffer = Util::Crypto::SHA256(nonce);
-                auto nonceBytesResult = Base64_DecodeAsBinary(safetyNetResponse.Nonce, false);
+                auto nonceBytesResult = Util::Base64_DecodeAsBinary(safetyNetResponse.Nonce, false);
 
                 if (!nonceBytesResult || !Util::StringCompare::ConstantTimeEqual(nonceBuffer, nonceBytesResult.value())) {
 
