@@ -11,6 +11,7 @@
 
 #include "../Core.ipp"
 #include "../Util/Crypto.ipp"
+#include "../Util/StringCompare.ipp"
 #include "tpm2-tss/tss2/tss2_mu.h"
 
 #pragma GCC visibility push(default)
@@ -74,10 +75,11 @@ namespace WebAuthN::Util::TPM {
 
     struct PublicAreaInfoType {
 
-        TPMI_ALG_PUBLIC   Type;
-        TPMI_ALG_HASH     NameAlg;
-        ECCParametersType ECCParameters;
-        RSAParametersType RSAParameters;
+        TPMI_ALG_PUBLIC      Type;
+        TPMI_ALG_HASH        NameAlg;
+        ECCParametersType    ECCParameters;
+        RSAParametersType    RSAParameters;
+        TPMU_PUBLIC_ID       ID;
     };
 
     struct CertInfoType {
@@ -119,8 +121,9 @@ namespace WebAuthN::Util::TPM {
         std::vector<uint8_t> rsaModulusRaw{};
 
         if (isRSA) {
-            
-            auto pubKeyResult = Util::Crypto::ParseRSAPublicKeyInfo(std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size));
+
+            auto publicKey = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size);
+            auto pubKeyResult = Util::Crypto::ParseRSAPublicKeyInfo(publicKey);
 
             if (!pubKeyResult) {
                 return unexpected(pubKeyResult.error());
@@ -132,7 +135,7 @@ namespace WebAuthN::Util::TPM {
             }
         }
 
-        return PublicAreaInfoType{
+        PublicAreaInfoType publicAreaInfo{
             .Type          = pub.type,
             .NameAlg       = pub.nameAlg,
             .ECCParameters = isECC ? ECCParametersType{
@@ -147,6 +150,9 @@ namespace WebAuthN::Util::TPM {
                 .Exponent   = pub.parameters.rsaDetail.exponent
             } : RSAParametersType{}
         };
+        std::memcpy(&publicAreaInfo.ID, &pub.unique, sizeof(pub.unique));
+
+        return publicAreaInfo;
     }
 
     inline expected<CertInfoType>
@@ -189,7 +195,45 @@ namespace WebAuthN::Util::TPM {
     inline expected<bool>
     NameMatchesPublicArea(const TPMS_CERTIFY_INFO& attestedCertifyInfo, const PublicAreaInfoType& publicAreaInfo) noexcept {
 
-        return true;
+        auto asDigest = *reinterpret_cast<const TPMU_NAME*>(attestedCertifyInfo.name.name);
+        auto attHashAlg = asDigest.digest.hashAlg;
+
+        if (attHashAlg == publicAreaInfo.NameAlg) {
+
+            const BYTE* nameDigest = asDigest.digest.digest.sha;
+
+            switch (attHashAlg) {
+
+                case TPM2_ALG_SHA1: nameDigest = asDigest.digest.digest.sha1;
+                    break;
+
+                case TPM2_ALG_SHA256: nameDigest = asDigest.digest.digest.sha256;
+                    break;
+
+                case TPM2_ALG_SHA384: nameDigest = asDigest.digest.digest.sha384;
+                    break;
+
+                case TPM2_ALG_SHA512: nameDigest = asDigest.digest.digest.sha512;
+                    break;
+
+                case TPM2_ALG_SM3_256: nameDigest = asDigest.digest.digest.sm3_256;
+                    //return unexpected(ErrorType("SM3-256 hash algorithm of attested is not supported"s));
+                    break;
+
+                default: unexpected(ErrorType("The hash algorithm of attested is unknown"s));
+            }
+            auto nameDigestSize = sizeof(nameDigest);
+
+            if (publicAreaInfo.ID.keyedHash.size == nameDigestSize) {
+                return Util::StringCompare::ConstantTimeEqual(publicAreaInfo.ID.keyedHash.buffer, nameDigest, nameDigestSize);
+            } else {
+                return unexpected(ErrorType("The hash algorithm sizes of attested and public area info do not match"s));
+            }
+        } else {
+            return unexpected(ErrorType("The hash algorithm ids of attested and public area info do not match"s));
+        }
+
+        return false;
     }
 } // namespace WebAuthN::Util::TPM
 

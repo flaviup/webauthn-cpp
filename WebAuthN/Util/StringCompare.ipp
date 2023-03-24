@@ -35,6 +35,11 @@ namespace WebAuthN::Util::StringCompare {
         return false;
     }
 
+    inline bool ConstantTimeEqual(const void* v1, const void* v2, size_t size) noexcept {
+
+        return (size == size_t(0)) || (sodium_memcmp(v1, v2, size) == 0);
+    }
+
     inline bool ConstantTimeEqual(const std::string& s1, const std::string& s2) noexcept {
 
         /*assert(s1.size() == s2.size());
@@ -49,7 +54,7 @@ namespace WebAuthN::Util::StringCompare {
         }
 
         return (c == 0);*/
-        return (s1.size() == s2.size()) && (s1.empty() || (sodium_memcmp(s1.data(), s2.data(), s1.size()) == 0));
+        return (s1.size() == s2.size()) && ConstantTimeEqual(s1.data(), s2.data(), s1.size());
     }
 
     inline bool ConstantTimeEqual(const std::vector<uint8_t>& v1, const std::vector<uint8_t>& v2) noexcept {
@@ -66,7 +71,7 @@ namespace WebAuthN::Util::StringCompare {
         }
 
         return (c == 0);*/
-        return (v1.size() == v2.size()) && (v1.empty() || (sodium_memcmp(v1.data(), v2.data(), v1.size()) == 0));
+        return (v1.size() == v2.size()) && ConstantTimeEqual(v1.data(), v2.data(), v1.size());
     }
 } // namespace WebAuthN::Util::StringCompare
 
