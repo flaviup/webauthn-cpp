@@ -75,6 +75,7 @@ namespace WebAuthN::Util::TPM {
     struct PublicAreaInfoType {
 
         TPMI_ALG_PUBLIC   Type;
+        TPMI_ALG_HASH     NameAlg;
         ECCParametersType ECCParameters;
         RSAParametersType RSAParameters;
     };
@@ -132,7 +133,8 @@ namespace WebAuthN::Util::TPM {
         }
 
         return PublicAreaInfoType{
-            .Type = pub.type,
+            .Type          = pub.type,
+            .NameAlg       = pub.nameAlg,
             .ECCParameters = isECC ? ECCParametersType{
                 .CurveID = pub.parameters.eccDetail.curveID,
                 .Point   = PointType{
@@ -159,15 +161,29 @@ namespace WebAuthN::Util::TPM {
         }
         
         if (attest.magic != TPM2_GENERATED_VALUE) {
-
             return unexpected(ErrorType("Magic number not set to TPM2_GENERATED_VALUE"s));
         }
 
-        return CertInfoType{
+        CertInfoType certInfo{
             .Type =  attest.type,
-            .AttestedCertifyInfo = attest.attested.certify,
+            .AttestedCertifyInfo = TPMS_CERTIFY_INFO{
+                .name = TPM2B_NAME{
+                    .size = attest.attested.certify.name.size
+                },
+                .qualifiedName = TPM2B_NAME {
+                    .size = attest.attested.certify.qualifiedName.size
+                }
+            },
             .ExtraData = std::vector<uint8_t>(attest.extraData.buffer, attest.extraData.buffer + attest.extraData.size)
         };
+        std::memcpy(certInfo.AttestedCertifyInfo.name.name, 
+                    attest.attested.certify.name.name,
+                    attest.attested.certify.name.size);
+        std::memcpy(certInfo.AttestedCertifyInfo.qualifiedName.name, 
+                    attest.attested.certify.qualifiedName.name,
+                    attest.attested.certify.qualifiedName.size);
+
+        return certInfo;
     }
 
     inline expected<bool>
