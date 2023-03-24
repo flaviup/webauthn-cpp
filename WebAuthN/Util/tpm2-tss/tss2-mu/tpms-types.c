@@ -116,7 +116,7 @@ Tss2_MU_##type##_Unmarshal(uint8_t const buffer[], size_t buffer_size, \
         return ret; \
 \
     if ((dest? dest->sizeofSelect : tmp) > TAB_SIZE(dest->pcrSelect)) { \
-        LOG_ERROR("sizeofSelect value %"PRIu8" / %zi too big", \
+        LOG_ERROR("sizeofSelect value %"PRIu32" / %zi too big", \
                   dest? dest->sizeofSelect : tmp, TAB_SIZE(dest->pcrSelect)); \
         return TSS2_SYS_RC_MALFORMED_RESPONSE; \
     } \
