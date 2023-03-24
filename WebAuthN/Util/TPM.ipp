@@ -10,8 +10,7 @@
 #define WEBAUTHN_UTIL_TPM_IPP
 
 #include "../Core.ipp"
-#include "../Util/Base64.ipp"
-#include "TPMTypes.ipp"
+#include "tpm2-tss/tss2/tss2_mu.h"
 
 #pragma GCC visibility push(default)
 
@@ -19,58 +18,7 @@ namespace WebAuthN::Util::TPM {
 
     using namespace std::string_literals;
 
-#pragma GCC visibility push(hidden)
-
-    namespace {
-
-        enum BlobType : int {
-            InitState,
-            Last
-        };
-        
-        static inline constexpr auto _INITSTATE_START_TAG = "-----BEGIN INITSTATE-----";
-        static inline constexpr auto _INITSTATE_END_TAG   = "-----END INITSTATE-----";
-
-        static inline constexpr struct TagsAndIndicesType {
-
-            const char* StartTag;
-            const char* EndTag;
-        } _TAGS_AND_INDICES[] = {
-            [BlobType::InitState] = {
-                .StartTag = _INITSTATE_START_TAG,
-                .EndTag   = _INITSTATE_END_TAG
-            }
-        };
-
-        static inline expected<std::string>
-        _GetPlaintext(const char* stream,
-                      const char* startTag,
-                      const char* endTag) noexcept {
-
-            auto start = strstr(stream, startTag);
-            decltype(start) end = nullptr;
-
-            if (start) {
-
-                start += strlen(startTag);
-
-                while (isspace((int)*start)) ++start;
-                end = strstr(start, endTag);
-
-                if (end) {
-
-                    --end;
-                    return Base64_Decode(start, end - start, true, false);
-                }
-            }
-
-            return ""s;
-        }
-    } // namespace
-
-#pragma GCC visibility pop
-
-    enum class EC2CurveType : uint16_t {
+    /*enum class EC2CurveType : uint16_t {
 
         None      = 0x0000,
         NIST_P192 = 0x0001,
@@ -103,7 +51,7 @@ namespace WebAuthN::Util::TPM {
         HashCheck          = 0x8024,
         AuthSigned         = 0x8025,
         FUManifest         = 0x8029
-    };
+    };*/
 
     struct PointType {
 
@@ -113,7 +61,7 @@ namespace WebAuthN::Util::TPM {
 
     struct ECCParametersType {
 
-        EC2CurveType CurveID;
+        TPM2_ECC_CURVE CurveID;
         PointType Point;
     };
 
@@ -129,40 +77,64 @@ namespace WebAuthN::Util::TPM {
         RSAParametersType RSAParameters;
     };
 
-    struct AttestedCertifyInfoType {
-
-        std::string Name;
-    };
-
     struct CertInfoType {
 
-        STType Type;
-        AttestedCertifyInfoType AttestedCertifyInfo;
+        TPMI_ST_ATTEST Type;
+        TPMS_CERTIFY_INFO AttestedCertifyInfo;
         std::vector<uint8_t> ExtraData;
     };
-
-    inline expected<std::string>
-    DecodeBlob(const std::string& blob, BlobType type) noexcept {
-
-        return _GetPlaintext(blob.data(),
-                             _TAGS_AND_INDICES[type].StartTag,
-                             _TAGS_AND_INDICES[type].EndTag);
-    }
 
     inline expected<PublicAreaInfoType>
     DecodePublicArea(const std::vector<uint8_t>& publicAreaData) noexcept {
 
-        return PublicAreaInfoType{};
+        size_t offset = 0UL;
+        TPMT_PUBLIC pub{};
+        auto result = Tss2_MU_TPMT_PUBLIC_Unmarshal(publicAreaData.data(), publicAreaData.size(), &offset, &pub);
+
+        if (result != TSS2_RC_SUCCESS) {
+            return unexpected(ErrorType("Could not decode public area data"s));
+        }
+
+        return PublicAreaInfoType{
+            .ECCParameters = ECCParametersType{
+                .CurveID = pub.parameters.eccDetail.curveID,
+                .Point   = PointType{
+                    .XRaw = std::vector<uint8_t>(pub.unique.ecc.x.buffer, pub.unique.ecc.x.buffer + pub.unique.ecc.x.size),
+                    .YRaw = std::vector<uint8_t>(pub.unique.ecc.y.buffer, pub.unique.ecc.y.buffer + pub.unique.ecc.y.size)
+                }
+            },
+            .RSAParameters = RSAParametersType{
+                .ModulusRaw = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size),
+                .Exponent   = pub.parameters.rsaDetail.exponent
+            }
+        };
     }
 
     inline expected<CertInfoType>
     DecodeAttestationData(const std::vector<uint8_t>& certInfoData) noexcept {
 
-        return CertInfoType{};
+        size_t offset = 0UL;
+        TPMS_ATTEST attest{};
+        auto result = Tss2_MU_TPMS_ATTEST_Unmarshal(certInfoData.data(), certInfoData.size(), &offset, &attest);
+
+        if (result != TSS2_RC_SUCCESS) {
+            return unexpected(ErrorType("Could not decode attestation data"s));
+        }
+        
+        if (attest.magic != TPM2_GENERATED_VALUE) {
+
+            return unexpected(ErrorType("Magic number not set to TPM2_GENERATED_VALUE"s));
+        }
+
+        return CertInfoType{
+            .Type =  attest.type,
+            .AttestedCertifyInfo = attest.attested.certify,
+            .ExtraData = std::vector<uint8_t>(attest.extraData.buffer, attest.extraData.buffer + attest.extraData.size)
+        };
     }
 
     inline expected<bool>
-    NameMatchesPublicArea(const std::string& name, const std::vector<uint8_t>& publicAreaData) noexcept {
+    NameMatchesPublicArea(const TPMS_CERTIFY_INFO& attestedCertifyInfo, const PublicAreaInfoType& publicAreaInfo) noexcept {
 
         return true;
     }

@@ -91,14 +91,14 @@ namespace WebAuthN::Protocol {
                                [&ID](const TPMManufacturerInfoType& tmi) { return tmi.ID == ID; });
         }
 
-        static inline TPM::EC2CurveType _TPMCurveID(const WebAuthNCOSE::COSEEllipticCurveType curve) noexcept {
+        static inline TPM2_ECC_CURVE _TPMCurveID(const WebAuthNCOSE::COSEEllipticCurveType curve) noexcept {
 
             switch (curve) {
 
-                case WebAuthNCOSE::COSEEllipticCurveType::P256: return TPM::EC2CurveType::NIST_P256;
-                case WebAuthNCOSE::COSEEllipticCurveType::P384: return TPM::EC2CurveType::NIST_P384;
-                case WebAuthNCOSE::COSEEllipticCurveType::P521: return TPM::EC2CurveType::NIST_P521;
-                default:                                        return TPM::EC2CurveType::None;
+                case WebAuthNCOSE::COSEEllipticCurveType::P256: return TPM2_ECC_NIST_P256;
+                case WebAuthNCOSE::COSEEllipticCurveType::P384: return TPM2_ECC_NIST_P384;
+                case WebAuthNCOSE::COSEEllipticCurveType::P521: return TPM2_ECC_NIST_P521;
+                default:                                        return TPM2_ECC_NONE;
             }
         }
 
@@ -447,7 +447,7 @@ namespace WebAuthN::Protocol {
                 std::memcpy(attToBeSigned.data() + att.RawAuthData.size(), clientDataHash.data(), clientDataHash.size());
 
                 // Validate that certInfo is valid:
-                // 1/4 Verify that magic is set to TPM_GENERATED_VALUE, handled here
+                // 1/4 Verify that magic is set to TPM2_GENERATED_VALUE, handled here
                 auto certInfoResult = TPM::DecodeAttestationData(certInfoData);
 
                 if (!certInfoResult) {
@@ -455,8 +455,8 @@ namespace WebAuthN::Protocol {
                 }
                 auto certInfo = certInfoResult.value();
 
-                // 2/4 Verify that type is set to TPM_ST_ATTEST_CERTIFY.
-                if (certInfo.Type != TPM::STType::AttestCertify) {
+                // 2/4 Verify that type is set to TPM2_ST_ATTEST_CERTIFY.
+                if (certInfo.Type != TPM2_ST_ATTEST_CERTIFY) {
                     return unexpected(ErrAttestationFormat().WithDetails("Type is not set to TPM_ST_ATTEST_CERTIFY"s));
                 }
 
@@ -472,7 +472,7 @@ namespace WebAuthN::Protocol {
                 // [TPMv2-Part2] section 10.12.3, whose name field contains a valid Name for pubArea,
                 // as computed using the algorithm in the nameAlg field of pubArea
                 // using the procedure specified in [TPMv2-Part1] section 16.
-                auto matchResult = TPM::NameMatchesPublicArea(certInfo.AttestedCertifyInfo.Name, pubArea);
+                auto matchResult = TPM::NameMatchesPublicArea(certInfo.AttestedCertifyInfo, pubAreaInfo);
 
                 if (!matchResult) {
                     return unexpected(matchResult.error());
