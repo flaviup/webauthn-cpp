@@ -39,7 +39,7 @@ namespace WebAuthN::Protocol {
         };
 
         using RelativeDistinguishedNameSetType = std::vector<AttributeTypeAndValueType>;
-        using RDNSequence = std::vector<RelativeDistinguishedNameSetType>;
+        using RDNSequenceType = std::vector<RelativeDistinguishedNameSetType>;
 
         struct BasicConstraintsType {
 
@@ -76,7 +76,7 @@ namespace WebAuthN::Protocol {
             { "FFFFF1D0", "FIDO Alliance Conformance Testing", "FIDO" },
         };
 
-        static inline constexpr auto _NAME_TYPE_DN = 4;
+        static inline constexpr auto _NAME_TYPE_DN_TAG = 4;
 
         static inline const auto _TCG_KP_AIK_CERTIFICATE  = "2.23.133.8.3"s;
         static inline const auto _TCG_AT_TPM_MANUFACTURER = "2.23.133.2.1"s;
@@ -113,10 +113,55 @@ namespace WebAuthN::Protocol {
             return BasicConstraintsType{.IsCA = false, .MaxPathLen = -1};
         }
 
-        static inline expected<RDNSequence>
+        static inline expected<RDNSequenceType>
         _ASN1UnmarshalDeviceAttributes(const std::vector<uint8_t>& data) noexcept {
+
+            auto p = data.data();
+            auto end = p + data.size();
+            auto retSequence = ASN1::GetSequence(p);
+
+            if (!retSequence) {
+                return unexpected(retSequence.error());
+            } else if (p + retSequence.value() != end) {
+                return unexpected(ErrorType("x509: trailing data present"s));
+            }
+            RDNSequenceType seq{};
+
+            while (p < end) {
+
+                auto retSet = ASN1::GetSet(p);
+
+                if (!retSet) {
+                    return unexpected(retSet.error());
+                }
+                auto end2 = p + retSet.value();
+                RelativeDistinguishedNameSetType rdnSet{};
+
+                while (p < end2) {
+
+                    auto dataResult = ASN1::GetBytes(p);
+
+                    if (!dataResult) {
+                        return unexpected(dataResult.error());
+                    }
+                    auto type = dataResult.value();
+
+                    if (p < end2) {
+                        dataResult = ASN1::GetBytes(p);
+
+                        if (!dataResult) {
+                            return unexpected(dataResult.error());
+                        }
+                        rdnSet.push_back(AttributeTypeAndValueType{
+                            .Type = type.empty() ? ""s : std::string(type.data(), type.data() + type.size()),
+                            .Value = dataResult.value()
+                        });
+                    }
+                }
+                seq.push_back(rdnSet);
+            }
             
-            return RDNSequence{};
+            return seq;
         }
 
         //using SANParsingHandlerType = std::optional<ErrorType> (*)(int tag, const std::vector<uint8_t>& data);
@@ -185,7 +230,7 @@ namespace WebAuthN::Protocol {
 
                 switch (tag) {
 
-                    case _NAME_TYPE_DN: {
+                    case _NAME_TYPE_DN_TAG: {
 
                         auto res = _ASN1UnmarshalDeviceAttributes(data);
 
