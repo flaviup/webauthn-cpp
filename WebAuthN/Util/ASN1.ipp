@@ -104,7 +104,7 @@ namespace WebAuthN::Util::ASN1 {
         return static_cast<T>(value);
     }
 
-    inline expected<std::vector<uint8_t>> GetBytes(const uint8_t*& data) noexcept {
+    inline expected<std::vector<uint8_t>> GetBytes(const uint8_t*& data, int* tag = nullptr) noexcept {
 
         auto length = 0L;
         auto tagID = 0, classID = 0;
@@ -115,7 +115,11 @@ namespace WebAuthN::Util::ASN1 {
         }
         auto value = length > 0 ? std::vector<uint8_t>(data, data + length) : std::vector<uint8_t>{};
         data += length;
-        
+
+        if (tag != nullptr) {
+            *tag = tagID;
+        }
+
         return value;
     }
 

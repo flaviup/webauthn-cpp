@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include "Attestation.ipp"
 #include "../Util/Crypto.ipp"
+#include "../Util/ASN1.ipp"
 #include "../Util/TPM.ipp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
@@ -30,6 +31,15 @@ namespace WebAuthN::Protocol {
     namespace {
 
         namespace TPM = Util::TPM;
+
+        struct AttributeTypeAndValueType {
+
+            std::string Type;
+            std::vector<uint8_t> Value;
+        };
+
+        using RelativeDistinguishedNameSetType = std::vector<AttributeTypeAndValueType>;
+        using RDNSequence = std::vector<RelativeDistinguishedNameSetType>;
 
         struct BasicConstraintsType {
 
@@ -91,6 +101,24 @@ namespace WebAuthN::Protocol {
             }
         }
 
+        static inline expected<std::vector<std::string>>
+        _ASN1UnmarshalExtendedKeyUsage(const std::vector<uint8_t>& data) noexcept {
+            
+            return std::vector<std::string>{};
+        }
+
+        static inline expected<BasicConstraintsType>
+        _ASN1UnmarshalBasicConstraints(const std::vector<uint8_t>& data) noexcept {
+            
+            return BasicConstraintsType{.IsCA = false, .MaxPathLen = -1};
+        }
+
+        static inline expected<RDNSequence>
+        _ASN1UnmarshalDeviceAttributes(const std::vector<uint8_t>& data) noexcept {
+            
+            return RDNSequence{};
+        }
+
         //using SANParsingHandlerType = std::optional<ErrorType> (*)(int tag, const std::vector<uint8_t>& data);
         using SANParsingHandlerType = std::function<std::optional<ErrorType>(int,  const std::vector<uint8_t>&)>;
 
@@ -113,36 +141,39 @@ namespace WebAuthN::Protocol {
             //      uniformResourceIdentifier       [6]     IA5String,
             //      iPAddress                       [7]     OCTET STRING,
             //      registeredID                    [8]     OBJECT IDENTIFIER }
-            
-            /*var seq asn1.RawValue
 
-            rest, err := asn1.Unmarshal(extension, &seq)
-            if err != nil {
-                return err
-            } else if len(rest) != 0 {
-                return errors.New("x509: trailing data after X.509 extension")
+            auto p = extension.data();
+            auto end = p + extension.size();
+            auto retSequence = ASN1::GetSequence(p);
+
+            if (!retSequence) {
+                return retSequence.error();
+            } else if (p + retSequence.value() != end) {
+                return ErrorType("x509: trailing data after X.509 extension"s);
             }
 
-            if !seq.IsCompound || seq.Tag != 16 || seq.Class != 0 {
-                return asn1.StructuralError{Msg: "bad SAN sequence"}
+            while (p < end) {
+
+                auto tag = 0;
+                auto dataResult = ASN1::GetBytes(p, &tag);
+
+                if (!dataResult) {
+                    return dataResult.error();
+                }
+                auto error = callback(tag, dataResult.value());
+
+                if (error) {
+                    return error;
+                }
             }
-
-            rest = seq.Bytes
-
-            for len(rest) > 0 {
-                var v asn1.RawValue
-
-                rest, err = asn1.Unmarshal(rest, &v)
-                if err != nil {
-                    return err
-                }
-
-                if err := callback(v.Tag, v.Bytes); err != nil {
-                    return err
-                }
-            }*/
 
             return std::nullopt;
+        }
+
+        static inline std::string _TrimPrefix(const std::string& str, const std::string& prefix) noexcept {
+
+            auto prefixPos = str.find(prefix);
+            return (prefixPos == 0) ? str.substr(prefix.size()): str;
         }
 
         static inline expected<std::tuple<std::string, std::string, std::string>>
@@ -156,39 +187,36 @@ namespace WebAuthN::Protocol {
 
                     case _NAME_TYPE_DN: {
 
-                        /*auto tpmDeviceAttributes = pkix.RDNSequence{};
-                        auto res = asn1.Unmarshal(data, &tpmDeviceAttributes);
+                        auto res = _ASN1UnmarshalDeviceAttributes(data);
 
-                        if (res) {
+                        if (!res) {
                             return res.error();
                         }
+                        auto tpmDeviceAttributes = res.value();
 
                         for (const auto& rdn : tpmDeviceAttributes) {
 
                             if (rdn.empty()) {
-                                continue
+                                continue;
                             }
 
                             for (const auto& atv : rdn) {
 
-                                //value, ok := atv.Value.(string)
-                                //if !ok {
-                                //    continue
-                                //}
+                                auto value = atv.Value.empty() ? ""s : std::string(atv.Value.data(), atv.Value.data() + atv.Value.size());
 
                                 if (atv.Type == _TCG_AT_TPM_MANUFACTURER) {
-                                    //manufacturer = strings.TrimPrefix(value, "id:");
+                                    manufacturer = _TrimPrefix(value, "id:");
                                 }
 
                                 if (atv.Type == _TCG_AT_TPM_MODEL) {
-                                    //model = value;
+                                    model = value;
                                 }
 
                                 if (atv.Type == _TCG_AT_TPM_VERSION) {
-                                    //version = strings.TrimPrefix(value, "id:");
+                                    version = _TrimPrefix(value, "id:");
                                 }
                             }
-                        }*/
+                        }
                     }
                 }
 
@@ -200,18 +228,6 @@ namespace WebAuthN::Protocol {
             }
 
             return std::tuple{manufacturer, model, version};
-        }
-
-        static inline expected<std::vector<std::string>>
-        _ASN1UnmarshalExtendedKeyUsage(const std::vector<uint8_t>& data) noexcept {
-            
-            return std::vector<std::string>{};
-        }
-
-        static inline expected<BasicConstraintsType>
-        _ASN1UnmarshalBasicConstraints(const std::vector<uint8_t>& data) noexcept {
-            
-            return BasicConstraintsType{.IsCA = false, .MaxPathLen = -1};
         }
 
         static inline expected<std::tuple<std::string, std::optional<json>>>
@@ -443,8 +459,6 @@ namespace WebAuthN::Protocol {
                     if (ext.ID == "2.5.29.37") {
 
                         auto result =_ASN1UnmarshalExtendedKeyUsage(ext.Value);
-                        // rest, err = asn1.Unmarshal(ext.Value, &eku);
-                        // consider len(rest) != 0 as error
 
                         if (!result) {
                             return unexpected(ErrAttestationFormat().WithDetails("AIK certificate EKU missing 2.23.133.8.3"));
