@@ -11,7 +11,6 @@
 
 #include "../Core.ipp"
 #include "../Util/Base64.ipp"
-#include "TPMTypes.ipp"
 
 #pragma GCC visibility push(default)
 
