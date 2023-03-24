@@ -10,6 +10,7 @@
 #define WEBAUTHN_UTIL_TPM_IPP
 
 #include "../Core.ipp"
+#include "../Util/Crypto.ipp"
 #include "tpm2-tss/tss2/tss2_mu.h"
 
 #pragma GCC visibility push(default)
@@ -62,25 +63,26 @@ namespace WebAuthN::Util::TPM {
     struct ECCParametersType {
 
         TPM2_ECC_CURVE CurveID;
-        PointType Point;
+        PointType      Point;
     };
 
     struct RSAParametersType {
 
         std::vector<uint8_t> ModulusRaw;
-        uint32_t Exponent;
+        uint32_t             Exponent;
     };
 
     struct PublicAreaInfoType {
 
+        TPMI_ALG_PUBLIC   Type;
         ECCParametersType ECCParameters;
         RSAParametersType RSAParameters;
     };
 
     struct CertInfoType {
 
-        TPMI_ST_ATTEST Type;
-        TPMS_CERTIFY_INFO AttestedCertifyInfo;
+        TPMI_ST_ATTEST       Type;
+        TPMS_CERTIFY_INFO    AttestedCertifyInfo;
         std::vector<uint8_t> ExtraData;
     };
 
@@ -94,19 +96,54 @@ namespace WebAuthN::Util::TPM {
         if (result != TSS2_RC_SUCCESS) {
             return unexpected(ErrorType("Could not decode public area data"s));
         }
+        auto isECC = false;
+        auto isRSA = false;
+
+        switch (pub.type) {
+
+            case TPM2_ALG_RSA:    ;
+            case TPM2_ALG_RSAES:  ;
+            case TPM2_ALG_RSAPSS: ;
+            case TPM2_ALG_RSASSA: isRSA = true;
+                break;
+
+            case TPM2_ALG_ECC:   ;
+            case TPM2_ALG_ECDAA: ;
+            case TPM2_ALG_ECDH:  ;
+            case TPM2_ALG_ECDSA: isECC = true;
+                break;
+
+            default: return unexpected(ErrorType("Unsupported algorithm"s));
+        }
+        std::vector<uint8_t> rsaModulusRaw{};
+
+        if (isRSA) {
+            
+            auto pubKeyResult = Util::Crypto::ParseRSAPublicKeyInfo(std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size));
+
+            if (!pubKeyResult) {
+                return unexpected(pubKeyResult.error());
+            }
+            auto [bits, modulus, exponent] = pubKeyResult.value();
+
+            if (modulus) {
+                rsaModulusRaw = modulus.value();
+            }
+        }
 
         return PublicAreaInfoType{
-            .ECCParameters = ECCParametersType{
+            .Type = pub.type,
+            .ECCParameters = isECC ? ECCParametersType{
                 .CurveID = pub.parameters.eccDetail.curveID,
                 .Point   = PointType{
                     .XRaw = std::vector<uint8_t>(pub.unique.ecc.x.buffer, pub.unique.ecc.x.buffer + pub.unique.ecc.x.size),
                     .YRaw = std::vector<uint8_t>(pub.unique.ecc.y.buffer, pub.unique.ecc.y.buffer + pub.unique.ecc.y.size)
                 }
-            },
-            .RSAParameters = RSAParametersType{
-                .ModulusRaw = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size),
+            } : ECCParametersType{},
+            .RSAParameters = isRSA ? RSAParametersType{
+                .ModulusRaw = rsaModulusRaw,
                 .Exponent   = pub.parameters.rsaDetail.exponent
-            }
+            } : RSAParametersType{}
         };
     }
 

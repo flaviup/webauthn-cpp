@@ -542,9 +542,9 @@ namespace WebAuthN::Util::Crypto {
         return s;
     }
 
-    using ECPublicKeyInfo = std::tuple<int, std::optional<int>, std::optional<std::vector<uint8_t>>, std::optional<std::vector<uint8_t>>>;
+    using ECPublicKeyInfoType = std::tuple<int, std::optional<int>, std::optional<std::vector<uint8_t>>, std::optional<std::vector<uint8_t>>>;
 
-    inline expected<ECPublicKeyInfo>
+    inline expected<ECPublicKeyInfoType>
     ParseCertificateECPublicKeyInfo(const std::vector<uint8_t>& certData) noexcept {
 
         auto bio = BIO_new(BIO_s_mem());
@@ -630,11 +630,69 @@ namespace WebAuthN::Util::Crypto {
         X509_free(certificate);
         BIO_free_all(bio);
 
-        return ECPublicKeyInfo{
+        return ECPublicKeyInfoType{
             algo,
             curve,
             x,
             y
+        };
+    }
+
+    using RSAPublicKeyInfoType = std::tuple<int, std::optional<std::vector<uint8_t>>, std::optional<int>>;
+
+    inline expected<RSAPublicKeyInfoType>
+    ParseRSAPublicKeyInfo(const std::vector<uint8_t>& pubKeyData) noexcept {
+
+        auto bio = BIO_new(BIO_s_mem());
+
+        if (bio == nullptr) {
+            return unexpected("Null BIO"s);
+        }
+
+        if (BIO_write(bio, pubKeyData.data(), static_cast<int>(pubKeyData.size())) != static_cast<int>(pubKeyData.size())) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not duplicate public key data"s);
+        }
+        EVP_PKEY* pKey = nullptr;
+        pKey = PEM_read_bio_PUBKEY(bio, &pKey, nullptr, nullptr);
+
+        if (pKey == nullptr) {
+
+            BIO_free_all(bio);
+            return unexpected("Could not parse the RSA public key from data"s);
+        }
+        auto algo = 0;
+
+        if (EVP_PKEY_get_int_param(pKey, OSSL_PKEY_PARAM_RSA_BITS, &algo) != 1) {
+            algo = 0;
+        }
+        std::optional<std::vector<uint8_t>> modulus = std::nullopt;
+        BIGNUM* bn = nullptr;
+
+        if (EVP_PKEY_get_bn_param(pKey, OSSL_PKEY_PARAM_RSA_N, &bn) == 1) {
+
+            uint8_t buff[BN_num_bytes(bn)];
+            auto length = BN_bn2bin(bn, buff);
+            modulus = std::vector<uint8_t>(buff, buff + length);
+        }
+
+        if (bn != nullptr) {
+            BN_clear_free(bn);
+        }
+        std::optional<int> exponent = std::nullopt;
+        auto exp = 0;
+
+        if (EVP_PKEY_get_int_param(pKey, OSSL_PKEY_PARAM_RSA_EXPONENT, &exp) == 1) {
+            exponent = exp;
+        }
+
+        BIO_free_all(bio);
+
+        return RSAPublicKeyInfoType{
+            algo,
+            modulus,
+            exponent
         };
     }
 
