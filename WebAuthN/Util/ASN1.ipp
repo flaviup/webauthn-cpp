@@ -76,7 +76,7 @@ namespace WebAuthN::Util::ASN1 {
     }
 
     template<typename T = int32_t>
-    inline expected<T> GetInt(const uint8_t*& data) noexcept {
+    inline expected<T> GetInt(const uint8_t*& data, int* tag = nullptr) noexcept {
 
         auto length = 0L;
         auto tagID = 0, classID = 0;
@@ -85,6 +85,11 @@ namespace WebAuthN::Util::ASN1 {
         if (ret == 0 && tagID == V_ASN1_NULL) {
 
             data += length;
+
+            if (tag != nullptr) {
+                *tag = tagID;
+            }
+
             return static_cast<T>(0);
         }
 
@@ -100,6 +105,10 @@ namespace WebAuthN::Util::ASN1 {
                                                                          length > 1 ? MAKE_UINT16(data[0], data[1]) :
                                                                                       data[0];
         data += length;
+
+        if (tag != nullptr) {
+            *tag = tagID;
+        }
 
         return static_cast<T>(value);
     }

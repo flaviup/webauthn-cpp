@@ -31,6 +31,7 @@ namespace WebAuthN::Protocol {
     namespace {
 
         namespace TPM = Util::TPM;
+        namespace ASN1 = Util::ASN1;
 
         struct AttributeTypeAndValueType {
 
@@ -109,8 +110,38 @@ namespace WebAuthN::Protocol {
 
         static inline expected<BasicConstraintsType>
         _ASN1UnmarshalBasicConstraints(const std::vector<uint8_t>& data) noexcept {
+
+            auto p = data.data();
+            auto end = p + data.size();
+            auto retSet = ASN1::GetSet(p);
+
+            if (!retSet) {
+                return unexpected(retSet.error());
+            } else if (p + retSet.value() != end) {
+                return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
+            }
+            auto retInt = ASN1::GetInt(p);
+
+            if (retInt) {
+
+                auto isCA = retInt.value() != 0;
+                auto tag = 0;
+                auto retInt = ASN1::GetInt(p, &tag);
+
+                if (p != end) {
+                    return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
+                }
+
+                return BasicConstraintsType{
+                    .IsCA = isCA,
+                    .MaxPathLen = ((retInt && tag != V_ASN1_NULL) ? retInt.value() : -1)
+                };
+            }
             
-            return BasicConstraintsType{.IsCA = false, .MaxPathLen = -1};
+            return BasicConstraintsType{
+                .IsCA = false,
+                .MaxPathLen = -1
+            };
         }
 
         static inline expected<RDNSequenceType>
@@ -156,6 +187,7 @@ namespace WebAuthN::Protocol {
                             .Type = type.empty() ? ""s : std::string(type.data(), type.data() + type.size()),
                             .Value = dataResult.value()
                         });
+                        p = end2;
                     }
                 }
                 seq.push_back(rdnSet);
@@ -530,14 +562,10 @@ namespace WebAuthN::Protocol {
                     if (ext.ID == "2.5.29.19") {
 
                         auto result = _ASN1UnmarshalBasicConstraints(ext.Value);
-                        // rest, error = asn1.Unmarshal(ext.Value, &constraints);
-                        // consider len(rest) != 0 as error
 
                         if (!result) {
-                            return unexpected(ErrAttestationFormat().WithDetails("AIK certificate basic constraints malformed"));
-                        }/* else if (!rest.empty()) {
-                            return unexpected(ErrAttestationFormat().WithDetails("AIK certificate basic constraints contains extra data"));
-                        }*/
+                            return unexpected(ErrAttestationFormat().WithDetails(fmt::format("AIK certificate basic constraints malformed {}", std::string(result.error()))));
+                        }
                         constraints = result.value();
                     }
                 }
