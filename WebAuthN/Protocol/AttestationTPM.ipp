@@ -91,14 +91,14 @@ namespace WebAuthN::Protocol {
                                [&ID](const TPMManufacturerInfoType& tmi) { return tmi.ID == ID; });
         }
 
-        static inline TPM::ECCCurveType _TPMCurveID(const WebAuthNCOSE::COSEEllipticCurveType curve) noexcept {
+        static inline TPM::EC2CurveType _TPMCurveID(const WebAuthNCOSE::COSEEllipticCurveType curve) noexcept {
 
             switch (curve) {
 
-                case WebAuthNCOSE::COSEEllipticCurveType::P256: return TPM::ECCCurveType::NIST_P256;
-                case WebAuthNCOSE::COSEEllipticCurveType::P384: return TPM::ECCCurveType::NIST_P384;
-                case WebAuthNCOSE::COSEEllipticCurveType::P521: return TPM::ECCCurveType::NIST_P521;
-                default:                                        return TPM::ECCCurveType::None;
+                case WebAuthNCOSE::COSEEllipticCurveType::P256: return TPM::EC2CurveType::NIST_P256;
+                case WebAuthNCOSE::COSEEllipticCurveType::P384: return TPM::EC2CurveType::NIST_P384;
+                case WebAuthNCOSE::COSEEllipticCurveType::P521: return TPM::EC2CurveType::NIST_P521;
+                default:                                        return TPM::EC2CurveType::None;
             }
         }
 

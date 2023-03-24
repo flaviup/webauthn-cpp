@@ -124,31 +124,31 @@ namespace WebAuthN::Protocol {
 
             // Step 2.2.2 (from §8.2.1) Subject field MUST be set to:
 
-            // 	Subject-C
-            // 	ISO 3166 code specifying the country where the Authenticator vendor is incorporated (PrintableString)
+            // Subject-C
+            // ISO 3166 code specifying the country where the Authenticator vendor is incorporated (PrintableString)
 
-            //  TODO: Find a good, useable, country code library. For now, check stringy-ness
+            // TODO: Find a good, useable, country code library. For now, check stringy-ness
             if (attCert.Subject.Country.empty()) {
 
                 return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Country Code is invalid"));
             }
 
-            // 	Subject-O
-            // 	Legal name of the Authenticator vendor (UTF8String)
+            // Subject-O
+            // Legal name of the Authenticator vendor (UTF8String)
             if (attCert.Subject.Organization.empty()) {
 
                 return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Organization is invalid"));
             }
 
-            // 	Subject-OU
-            // 	Literal string “Authenticator Attestation” (UTF8String)
+            // Subject-OU
+            // Literal string “Authenticator Attestation” (UTF8String)
             if (attCert.Subject.OrganizationalUnit != "Authenticator Attestation") {
 
                 // TODO: Implement a return error when I'm more certain this is general practice
                 //return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate OrganizationalUnit is invalid"));
             }
 
-            // 	Subject-CN
+            // Subject-CN
             //  A UTF8String of the vendor’s choosing
             if (attCert.Subject.CommonName.empty()) {
 

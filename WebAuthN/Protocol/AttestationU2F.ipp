@@ -54,8 +54,8 @@ namespace WebAuthN::Protocol {
 
             // The Format/syntax is
             // u2fStmtFormat = {
-            // 	x5c: [ attestnCert: bytes ],
-            // 	sig: bytes
+            //      x5c: [ attestnCert: bytes ],
+            //      sig: bytes
             // }
 
             // Check for "x5c" which is a single element array containing the attestation certificate in X.509 format.

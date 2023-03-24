@@ -164,7 +164,7 @@ namespace WebAuthN::Protocol {
         // statement is based on the SafetyNet API. In this case the authenticator data is completely controlled by the caller of
         // the SafetyNet API (typically an application running on the Android platform) and the attestation statement only provides
         //
-        //	some statements about the health of the platform and the identity of the calling application. This attestation does not
+        // some statements about the health of the platform and the identity of the calling application. This attestation does not
         //
         // provide information regarding provenance of the authenticator and its associated data. Therefore platform-provided
         // authenticators SHOULD make use of the Android Key Attestation when available, even if the SafetyNet API is also present.

@@ -11,6 +11,7 @@
 
 #include "../Core.ipp"
 #include "../Util/Base64.ipp"
+#include "TPMTypes.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -21,7 +22,6 @@ namespace WebAuthN::Util::TPM {
 #pragma GCC visibility push(hidden)
 
     namespace {
-
 
         enum BlobType : int {
             InitState,
@@ -70,7 +70,7 @@ namespace WebAuthN::Util::TPM {
 
 #pragma GCC visibility pop
 
-    enum class ECCCurveType : uint16_t {
+    enum class EC2CurveType : uint16_t {
 
         None      = 0x0000,
         NIST_P192 = 0x0001,
@@ -113,7 +113,7 @@ namespace WebAuthN::Util::TPM {
 
     struct ECCParametersType {
 
-        ECCCurveType CurveID;
+        EC2CurveType CurveID;
         PointType Point;
     };
 
