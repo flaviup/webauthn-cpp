@@ -138,7 +138,7 @@ socket_xmit_buf (
     int ret;
 
     LOGBLOB_DEBUG (buf, size, "Writing %zu bytes to socket %d:", size, sock);
-    ret = write_all (sock, buf, size);
+    ret = (int) write_all (sock, buf, size);
     if (ret < (ssize_t) size) {
 #ifdef _WIN32
         LOG_ERROR ("write to fd %d failed, errno %d: %s", sock, WSAGetLastError(), strerror (WSAGetLastError()));
