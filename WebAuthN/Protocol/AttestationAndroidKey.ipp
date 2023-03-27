@@ -711,7 +711,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with purpose not equal KM_PURPOSE_SIGN"));
                 }
 
-                return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
+                return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
             } else {
 
                 return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));

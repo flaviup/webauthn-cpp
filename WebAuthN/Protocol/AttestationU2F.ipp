@@ -173,7 +173,7 @@ namespace WebAuthN::Protocol {
                 }
 
                 // Step 7. If successful, return attestation type Basic with the attestation trust path set to x5c.
-                return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
+                return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
             }
 
             return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));

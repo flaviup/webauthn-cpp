@@ -326,7 +326,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(err.value());
             }
 
-            return std::tuple{manufacturer, model, version};
+            return std::make_tuple(manufacturer, model, version);
         }
 
         static inline expected<std::tuple<std::string, std::optional<json>>>
@@ -598,7 +598,7 @@ namespace WebAuthN::Protocol {
                 }
 
                 // If successful, return attestation type AttCA with the attestation trust path set to x5c.
-                return std::tuple{json(Metadata::AuthenticatorAttestationType::AttCA).get<std::string>(), std::optional<json>{x5c}};
+                return std::make_tuple(json(Metadata::AuthenticatorAttestationType::AttCA).get<std::string>(), std::optional<json>{x5c});
             }
 
             return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"s));

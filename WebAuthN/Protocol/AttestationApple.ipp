@@ -192,7 +192,7 @@ namespace WebAuthN::Protocol {
                 }
 
                 // Step 6. If successful, return implementation-specific values representing attestation type Anonymization CA and attestation trust path x5c.
-                return std::tuple{json(Metadata::AuthenticatorAttestationType::AnonCA).get<std::string>(), std::optional<json>{x5c}};
+                return std::make_tuple(json(Metadata::AuthenticatorAttestationType::AnonCA).get<std::string>(), std::optional<json>{x5c});
             }
 
             return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));

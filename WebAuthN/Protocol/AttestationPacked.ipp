@@ -207,7 +207,7 @@ namespace WebAuthN::Protocol {
             // Step 2.4 If successful, return attestation type Basic and attestation trust path x5c.
             // We don't handle trust paths yet but we're done
 
-            return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c}};
+            return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
         }
 
         static inline expected<std::tuple<std::string, std::optional<json>>>
@@ -279,7 +279,7 @@ namespace WebAuthN::Protocol {
                 return unexpected(validationResult.error());
             }
 
-            return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicSurrogate).get<std::string>(), std::nullopt};
+            return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicSurrogate).get<std::string>(), std::nullopt);
         }
 
         // The packed attestation statement looks like:
