@@ -365,8 +365,8 @@ namespace WebAuthN::Protocol {
                     return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"s));
                 }
 
-                if (atts.find("ecdaaKeyId") == atts.cend() || !atts["ecdaaKeyId"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving ecdaaKeyId value"s));
+                if (atts.find("ecdaaKeyId") != atts.cend()) {
+                    return unexpected(ErrNotImplemented());
                 }
 
                 if (atts.find("sig") == atts.cend() || !atts["sig"].is_binary()) {
@@ -420,6 +420,7 @@ namespace WebAuthN::Protocol {
 
                             return unexpected(ErrAttestationFormat().WithDetails("Mismatch between ECCParameters in pubArea and credentialPublicKey"s));
                         }
+                        break;
                     }
 
                     case WebAuthNCOSE::COSEKeyType::RSAKey: {
@@ -437,6 +438,7 @@ namespace WebAuthN::Protocol {
 
                             return unexpected(ErrAttestationFormat().WithDetails("Mismatch between RSAParameters in pubArea and credentialPublicKey"s));
                         }
+                        break;
                     }
 
                     default:

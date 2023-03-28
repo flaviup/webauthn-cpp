@@ -9,10 +9,10 @@
 #ifndef WEBAUTHN_UTIL_TPM_IPP
 #define WEBAUTHN_UTIL_TPM_IPP
 
-#include "../Core.ipp"
-#include "../Util/Crypto.ipp"
-#include "../Util/StringCompare.ipp"
 #include "tpm2-tss/tss2/tss2_mu.h"
+#include "../Core.ipp"
+#include "Crypto.ipp"
+#include "StringCompare.ipp"
 
 #pragma GCC visibility push(default)
 
@@ -118,22 +118,6 @@ namespace WebAuthN::Util::TPM {
 
             default: return unexpected(ErrorType("Unsupported algorithm"s));
         }
-        std::vector<uint8_t> rsaModulusRaw{};
-
-        if (isRSA) {
-
-            auto publicKey = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size);
-            auto pubKeyResult = Util::Crypto::ParseRSAPublicKeyInfo(publicKey);
-
-            if (!pubKeyResult) {
-                return unexpected(pubKeyResult.error());
-            }
-            auto [bits, modulus, exponent] = pubKeyResult.value();
-
-            if (modulus) {
-                rsaModulusRaw = modulus.value();
-            }
-        }
 
         PublicAreaInfoType publicAreaInfo{
             .Type          = pub.type,
@@ -146,7 +130,7 @@ namespace WebAuthN::Util::TPM {
                 }
             } : ECCParametersType{},
             .RSAParameters = isRSA ? RSAParametersType{
-                .ModulusRaw = rsaModulusRaw,
+                .ModulusRaw = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size),
                 .Exponent   = pub.parameters.rsaDetail.exponent
             } : RSAParametersType{}
         };
