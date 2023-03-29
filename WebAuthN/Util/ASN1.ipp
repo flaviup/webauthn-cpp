@@ -151,7 +151,7 @@ namespace WebAuthN::Util::ASN1 {
 
                     auto p1 = data1;
                     auto p2 = data.data();
-                    auto end = data.data() + data.size();
+                    auto end = p2 + data.size();
 
                     while ((*p1 != 0) && (p2 < end) && (*p1 == static_cast<unsigned char>(*p2))) {
 
@@ -180,7 +180,7 @@ namespace WebAuthN::Util::ASN1 {
 
                     auto p1 = data1;
                     auto p2 = data.data();
-                    auto end = data.data() + data.size();
+                    auto end = p2 + data.size();
 
                     while ((*p1 != 0) && (p2 < end) && (*p1 == *p2)) {
 
