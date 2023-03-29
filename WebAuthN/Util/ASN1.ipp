@@ -24,6 +24,7 @@ namespace WebAuthN::Util::ASN1 {
     class OIDType final {
 
     public:
+
         OIDType() noexcept :
             _obj(nullptr) {
         }
@@ -94,7 +95,7 @@ namespace WebAuthN::Util::ASN1 {
             return *this;
         }
 
-        inline bool operator ==(const OIDType& other) const noexcept {
+        inline constexpr bool operator ==(const OIDType& other) const noexcept {
 
             if (_obj == other._obj) {
                 return true;
@@ -123,7 +124,7 @@ namespace WebAuthN::Util::ASN1 {
             return false;
         }
 
-        inline bool operator !=(const OIDType& other) const noexcept {
+        inline constexpr bool operator !=(const OIDType& other) const noexcept {
 
             return !(*this == other);
         }

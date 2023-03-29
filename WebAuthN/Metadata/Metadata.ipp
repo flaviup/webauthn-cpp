@@ -251,7 +251,7 @@ namespace WebAuthN::Metadata {
     namespace WebAuthNCOSE = ::WebAuthN::Protocol::WebAuthNCOSE;
 
     // TODO: this goes away after WebAuthNCOSE::CredentialPublicKey gets implemented
-    struct AlgKeyCose {
+/*    struct AlgKeyCose {
         
         WebAuthNCOSE::COSEKeyType KeyType;
         WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
@@ -289,7 +289,7 @@ namespace WebAuthN::Metadata {
         }
     } // namespace
 
-#pragma GCC visibility pop
+#pragma GCC visibility pop*/
 
     // usage:
     // algKeyCose key = ...;
@@ -299,7 +299,7 @@ namespace WebAuthN::Metadata {
     //     ........
     // };
     // AlgKeyMatch(key, a);
-    template<size_t N>
+    /*template<size_t N>
     inline bool AlgKeyMatch(const AlgKeyCose& key, AuthenticationAlgorithmType (&algs)[N]) noexcept {
 
         for (auto it = std::cbegin(algs); it != std::cend(algs); ++it) {
@@ -311,7 +311,7 @@ namespace WebAuthN::Metadata {
         }
 
         return false;
-    }
+    }*/
 
     struct PublicKeyCredentialParametersType {
 
