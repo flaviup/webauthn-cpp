@@ -474,7 +474,7 @@ namespace WebAuthN::Protocol {
                 // [TPMv2-Part2] section 10.12.3, whose name field contains a valid Name for pubArea,
                 // as computed using the algorithm in the nameAlg field of pubArea
                 // using the procedure specified in [TPMv2-Part1] section 16.
-                auto matchResult = TPM::NameMatchesPublicArea(certInfo.AttestedCertifyInfo, pubAreaInfo);
+                auto matchResult = TPM::NameMatchesPublicArea(certInfo.AttestedCertifyInfo, pubAreaInfo.NameAlg, pubArea);
 
                 if (!matchResult) {
                     return unexpected(matchResult.error());

@@ -131,7 +131,7 @@ namespace WebAuthN::Util::TPM {
             } : ECCParametersType{},
             .RSAParameters = isRSA ? RSAParametersType{
                 .ModulusRaw = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size),
-                .Exponent   = (pub.parameters.rsaDetail.exponent != 0 ? pub.parameters.rsaDetail.exponent : UINT32(65537))
+                .Exponent   = (pub.parameters.rsaDetail.exponent != 0 ? pub.parameters.rsaDetail.exponent : static_cast<UINT32>(65537))
             } : RSAParametersType{}
         };
         std::memcpy(&publicAreaInfo.ID, &pub.unique, sizeof(pub.unique));
@@ -159,9 +159,6 @@ namespace WebAuthN::Util::TPM {
             .AttestedCertifyInfo = TPMS_CERTIFY_INFO{
                 .name = TPM2B_NAME{
                     .size = attest.attested.certify.name.size
-                },
-                .qualifiedName = TPM2B_NAME {
-                    .size = attest.attested.certify.qualifiedName.size
                 }
             },
             .ExtraData = std::vector<uint8_t>(attest.extraData.buffer, attest.extraData.buffer + attest.extraData.size)
@@ -169,47 +166,49 @@ namespace WebAuthN::Util::TPM {
         std::memcpy(certInfo.AttestedCertifyInfo.name.name, 
                     attest.attested.certify.name.name,
                     attest.attested.certify.name.size);
-        std::memcpy(certInfo.AttestedCertifyInfo.qualifiedName.name, 
-                    attest.attested.certify.qualifiedName.name,
-                    attest.attested.certify.qualifiedName.size);
 
         return certInfo;
     }
 
     inline expected<bool>
-    NameMatchesPublicArea(const TPMS_CERTIFY_INFO& attestedCertifyInfo, const PublicAreaInfoType& publicAreaInfo) noexcept {
+    NameMatchesPublicArea(const TPMS_CERTIFY_INFO& attestedCertifyInfo, TPMI_ALG_HASH nameAlg, const std::vector<uint8_t>& publicAreaData) noexcept {
 
-        auto asDigest = *reinterpret_cast<const TPMU_NAME*>(attestedCertifyInfo.name.name);
-        auto attHashAlg = asDigest.digest.hashAlg;
+        TPMI_ALG_HASH attHashAlg = TPMI_ALG_HASH(attestedCertifyInfo.name.name[0] << 8) + TPMI_ALG_HASH(attestedCertifyInfo.name.name[1]);
 
-        if (attHashAlg == publicAreaInfo.NameAlg) {
+        if (attHashAlg == nameAlg) {
 
-            const BYTE* nameDigest = asDigest.digest.digest.sha;
+            std::vector<uint8_t> publicAreaHash{};
 
             switch (attHashAlg) {
 
-                case TPM2_ALG_SHA1: nameDigest = asDigest.digest.digest.sha1;
+                case TPM2_ALG_SHA1: publicAreaHash = Util::Crypto::SHA1(publicAreaData);
                     break;
 
-                case TPM2_ALG_SHA256: nameDigest = asDigest.digest.digest.sha256;
+                case TPM2_ALG_SHA256: publicAreaHash = Util::Crypto::SHA256(publicAreaData);
                     break;
 
-                case TPM2_ALG_SHA384: nameDigest = asDigest.digest.digest.sha384;
+                case TPM2_ALG_SHA384: publicAreaHash = Util::Crypto::SHA384(publicAreaData);
                     break;
 
-                case TPM2_ALG_SHA512: nameDigest = asDigest.digest.digest.sha512;
+                case TPM2_ALG_SHA512: publicAreaHash = Util::Crypto::SHA512(publicAreaData);
                     break;
 
-                case TPM2_ALG_SM3_256: nameDigest = asDigest.digest.digest.sm3_256;
-                    //return unexpected(ErrorType("SM3-256 hash algorithm of attested is not supported"s));
+                case TPM2_ALG_SM3_256: return unexpected(ErrorType("SM3-256 hash algorithm of attested is not supported"s));
                     break;
 
                 default: unexpected(ErrorType("The hash algorithm of attested is unknown"s));
             }
-            auto nameDigestSize = sizeof(nameDigest);
+            const auto SZ = sizeof(attHashAlg) + publicAreaHash.size();
+            std::vector<uint8_t> attestedName(SZ);
 
-            if (publicAreaInfo.ID.keyedHash.size == nameDigestSize) {
-                return Util::StringCompare::ConstantTimeEqual(publicAreaInfo.ID.keyedHash.buffer, nameDigest, nameDigestSize);
+            for (auto i = 0; i < sizeof(attHashAlg); ++i) {
+                attestedName[i] = static_cast<uint8_t>((attHashAlg >> (8 * (sizeof(attHashAlg) - i - 1))) & 0xFF);
+            }
+            std::memcpy(attestedName.data() + sizeof(attHashAlg), publicAreaHash.data(), publicAreaHash.size());
+            const auto NAME_DIGEST_SIZE = attestedCertifyInfo.name.size;
+
+            if (NAME_DIGEST_SIZE == SZ) {
+                return Util::StringCompare::ConstantTimeEqual(attestedCertifyInfo.name.name, attestedName.data(), SZ);
             } else {
                 return unexpected(ErrorType("The hash algorithm sizes of attested and public area info do not match"s));
             }
