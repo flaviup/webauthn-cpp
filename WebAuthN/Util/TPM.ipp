@@ -131,7 +131,7 @@ namespace WebAuthN::Util::TPM {
             } : ECCParametersType{},
             .RSAParameters = isRSA ? RSAParametersType{
                 .ModulusRaw = std::vector(pub.unique.rsa.buffer, pub.unique.rsa.buffer + pub.unique.rsa.size),
-                .Exponent   = pub.parameters.rsaDetail.exponent
+                .Exponent   = (pub.parameters.rsaDetail.exponent != 0 ? pub.parameters.rsaDetail.exponent : UINT32(65537))
             } : RSAParametersType{}
         };
         std::memcpy(&publicAreaInfo.ID, &pub.unique, sizeof(pub.unique));
