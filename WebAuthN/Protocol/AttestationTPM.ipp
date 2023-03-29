@@ -201,24 +201,28 @@ namespace WebAuthN::Protocol {
                     if (!retSequence) {
                         return unexpected(retSequence.error());
                     }
-                    auto objResult = ASN1::GetObject(p);
 
-                    if (!objResult) {
-                        return unexpected(objResult.error());
-                    }
-                    auto type = objResult.value();
+                    if (retSequence.value() > 0) {
 
-                    if (p < end2) {
-                        
-                        auto dataResult = ASN1::GetBytes(p);
+                        auto objResult = ASN1::GetObject(p);
 
-                        if (!dataResult) {
-                            return unexpected(dataResult.error());
+                        if (!objResult) {
+                            return unexpected(objResult.error());
                         }
-                        rdnSet.push_back(AttributeTypeAndValueType{
-                            .Type = type,
-                            .Value = dataResult.value()
-                        });
+                        auto type = objResult.value();
+
+                        if (p < end2) {
+                            
+                            auto dataResult = ASN1::GetBytes(p);
+
+                            if (!dataResult) {
+                                return unexpected(dataResult.error());
+                            }
+                            rdnSet.push_back(AttributeTypeAndValueType{
+                                .Type = type,
+                                .Value = dataResult.value()
+                            });
+                        }
                     }
                 }
                 seq.push_back(rdnSet);

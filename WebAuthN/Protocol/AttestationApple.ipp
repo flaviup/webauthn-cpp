@@ -46,12 +46,12 @@ namespace WebAuthN::Protocol {
             auto end = p + data.size();
             auto retSequence = ASN1::GetSequence(p);
 
-            if (!retSequence || p + retSequence.value() != end) {
+            if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
                 return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
             auto retBoolSeq = ASN1::GetBooleanSequence(p);
 
-            if (!retBoolSeq || p + retBoolSeq.value() != end) {
+            if (!retBoolSeq || p + retBoolSeq.value() != end || retBoolSeq.value() < 1) {
                 return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
             auto retBytes = ASN1::GetBytes(p);

@@ -496,6 +496,7 @@ namespace WebAuthN::Util::ASN1 {
 
             return t;
         } else {
+
             auto retInt = GetInt(p);
 
             if (retInt) {

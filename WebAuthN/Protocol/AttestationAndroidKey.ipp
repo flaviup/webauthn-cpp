@@ -242,26 +242,30 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 if (!retSequence) {
                     return unexpected("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s);
                 }
-                auto end2 = data + retSequence.value();
-                auto retBytes = ASN1::GetBytes(data);
 
-                if (retBytes) {
+                if (retSequence.value() > 0) {
 
-                    auto v = retBytes.value();
-                    attPackageInfo.PackageName = std::string(v.data(), v.data() + v.size());
+                    auto end2 = data + retSequence.value();
+                    auto retBytes = ASN1::GetBytes(data);
 
-                } else {
-                    return unexpected("ASN1 parsing error of AttestationPackageInfoType::PackageName in Android Key Attestation"s);
+                    if (retBytes) {
+
+                        auto v = retBytes.value();
+                        attPackageInfo.PackageName = std::string(v.data(), v.data() + v.size());
+
+                    } else {
+                        return unexpected("ASN1 parsing error of AttestationPackageInfoType::PackageName in Android Key Attestation"s);
+                    }
+                    auto retInt = data < end2 ? ASN1::GetInt<int64_t>(data) : unexpected(""s);
+
+                    if (retInt) {
+                        attPackageInfo.Version = retInt.value();
+                    } else {
+                        return unexpected("ASN1 parsing error of AttestationPackageInfoType::Version in Android Key Attestation"s);
+                    }
+
+                    attPackageInfos.push_back(attPackageInfo);
                 }
-                auto retInt = data < end2 ? ASN1::GetInt<int64_t>(data) : unexpected(""s);
-
-                if (retInt) {
-                    attPackageInfo.Version = retInt.value();
-                } else {
-                    return unexpected("ASN1 parsing error of AttestationPackageInfoType::Version in Android Key Attestation"s);
-                }
-
-                attPackageInfos.push_back(attPackageInfo);
             }
 
             return attPackageInfos;
@@ -308,7 +312,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             end = p + retBytes.value().size();
             auto retSequence = ASN1::GetSequence(p);
 
-            if (!retSequence || p + retSequence.value() != end) {
+            if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
                 return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
             }
             auto retSet = ASN1::GetSet(p);
@@ -355,7 +359,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto end = p + std::get<size_t>(bufferSlice);
             auto retSequence = ASN1::GetSequence(p);
 
-            if (!retSequence || p + retSequence.value() != end) {
+            if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
                 return unexpected("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s);
             }
             RootOfTrustType rootOfTrust{};
@@ -457,7 +461,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto end = p + data.size();
             auto retSequence = ASN1::GetSequence(p);
 
-            if (!retSequence || p + retSequence.value() != end) {
+            if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
                 return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s);
             }
             auto retInt = ASN1::GetInt(p);
