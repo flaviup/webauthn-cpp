@@ -79,10 +79,10 @@ namespace WebAuthN::Protocol {
 
         static inline constexpr auto _NAME_TYPE_DN_TAG = 4;
 
-        static inline const auto _TCG_KP_AIK_CERTIFICATE  = "2.23.133.8.3"s;
-        static inline const auto _TCG_AT_TPM_MANUFACTURER = "2.23.133.2.1"s;
-        static inline const auto _TCG_AT_TPM_MODEL        = "2.23.133.2.2"s;
-        static inline const auto _TCG_AT_TPM_VERSION      = "2.23.133.2.3"s;
+        static inline const ASN1::OIDType _TCG_KP_AIK_CERTIFICATE  = "2.23.133.8.3"s;
+        static inline const ASN1::OIDType _TCG_AT_TPM_MANUFACTURER = "2.23.133.2.1"s;
+        static inline const ASN1::OIDType _TCG_AT_TPM_MODEL        = "2.23.133.2.2"s;
+        static inline const ASN1::OIDType _TCG_AT_TPM_VERSION      = "2.23.133.2.3"s;
 
         static inline bool _IsValidTPMManufacturer(const std::string& ID) noexcept {
 
@@ -118,13 +118,13 @@ namespace WebAuthN::Protocol {
 
             while (p < end) {
 
-                auto dataResult = ASN1::GetBytes(p);
+                auto objResult = ASN1::GetObject(p);
 
-                if (!dataResult) {
-                    return unexpected(dataResult.error());
+                if (!objResult) {
+                    return unexpected(objResult.error());
                 }
-                auto value = dataResult.value();
-                eku.push_back(value.empty() ? ""s : std::string(value.data(), value.data() + value.size()));
+                auto value = objResult.value();
+                eku.push_back(value);
             }
             
             return eku;
@@ -135,11 +135,11 @@ namespace WebAuthN::Protocol {
 
             auto p = data.data();
             auto end = p + data.size();
-            auto retSet = ASN1::GetSet(p);
+            auto retSequence = ASN1::GetSequence(p);
 
-            if (!retSet) {
-                return unexpected(retSet.error());
-            } else if (p + retSet.value() != end) {
+            if (!retSequence) {
+                return unexpected(retSequence.error());
+            } else if (p + retSequence.value() != end) {
                 return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
             }
             auto retInt = ASN1::GetInt(p);
@@ -192,24 +192,29 @@ namespace WebAuthN::Protocol {
 
                 while (p < end2) {
 
-                    auto dataResult = ASN1::GetBytes(p);
+                    retSequence = ASN1::GetSequence(p);
 
-                    if (!dataResult) {
-                        return unexpected(dataResult.error());
+                    if (!retSequence) {
+                        return unexpected(retSequence.error());
                     }
-                    auto type = dataResult.value();
+                    auto objResult = ASN1::GetObject(p);
+
+                    if (!objResult) {
+                        return unexpected(objResult.error());
+                    }
+                    auto type = objResult.value();
 
                     if (p < end2) {
-                        dataResult = ASN1::GetBytes(p);
+                        
+                        auto dataResult = ASN1::GetBytes(p);
 
                         if (!dataResult) {
                             return unexpected(dataResult.error());
                         }
                         rdnSet.push_back(AttributeTypeAndValueType{
-                            .Type = type.empty() ? ""s : std::string(type.data(), type.data() + type.size()),
+                            .Type = type,
                             .Value = dataResult.value()
                         });
-                        p = end2;
                     }
                 }
                 seq.push_back(rdnSet);
@@ -303,15 +308,15 @@ namespace WebAuthN::Protocol {
 
                                 auto value = atv.Value.empty() ? ""s : std::string(atv.Value.data(), atv.Value.data() + atv.Value.size());
 
-                                if (atv.Type == _TCG_AT_TPM_MANUFACTURER) {
+                                if (_TCG_AT_TPM_MANUFACTURER.Equals(atv.Type)) {
                                     manufacturer = _TrimPrefix(value, "id:"s);
                                 }
 
-                                if (atv.Type == _TCG_AT_TPM_MODEL) {
+                                if (_TCG_AT_TPM_MODEL.Equals(atv.Type)) {
                                     model = value;
                                 }
 
-                                if (atv.Type == _TCG_AT_TPM_VERSION) {
+                                if (_TCG_AT_TPM_VERSION.Equals(atv.Type)) {
                                     version = _TrimPrefix(value, "id:"s);
                                 }
                             }
@@ -529,26 +534,32 @@ namespace WebAuthN::Protocol {
                 }
 
                 // 3/6 The Subject Alternative Name extension MUST be set as defined in [TPMv2-EK-Profile] section 3.2.9{}
-                std::string manufacturer, model, version;
+                auto validSANData = false;
 
                 for (const auto& ext : aikCert.Extensions) {
 
-                    if (ext.ID == "2.5.29.17"s) {
+                    if (ext.ID == "2.5.29.17"s || ext.ID == "X509v3 Subject Alternative Name"s) {
 
                         auto sanParseResult = _ParseSANExtension(ext.Value);
 
                         if (!sanParseResult) {
                             return unexpected(sanParseResult.error());
                         }
+                        auto [manufacturer, model, version] = sanParseResult.value();
+                        
+                        if (manufacturer.empty() || model.empty() || version.empty()) {
+                            return unexpected(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
+                        }
+                        
+                        if (!_IsValidTPMManufacturer(manufacturer)) {
+                            return unexpected(ErrAttestationFormat().WithDetails("Invalid TPM manufacturer"s));
+                        }
+                        validSANData = true;
                     }
                 }
 
-                if (manufacturer.empty() || model.empty() || version.empty()) {
+                if (!validSANData) {
                     return unexpected(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
-                }
-
-                if (!_IsValidTPMManufacturer(manufacturer)) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Invalid TPM manufacturer"s));
                 }
 
                 // 4/6 The Extended Key Usage extension MUST contain the "joint-iso-itu-t(2) internationalorganizations(23) 133 tcg-kp(8) tcg-kp-AIKCertificate(3)" OID.
@@ -556,7 +567,7 @@ namespace WebAuthN::Protocol {
 
                 for (const auto& ext : aikCert.Extensions) {
 
-                    if (ext.ID == "2.5.29.37") {
+                    if (ext.ID == "2.5.29.37" || ext.ID == "X509v3 Extended Key Usage"s) {
 
                         auto result =_ASN1UnmarshalExtendedKeyUsage(ext.Value);
 
@@ -565,7 +576,7 @@ namespace WebAuthN::Protocol {
                         }
                         auto eku = result.value();
 
-                        if (eku.empty() || eku[0] != _TCG_KP_AIK_CERTIFICATE) {
+                        if (eku.empty() || !_TCG_KP_AIK_CERTIFICATE.Equals(eku[0])) {
                             return unexpected(ErrAttestationFormat().WithDetails("AIK certificate EKU missing 2.23.133.8.3"s));
                         }
                         ekuValid = true;
@@ -581,7 +592,7 @@ namespace WebAuthN::Protocol {
 
                 for (const auto& ext : aikCert.Extensions) {
 
-                    if (ext.ID == "2.5.29.19") {
+                    if (ext.ID == "2.5.29.19" || ext.ID == "X509v3 Basic Constraints"s) {
 
                         auto result = _ASN1UnmarshalBasicConstraints(ext.Value);
 
