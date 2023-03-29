@@ -46,12 +46,12 @@ namespace WebAuthN::Protocol {
             auto end = p + data.size();
             auto retSequence = ASN1::GetSequence(p);
 
-            if (!retSequence || p + retSequence.value() != end) {
+            if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
                 return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
             auto retBoolSeq = ASN1::GetBooleanSequence(p);
 
-            if (!retBoolSeq || p + retBoolSeq.value() != end) {
+            if (!retBoolSeq || p + retBoolSeq.value() != end || retBoolSeq.value() < 1) {
                 return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
             auto retBytes = ASN1::GetBytes(p);
@@ -192,7 +192,7 @@ namespace WebAuthN::Protocol {
                 }
 
                 // Step 6. If successful, return implementation-specific values representing attestation type Anonymization CA and attestation trust path x5c.
-                return std::tuple{json(Metadata::AuthenticatorAttestationType::AnonCA).get<std::string>(), std::optional<json>{x5c}};
+                return std::make_tuple(json(Metadata::AuthenticatorAttestationType::AnonCA).get<std::string>(), std::optional<json>{x5c});
             }
 
             return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));

@@ -182,7 +182,7 @@ namespace WebAuthN::WebAuthN {
                 creation.Response.AuthenticatorSelection.value().UserVerification.value()
             };
 
-            return std::tuple{creation, session};
+            return std::make_tuple(creation, session);
         }
 
         // FinishRegistration takes the response from the authenticator and client and verifies the credential against the user's
@@ -603,7 +603,7 @@ namespace WebAuthN::WebAuthN {
                 assertion.Response.Extensions
             };
 
-            return std::tuple{assertion, session};
+            return std::make_tuple(assertion, session);
         }
 
         // ValidateLogin takes a parsed response and validates it against the user credentials and session data.

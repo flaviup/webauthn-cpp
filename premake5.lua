@@ -18,10 +18,15 @@ project "webauthn-cpp"
         "**.hpp",
         "**.ipp",
         "**.cpp", 
-        "**.cc"
+        "**.cc",
+        "**.c"
     }
 
     removefiles { "**/test/**" }
+
+    includedirs {
+        "WebAuthN/Util/tpm2-tss"
+    }
 
     externalincludedirs {
         "/usr/local/opt/icu4c/include",
@@ -37,6 +42,10 @@ project "webauthn-cpp"
         "sodium",
         "ssl",
         "uuid"
+    }
+
+    defines {
+        "MAXLOGLEVEL=4"
     }
 
     syslibdirs {

@@ -417,7 +417,7 @@ namespace WebAuthN::Protocol {
 
                 // §8.5.7 If successful, return implementation-specific values representing attestation type Basic and attestation
                 // trust path attestationCert.
-                return std::tuple{json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::nullopt};
+                return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::nullopt);
             } else {
                 return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
