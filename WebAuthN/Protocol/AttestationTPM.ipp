@@ -514,8 +514,8 @@ namespace WebAuthN::Protocol {
 
                 // Verify that aikCert meets the requirements in §8.3.1 TPM Attestation Statement Certificate Requirements
 
-                // 1/6 Version MUST be set to 3.
-                if (aikCert.Version != 3L) {
+                // 1/6 Version MUST be 3 (value is set to 2).
+                if (aikCert.Version != 2L) {
                     return unexpected(ErrAttestationFormat().WithDetails("AIK certificate version must be 3"s));
                 }
 
