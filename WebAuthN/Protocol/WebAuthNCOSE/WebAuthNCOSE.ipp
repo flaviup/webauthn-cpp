@@ -257,22 +257,22 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         switch (signatureAlgorithm) {
 
             case SignatureAlgorithmType::UnknownSignatureAlgorithm: return "SHA512"s;
-            case SignatureAlgorithmType::MD2WithRSA:                return "MD2"s;
-            case SignatureAlgorithmType::MD5WithRSA:                return "MD5"s;    // EVP_md5();
-            case SignatureAlgorithmType::SHA1WithRSA:               return "SHA1"s;   // EVP_sha1();
+            case SignatureAlgorithmType::MD2WithRSA:                return    "MD2"s;
+            case SignatureAlgorithmType::MD5WithRSA:                return    "MD5"s; // EVP_md5();
+            case SignatureAlgorithmType::SHA1WithRSA:               return   "SHA1"s; // EVP_sha1();
             case SignatureAlgorithmType::SHA256WithRSA:             return "SHA256"s; // EVP_sha256()
             case SignatureAlgorithmType::SHA384WithRSA:             return "SHA384"s; // EVP_sha384();
             case SignatureAlgorithmType::SHA512WithRSA:             return "SHA512"s; // EVP_sha512();
-            case SignatureAlgorithmType::DSAWithSHA1:               return "SHA1"s;
+            case SignatureAlgorithmType::DSAWithSHA1:               return   "SHA1"s;
             case SignatureAlgorithmType::DSAWithSHA256:             return "SHA256"s;
-            case SignatureAlgorithmType::ECDSAWithSHA1:             return "SHA1"s;
+            case SignatureAlgorithmType::ECDSAWithSHA1:             return   "SHA1"s;
             case SignatureAlgorithmType::ECDSAWithSHA256:           return "SHA256"s;
             case SignatureAlgorithmType::ECDSAWithSHA384:           return "SHA384"s;
             case SignatureAlgorithmType::ECDSAWithSHA512:           return "SHA512"s;
             case SignatureAlgorithmType::SHA256WithRSAPSS:          return "SHA256"s;
             case SignatureAlgorithmType::SHA384WithRSAPSS:          return "SHA384"s;
             case SignatureAlgorithmType::SHA512WithRSAPSS:          return "SHA512"s;
-            default:                                                return ""s;
+            default:                                                return       ""s;
         }
     }
 
@@ -522,6 +522,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             pubKeyData[0] = static_cast<uint8_t>(0x04);
             std::memcpy(pubKeyData.data() + 1, XCoord.value().data(), XCoord.value().size());
             std::memcpy(pubKeyData.data() + XCoord.value().size() + 1, YCoord.value().data(), YCoord.value().size());
+
+            // Commented code is an alternative implementation
             OSSL_PARAM params[]{
                 OSSL_PARAM_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, curve, 0),
                 /*OSSL_PARAM_BN(OSSL_PKEY_PARAM_EC_PUB_X,
@@ -701,6 +703,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                 return unexpected("Unknown unsupported algorithm"s);
             }
             EVP_PKEY_CTX* pKeyCtx = nullptr;
+
+            // Commented code is an alternative implementation
 
             switch (Algorithm) {
 
@@ -1373,42 +1377,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
         return ec2;
     }
-
-    /*inline expected<std::vector<uint8_t>> MarshalEd25519PublicKey(const ed25519.PublicKey& pub) {
-        
-        return x509.MarshalPKIXPublicKey(pub);
-    }
-
-    {
-        const asn1.ObjectIdentifier oidSignatureEd25519{1, 3, 101, 112};
-
-        struct PkixPublicKeyType {
-            pkix.AlgorithmIdentifier Algo;
-            asn1.BitString BitString;
-        };
-
-        // MarshalEd25519PublicKey is a backport of the functionality introduced in
-        // Go v1.13.
-        // Ref: https://golang.org/doc/go1.13#crypto/ed25519
-        // Ref: https://golang.org/doc/go1.13#crypto/x509
-        inline expected<std::vector<uint8_t>> MarshalEd25519PublicKey(const ed25519.PublicKey& pub) {
-            
-            publicKeyBytes := pub
-            var publicKeyAlgorithm pkix.AlgorithmIdentifier
-            publicKeyAlgorithm.Algorithm = oidSignatureEd25519
-
-            pkix := pkixPublicKey{
-                Algo: publicKeyAlgorithm,
-                BitString: asn1.BitString{
-                    Bytes:     publicKeyBytes,
-                    BitLength: 8 * len(publicKeyBytes),
-                },
-            }
-
-            ret, _ := asn1.Marshal(pkix)
-            return ret, nil
-        }
-    }*/
 
     inline ValueType<PublicKeyDataType> KeyCast(const std::any& key, bool& success) noexcept {
 
