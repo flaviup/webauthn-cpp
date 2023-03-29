@@ -5,8 +5,6 @@ Based on [this](https://github.com/go-webauthn/webauthn) Go implementation.
 
 Currently there is no testing code and overall it hasn't been tested thoroughly.
 
-TPM attestation support is in progress.
-
 In order to build the library you need to have premake5 installed. You also need to have the dependencies specified in premake5.lua script installed on your system.
 
 To build as static library:
@@ -37,12 +35,13 @@ Usage example:
 #include <thread>
 #include <algorithm>
 #include <string>
-#include <iostream>
 #include "../webauthn-cpp/WebAuthN.hpp"
 
 using json = nlohmann::json;
 
 WebAuthN::WebAuthN::CredentialType* RegisteredCredential = nullptr;
+
+// You need to implement an IUser service
 
 struct DefaultUser : public WebAuthN::WebAuthN::IUser {
 
@@ -100,6 +99,8 @@ struct DefaultUser : public WebAuthN::WebAuthN::IUser {
       0x63, 0x09, 0xf3, 0x48, 0x1c, 0x69, 0xbf, 0x5d, 0x8a, 0x8c, 0x5b, 0x36, 0xe2, 0xda, 0x8a, 0x0d };
 };
 
+// useful for step debugging by loading the client responses from a text file
+
 std::string loadTextFromFile(const std::string& filePath) {
     
     std::stringstream buffer;
@@ -108,12 +109,11 @@ std::string loadTextFromFile(const std::string& filePath) {
     return buffer.str();
 }
 
+// test program main function
+
 int main(int argc, const char * argv[]) {
 
-    //std::string webAuthNFilePath = argc > 1 ? std::string(argv[1]) : "WebAuthN.json.txt";
-    //std::ifstream webAuthNFileStream(webAuthNFilePath);
-    //json j;
-    //webAuthNFileStream >> j;
+    // Configuration object
     /*WebAuthN::WebAuthN::ConfigType cfg{
         .RPID = "northern-subsequent-stock.glitch.me", //"github.github.com", // change this
         .RPDisplayName = "testweb",
@@ -135,6 +135,8 @@ int main(int argc, const char * argv[]) {
         .Debug = true,
         .AttestationPreference = WebAuthN::Protocol::ConveyancePreferenceType::IndirectAttestation
     };
+
+    // Create WebAuthN object
     auto result = GetWebAuthN(cfg);
 
     if (!result) {
@@ -151,6 +153,8 @@ int main(int argc, const char * argv[]) {
                                                            std::nullopt,
                                                            WebAuthN::Protocol::UserVerificationRequirementType::Required))
     };
+
+    // Begin Registration (Attestation)
     auto beginRegistration = wt.BeginRegistration(du, registrationOptions);//WebAuthN::WebAuthN::WebAuthNType::DEFAULT_REGISTRATION_OPTIONS);
 
     if (!beginRegistration) {
@@ -162,7 +166,8 @@ int main(int argc, const char * argv[]) {
 
     std::cout << json(credentialCreation).dump() << std::endl;
 
-    std::string clientRegistrationResponse = loadTextFromFile("webjson.txt");
+    // End Registration: load client response here from file; set a breakpoint here before continuing
+    std::string clientRegistrationResponse = loadTextFromFile("clientjson.txt");
     auto finishRegistration = wt.FinishRegistration(du, sessionData, clientRegistrationResponse);
 
     if (!finishRegistration) {
@@ -182,6 +187,7 @@ int main(int argc, const char * argv[]) {
         WebAuthN::WebAuthN::WebAuthNType::WithUserVerification(WebAuthN::Protocol::UserVerificationRequirementType::Required)
     };
     
+    // Begin Login/Authentication (Assertion)
     auto beginLogin = wt.BeginLogin(du, loginOptions); //WebAuthN::WebAuthN::WebAuthNType::DEFAULT_LOGIN_OPTIONS);
     
     if (!beginLogin) {
@@ -194,7 +200,8 @@ int main(int argc, const char * argv[]) {
 
     std::cout << json(credentialAssertion).dump() << std::endl;
 
-    std::string clientLoginResponse = loadTextFromFile("webjson.txt");
+    // End Login: load client response here from file; set a breakpoint here before continuing
+    std::string clientLoginResponse = loadTextFromFile("clientjson.txt");
     auto finishLogin = wt.FinishLogin(du, sessionDataLogin, clientLoginResponse);
 
     if (!finishLogin) {
