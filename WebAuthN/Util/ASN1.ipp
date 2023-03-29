@@ -90,16 +90,7 @@ namespace WebAuthN::Util::ASN1 {
 
         inline OIDType& operator =(OIDType&& other) noexcept {
 
-            //auto ptr = _obj;
-            //_obj = nullptr;
-
             std::swap(_obj, other._obj);
-
-            /*if (ptr != nullptr) {
-
-                ASN1_OBJECT_free(ptr);
-            }*/
-
             return *this;
         }
 
