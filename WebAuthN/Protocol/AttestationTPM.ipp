@@ -142,24 +142,28 @@ namespace WebAuthN::Protocol {
             } else if (p + retSequence.value() != end) {
                 return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
             }
-            auto retInt = ASN1::GetInt(p);
 
-            if (retInt) {
+            if (retSequence.value() > 0) {
 
-                auto isCA = retInt.value() != 0;
-                auto tag = 0;
-                auto retInt = ASN1::GetInt(p, &tag);
-
-                if (p != end) {
-                    return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
+                auto retInt = ASN1::GetInt(p);
+                
+                if (retInt) {
+                    
+                    auto isCA = retInt.value() != 0;
+                    auto tag = 0;
+                    auto retInt = ASN1::GetInt(p, &tag);
+                    
+                    if (p != end) {
+                        return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
+                    }
+                    
+                    return BasicConstraintsType{
+                        .IsCA = isCA,
+                        .MaxPathLen = ((retInt && tag != V_ASN1_NULL) ? retInt.value() : -1)
+                    };
                 }
-
-                return BasicConstraintsType{
-                    .IsCA = isCA,
-                    .MaxPathLen = ((retInt && tag != V_ASN1_NULL) ? retInt.value() : -1)
-                };
             }
-            
+
             return BasicConstraintsType{
                 .IsCA = false,
                 .MaxPathLen = -1
