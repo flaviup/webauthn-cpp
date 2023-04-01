@@ -23,7 +23,7 @@ namespace WebAuthN::Protocol {
 
     using namespace std::string_literals;
     using json = nlohmann::json;
-    
+
     inline const auto TPM_ATTESTATION_KEY = "tpm"s;
 
 #pragma GCC visibility push(hidden)
@@ -126,7 +126,7 @@ namespace WebAuthN::Protocol {
                 auto value = objResult.value();
                 eku.push_back(value);
             }
-            
+
             return eku;
         }
 
@@ -146,17 +146,17 @@ namespace WebAuthN::Protocol {
             if (retSequence.value() > 0) {
 
                 auto retInt = ASN1::GetInt(p);
-                
+
                 if (retInt) {
-                    
+
                     auto isCA = retInt.value() != 0;
                     auto tag = 0;
                     auto retInt = ASN1::GetInt(p, &tag);
-                    
+
                     if (p != end) {
                         return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
                     }
-                    
+
                     return BasicConstraintsType{
                         .IsCA = isCA,
                         .MaxPathLen = ((retInt && tag != V_ASN1_NULL) ? retInt.value() : -1)
@@ -212,7 +212,7 @@ namespace WebAuthN::Protocol {
                         auto type = objResult.value();
 
                         if (p < end2) {
-                            
+
                             auto dataResult = ASN1::GetBytes(p);
 
                             if (!dataResult) {
@@ -227,7 +227,7 @@ namespace WebAuthN::Protocol {
                 }
                 seq.push_back(rdnSet);
             }
-            
+
             return seq;
         }
 
@@ -558,7 +558,7 @@ namespace WebAuthN::Protocol {
                         if (manufacturer.empty() || model.empty() || version.empty()) {
                             return unexpected(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
                         }
-                        
+
                         if (!_IsValidTPMManufacturer(manufacturer)) {
                             return unexpected(ErrAttestationFormat().WithDetails("Invalid TPM manufacturer"s));
                         }

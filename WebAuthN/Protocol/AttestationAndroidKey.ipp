@@ -24,7 +24,7 @@ namespace WebAuthN::Protocol {
     using namespace std::string_literals;
     using json = nlohmann::json;
     namespace ASN1 = Util::ASN1;
-    
+
     inline const std::string ANDROID_KEY_ATTESTATION_KEY = "android-key";
 
 #pragma GCC visibility push(hidden)
@@ -561,7 +561,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             // Get the alg value - A COSEAlgorithmIdentifier containing the identifier of the algorithm
             // used to generate the attestation signature.
             if (att.AttStatement) {
-                
+
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("alg") == atts.cend()) {
@@ -622,7 +622,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 std::optional<ErrorType> err = std::nullopt;
 
                 try {
-                
+
                     auto key = std::any_cast<const WebAuthNCOSE::EC2PublicKeyDataType&>(pubKey);
                     auto verificationResult = key.Verify(signatureData, signature);
 
@@ -712,7 +712,6 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
 
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
             } else {
-
                 return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
         }

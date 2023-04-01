@@ -168,7 +168,7 @@ namespace WebAuthN::Util::Crypto {
                 return unexpected("Null X509_NAME_ENTRY"s);
             }
             auto asn1Data = X509_NAME_ENTRY_get_data(entry);
-            
+
             if (asn1Data == nullptr) {
                 return unexpected("Null ASN1_STRING"s);
             }

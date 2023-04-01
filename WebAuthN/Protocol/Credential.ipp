@@ -79,7 +79,7 @@ namespace WebAuthN::Protocol {
         PublicKeyCredentialType(const json& j) :
             CredentialType(j),
             RawID(j["rawId"].get<Util::URLEncodedBase64Type>()) {
-            
+
             if (j.find("clientExtensionResults") != j.end()) {
                 ClientExtensionResults.emplace(j["clientExtensionResults"].get<AuthenticationExtensionsClientOutputsType>());
             }
@@ -148,7 +148,7 @@ namespace WebAuthN::Protocol {
         ParsedPublicKeyCredentialType(const json& j) :
             ParsedCredentialType(j),
             RawID(j["rawId"].get<std::vector<uint8_t>>()) {
-            
+
             if (j.find("clientExtensionResults") != j.end()) {
                 ClientExtensionResults.emplace(j["clientExtensionResults"].get<AuthenticationExtensionsClientOutputsType>());
             }
@@ -348,9 +348,8 @@ namespace WebAuthN::Protocol {
                                                  .WithInfo(fmt::format("Type not {}",
                                                                        json(CredentialTypeType::PublicKey).get<std::string>())));
             }
-
             auto responseParseResult = credentialCreationResponse.AttestationResponse.Parse();
-            
+
             if (!responseParseResult) {
                 return unexpected(ErrParsingData().WithDetails("Error parsing attestation response"));
             }

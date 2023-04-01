@@ -18,7 +18,7 @@
 namespace WebAuthN::Util::Url {
 
 #pragma GCC visibility push(hidden)
-    
+
     namespace {
         static inline constexpr const auto SCHEME_REGEX   = "((http[s]?)://)?";  // match http or https before the ://
         static inline constexpr const auto USER_REGEX     = "(([^@/:\\s]+)@)?";  // match anything other than @ / : or whitespace before the ending @
@@ -58,7 +58,6 @@ namespace WebAuthN::Util::Url {
                 return true;
             }
         }
-
         std::smatch matchResults;
 
         if (std::regex_match(rawOrigin.cbegin(), rawOrigin.cend(), matchResults, URL_REGEX)) {
@@ -84,8 +83,8 @@ namespace WebAuthN::Util::Url {
                 return true;
             }
         }
-
         fqo = "";
+
         return false;
     }
 } // namespace WebAuthN::Util::Url

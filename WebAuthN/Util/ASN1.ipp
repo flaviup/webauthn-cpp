@@ -321,7 +321,9 @@ namespace WebAuthN::Util::ASN1 {
             return unexpected("Could not parse ASN1 data as object"s);
         }
 
-        if (length == 0) return ""s;
+        if (length == 0) {
+            return ""s;
+        }
 
         std::string retStr(data, data + length);
         data += length;
@@ -378,8 +380,8 @@ namespace WebAuthN::Util::ASN1 {
         if (std::get<size_t>(bufferSlice) < size_t(1)) {
             return std::vector<uint8_t>{};
         }
-
         auto p = std::get<const uint8_t*>(bufferSlice);
+
         return GetBytes(p);
     }
 

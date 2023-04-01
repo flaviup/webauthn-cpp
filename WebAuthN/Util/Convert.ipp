@@ -17,15 +17,6 @@
 
 namespace WebAuthN::Util::Convert {
 
-    inline std::string ToString(const std::vector<uint8_t>& data) {
-
-        std::string str{};
-        str.reserve(data.size());
-        for (int value : data) str += std::to_string(value);
-
-        return str;
-    }
-
     // Given a UTF-8 encoded string return a new UCS-2 string.
     inline std::u16string Utf8ToUcs2(const std::string& input) {
 

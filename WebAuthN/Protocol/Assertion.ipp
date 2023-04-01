@@ -102,6 +102,7 @@ namespace WebAuthN::Protocol {
             std::vector<uint8_t> userHandle{};
 
             if (UserHandle) {
+
                 binaryData = Util::URLEncodedBase64_DecodeAsBinary(UserHandle.value());
 
                 if (!binaryData) {
@@ -230,7 +231,7 @@ namespace WebAuthN::Protocol {
             }
 
             auto responseParseResult = credentialAssertionResponse.AssertionResponse.Parse();
-            
+
             if (!responseParseResult) {
                 return unexpected(ErrParsingData().WithDetails("Error parsing assertion response"));
             }
@@ -289,14 +290,12 @@ namespace WebAuthN::Protocol {
             if (err) {
                 return err;
             }
-
             auto decodedAuthenticatorData = Util::URLEncodedBase64_DecodeAsBinary(Raw.AssertionResponse.AuthenticatorData);
 
             if (!decodedAuthenticatorData) {
                 return decodedAuthenticatorData.error();
             }
             auto authenticatorData = decodedAuthenticatorData.value();
-
             auto decodedClientDataJson = Util::URLEncodedBase64_Decode(Raw.AssertionResponse.ClientDataJSON);
 
             if (!decodedClientDataJson) {

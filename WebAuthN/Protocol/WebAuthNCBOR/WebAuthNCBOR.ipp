@@ -23,6 +23,7 @@
 
 namespace WebAuthN::Protocol::WebAuthNCBOR {
 
+    using namespace std::string_literals;
     using json = nlohmann::json;
 
     //inline constexpr const auto NESTED_LEVELS_ALLOWED = 4;
@@ -60,8 +61,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
 
             return json::from_cbor(data);
         } catch (const std::exception&) {
-
-            return unexpected(std::string("JSON Unmarshal error"));
+            return unexpected("JSON Unmarshal error"s);
         }
     }
 
@@ -71,11 +71,9 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
     inline expected<std::vector<uint8_t>> JsonMarshal(const json& v) noexcept {
 
         try {
-
             return json::to_cbor(v);
         } catch (const std::exception&) {
-
-            return unexpected(std::string("JSON Marshal error"));
+            return unexpected("JSON Marshal error"s);
         }
     }
 
@@ -92,8 +90,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
         cbor_item_t* item = cbor_load(data.data(), data.size(), &result);
 
         if (item == nullptr) {
-
-            return unexpected(std::string("Unmarshal error"));
+            return unexpected("Unmarshal error"s);
         }
 
         /* Pretty-print the result */
@@ -122,8 +119,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
 
             return marshaled;
         } else {
-
-            return unexpected(std::string("Marshal error"));
+            return unexpected("Marshal error"s);
         }
     }
 

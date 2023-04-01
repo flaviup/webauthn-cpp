@@ -23,7 +23,7 @@ namespace WebAuthN::Protocol {
     using namespace std::string_literals;
     using json = nlohmann::json;
      namespace ASN1 = Util::ASN1;
-    
+
     inline const std::string APPLE_ATTESTATION_KEY = "apple";
 
 #pragma GCC visibility push(hidden)
@@ -55,7 +55,7 @@ namespace WebAuthN::Protocol {
                 return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
             auto retBytes = ASN1::GetBytes(p);
-    
+
             if (!retBytes/* || p != end*/) {
                 return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
             }
@@ -83,7 +83,7 @@ namespace WebAuthN::Protocol {
             // Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined
             // above and perform CBOR decoding on it to extract the contained fields.
             if (att.AttStatement) {
-                
+
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("x5c") == atts.cend()) { // If x5c is not present, return an error
@@ -125,7 +125,7 @@ namespace WebAuthN::Protocol {
                     if (extension.ID == ID_FIDO) {
 
                         /*if (extension.IsCritical) {
-                            
+
                             return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
                         }*/
                         attExtBytes = extension.Value;

@@ -36,7 +36,7 @@ namespace WebAuthN::WebAuthN {
         inline void UpdateCounter(const uint32_t authDataCount) noexcept {
 
             if ((!(authDataCount > SignCount)) && (authDataCount != 0 || SignCount != 0)) {
-                
+
                 CloneWarning = true;
                 return;
             }

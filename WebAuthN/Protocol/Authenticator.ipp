@@ -438,10 +438,10 @@ namespace WebAuthN::Protocol {
                 if (rawAuthData.size() > MIN_ATTESTED_AUTH_LENGTH) {
 
                     auto err = _UnmarshalAttestedData(rawAuthData);
+
                     if (err) {
                         return err;
                     }
-
                     auto attDataLen = AttData.AAGUID.size() + 2 + AttData.CredentialID.size() + AttData.CredentialPublicKey.size();
                     remaining = remaining - attDataLen;
                 } else {
@@ -528,9 +528,8 @@ namespace WebAuthN::Protocol {
         _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
 
             AttData.AAGUID = std::vector<uint8_t>(rawAuthData.cbegin() + 37, rawAuthData.cbegin() + 53);
-
             auto idLength = MAKE_UINT16(rawAuthData[53], rawAuthData[54]);
-            
+
             if (rawAuthData.size() < static_cast<size_t>(MIN_ATTESTED_AUTH_LENGTH + idLength)) {
                 return ErrBadRequest().WithDetails("Authenticator attestation data length too short");
             }
@@ -543,6 +542,7 @@ namespace WebAuthN::Protocol {
             auto lastChunk = std::vector<uint8_t>(rawAuthData.cbegin() + MIN_ATTESTED_AUTH_LENGTH + idLength, rawAuthData.cend());
 
             auto data = _UnmarshalCredentialPublicKey(lastChunk);
+
             if (!data) {
                 return ErrBadRequest().WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", std::string(data.error())));
             }

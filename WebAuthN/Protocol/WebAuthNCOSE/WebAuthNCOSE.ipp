@@ -33,10 +33,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     using namespace std::string_literals;
     using json = nlohmann::json;
 
-    // Consts
-
-    inline const auto KEY_CANNOT_DISPLAY = "Cannot display key"s;
-
     // Enums
 
     // COSEAlgorithmIdentifierType is a number identifying a cryptographic algorithm. The algorithm identifiers SHOULD be values
@@ -307,10 +303,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     inline constexpr HasherHandlerType DEFAULT_HASHER = Util::Crypto::SHA256;
 
     inline const struct {
-        SignatureAlgorithmType algo;
-        COSEAlgorithmIdentifierType coseAlg;
-        std::string name;
-        HasherHandlerType hasher;
+        SignatureAlgorithmType Algo;
+        COSEAlgorithmIdentifierType COSEAlg;
+        std::string Name;
+        HasherHandlerType Hasher;
     } SIGNATURE_ALGORITHM_DETAILS[] {
         { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA"s,   Util::Crypto::SHA1 },
         { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA"s, Util::Crypto::SHA256 },
@@ -326,25 +322,25 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     };
 
     // SigAlgFromCOSEAlg return which signature algorithm is being used from the COSE Key.
-    inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
+    inline SignatureAlgorithmType SigAlgFromCOSEAlg(COSEAlgorithmIdentifierType COSEAlg) noexcept {
 
         const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
 
         auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
-                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
+                               SIGNATURE_ALGORITHM_DETAILS + sz, [&COSEAlg](const auto& details) { return details.COSEAlg == COSEAlg; });
 
-        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->Algo : SignatureAlgorithmType::UnknownSignatureAlgorithm;
     }
 
     // HasherFromCOSEAlg returns the Hashing interface to be used for a given COSE Algorithm.
-    inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType coseAlg) noexcept {
+    inline HasherHandlerType HasherFromCOSEAlg(COSEAlgorithmIdentifierType COSEAlg) noexcept {
 
         const auto sz = sizeof(SIGNATURE_ALGORITHM_DETAILS) / sizeof(SIGNATURE_ALGORITHM_DETAILS[0]);
 
         auto it = std::find_if(SIGNATURE_ALGORITHM_DETAILS, 
-                               SIGNATURE_ALGORITHM_DETAILS + sz, [&coseAlg](const auto& details) { return details.coseAlg == coseAlg; });
+                               SIGNATURE_ALGORITHM_DETAILS + sz, [&COSEAlg](const auto& details) { return details.COSEAlg == COSEAlg; });
 
-        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->hasher : DEFAULT_HASHER;  // default to SHA256?  Why not.
+        return (it != SIGNATURE_ALGORITHM_DETAILS + sz) ? it->Hasher : DEFAULT_HASHER;  // default to SHA256?  Why not.
     }
 
     // PublicKeyDataType The public key portion of a Relying Party-specific credential key pair, generated
@@ -677,17 +673,14 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
 
             if (!Modulus) {
-
                 return unexpected("Modulus param missing"s);
             }
 
             if (!Exponent) {
-
                 return unexpected("Exponent param missing"s);
             }
 
             if (Exponent.value().size() < 3) {
-
                 return unexpected("Exponent param too small"s);
             }
             auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
@@ -695,7 +688,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
 
             if (algorithmName.empty()) {
-
                 return unexpected("Unknown unsupported algorithm"s);
             }
             EVP_PKEY_CTX* pKeyCtx = nullptr;
@@ -710,7 +702,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                     //pKeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA_PSS, nullptr);
                     pKeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "RSASSA-PSS", nullptr);
                     break;
-                
+
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS1):
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS256):
                 case static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgRS384):
@@ -724,7 +716,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
 
             if (pKeyCtx == nullptr) {
-
                 return unexpected("Could not create an RSA key generation context"s);
             }
 
@@ -783,10 +774,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             EVP_PKEY_CTX_free(pKeyCtx);
 
             if (result == 0 || result == 1) {
-
                 return result == 1;
             } else {
-
                 return unexpected("Could not check signature"s);
             }
         }
@@ -854,12 +843,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         Verify(const std::vector<uint8_t>& data, const std::vector<uint8_t>& sig) const noexcept override {
 
             if (!XCoord) {
-
                 return unexpected("XCoord param missing"s);
             }
 
             if (Algorithm != static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgEdDSA)) {
-
                 return unexpected("Unknown unsupported algorithm"s);
             }
             auto coseAlg = static_cast<COSEAlgorithmIdentifierType>(Algorithm);
@@ -867,14 +854,12 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             auto algorithmName = SignatureAlgorithmTypeToString(sigAlg);
 
             if (algorithmName.empty()) {
-
                 return unexpected("Unknown unsupported algorithm"s);
             }
             //auto pKeyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr);
             auto pKeyCtx = EVP_PKEY_CTX_new_from_name(nullptr, "ED25519", nullptr);
 
             if (pKeyCtx == nullptr) {
-
                 return unexpected("Could not create an Ed25519 key generation context"s);
             }
 
@@ -930,10 +915,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             EVP_PKEY_CTX_free(pKeyCtx);
 
             if (result == 0 || result == 1) {
-
                 return result == 1;
             } else {
-
                 return unexpected("Could not check signature"s);
             }
         }
@@ -974,7 +957,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         _PublicKeyDataFromCBOR(const cbor_pair* items, size_t size) noexcept {
 
             if (items == nullptr || size == 0) {
-
                 return unexpected("No CBOR data available to parse a public key"s);
             }
 
@@ -1002,7 +984,8 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                         case 3: {
 
                             pk.Algorithm = cbor_isa_negint(item.value) ? 
-                                                -(cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8 ? cbor_get_uint8(item.value) : cbor_get_uint16(item.value)) - 1
+                                                -(cbor_int_get_width(item.key) == cbor_int_width::CBOR_INT_8 ? cbor_get_uint8(item.value)
+                                                                                                             : cbor_get_uint16(item.value)) - 1
                                                 : 0;
                             ++fieldCount;
                             break;
@@ -1015,7 +998,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
 
             if (fieldCount < 2) {
-
                 return unexpected("Could not CBOR-decode public key: could not find all public key fields"s);
             }
 
@@ -1066,7 +1048,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
 
             if (fieldCount < 2) {
-
                 return unexpected("Could not CBOR-decode OKP public key: could not find all fields"s);
             }
 
@@ -1101,7 +1082,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                                 auto dataSize = cbor_bytestring_length(item.value);
 
                                 if (dataSize > 0) {
-                                    
+
                                     auto data = cbor_bytestring_handle(item.value);
                                     ec2.XCoord = std::vector<uint8_t>(data, data + dataSize);
                                 }
@@ -1117,7 +1098,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                                 auto dataSize = cbor_bytestring_length(item.value);
 
                                 if (dataSize > 0) {
-                                    
+
                                     auto data = cbor_bytestring_handle(item.value);
                                     ec2.YCoord = std::vector<uint8_t>(data, data + dataSize);
                                 }
@@ -1133,7 +1114,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
 
             if (fieldCount < 3) {
-
                 return unexpected("Could not CBOR-decode EC2 public key: could not find all fields"s);
             }
 
@@ -1164,7 +1144,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                                 auto dataSize = cbor_bytestring_length(item.value);
 
                                 if (dataSize > 0) {
-                                    
+
                                     auto data = cbor_bytestring_handle(item.value);
                                     rsa.Modulus = std::vector<uint8_t>(data, data + dataSize);
                                 }
@@ -1180,7 +1160,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                                 auto dataSize = cbor_bytestring_length(item.value);
 
                                 if (dataSize > 0) {
-                                    
+
                                     auto data = cbor_bytestring_handle(item.value);
                                     rsa.Exponent = std::vector<uint8_t>(data, data + dataSize);
                                 }
@@ -1196,7 +1176,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
 
             if (fieldCount < 2) {
-
                 return unexpected("Could not CBOR-decode RSA public key: could not find all fields"s);
             }
 
@@ -1212,7 +1191,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
 
         if (!unmarshalResult) {
-
             return unexpected("Could not CBOR-decode public key"s);
         }
         auto cborItem = unmarshalResult.value();
@@ -1296,7 +1274,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         auto unmarshalResult = WebAuthNCBOR::Unmarshal(keyBytes);
 
         if (!unmarshalResult) {
-
             return unexpected("Could not CBOR-decode public key"s);
         }
         auto cborItem = unmarshalResult.value();
@@ -1335,7 +1312,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                                 auto dataSize = cbor_bytestring_length(item.value);
 
                                 if (dataSize > 0) {
-                                    
+
                                     auto data = cbor_bytestring_handle(item.value);
                                     ec2.XCoord = std::vector<uint8_t>(data, data + dataSize);
                                 }
@@ -1350,7 +1327,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
                                 auto dataSize = cbor_bytestring_length(item.value);
 
                                 if (dataSize > 0) {
-                                    
+
                                     auto data = cbor_bytestring_handle(item.value);
                                     ec2.YCoord = std::vector<uint8_t>(data, data + dataSize);
                                 }
@@ -1367,7 +1344,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         cbor_decref(&cborItem);
 
         if (!ec2.XCoord || !ec2.YCoord) { // || !ec2.Curve || !ec2.Curve.value() != static_cast<int64_t>(COSEAlgorithmIdentifierType::AlgES256)
-
             return unexpected("Missing value(s) in elliptic unmarshal"s);
         }
 
@@ -1380,20 +1356,16 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         success = true;
 
         try {
-            
             return ValueType<PublicKeyDataType>{std::any_cast<const OKPPublicKeyDataType&>(key)};
         } catch(const std::bad_any_cast&) {
 
             try {
-                
                 return ValueType<PublicKeyDataType>{std::any_cast<const EC2PublicKeyDataType&>(key)};
             } catch(const std::bad_any_cast&) {
 
                 try {
-                    
                     return ValueType<PublicKeyDataType>{std::any_cast<const RSAPublicKeyDataType&>(key)};
                 } catch(const std::bad_any_cast&) {
-
                     success = false;
                 }
             }
@@ -1409,7 +1381,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         auto vpk = KeyCast(key, success);
 
         if (success) {
-
             return vpk.Value.Verify(data, sig);
         }
 

@@ -66,7 +66,6 @@ namespace WebAuthN::WebAuthN {
                     return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon));
                 }
             }
-
             auto defaultTimeoutConfig = DEFAULT_TIMEOUT;
             auto defaultTimeoutUVDConfig = DEFAULT_TIMEOUT_UVD;
 
@@ -97,7 +96,6 @@ namespace WebAuthN::WebAuthN {
             if (!AuthenticatorSelection.UserVerification.has_value()) {
                 AuthenticatorSelection.UserVerification = Protocol::UserVerificationRequirementType::Preferred;
             }
-
             Validated = true;
 
             return std::nullopt;

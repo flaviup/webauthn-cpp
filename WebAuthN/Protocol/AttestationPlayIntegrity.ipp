@@ -24,7 +24,7 @@
 namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
-    
+
     inline const std::string PLAYINTEGRITY_ATTESTATION_KEY = "android-playintegrity";
 
 #pragma GCC visibility push(hidden)
@@ -140,7 +140,7 @@ namespace WebAuthN::Protocol {
         }
 
         struct DeviceIntegrityType {
-            
+
             std::vector<DeviceRecognitionVerdictType> DeviceRecognitionVerdict;
         };
 
@@ -271,6 +271,7 @@ namespace WebAuthN::Protocol {
             if (x5c != nullptr) {
 
                 try {
+
                     auto j = json::parse(x5c);
 
                     if (!j.empty() && j.is_array()) {

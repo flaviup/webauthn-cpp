@@ -148,7 +148,7 @@ namespace WebAuthN::Protocol {
                 if (x5c && !x5c.value().empty()) {
 
                     auto namesResult = Util::Crypto::GetNamesX509(x5c.value()[0]);
-                    
+
                     if (!namesResult) {
                         return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
                     }
@@ -253,7 +253,7 @@ namespace WebAuthN::Protocol {
         AuthenticatorAttestationResponseType(const json& j) :
             AuthenticatorResponseType(j), // // The byte slice of clientDataJSON, which becomes CollectedClientData
             AttestationObject(j["attestationObject"].get<Util::URLEncodedBase64Type>()) {
-            
+
             if (j.find("transports") != j.end()) {
                 Transports.emplace(j["transports"].get<std::vector<std::string>>());
             }
@@ -301,7 +301,6 @@ namespace WebAuthN::Protocol {
             if (!HasAttestedCredentialData(attestationObject.AuthData.Flags)) {
                 return unexpected(ErrAttestationFormat().WithInfo("Attestation missing attested credential data flag"));
             }
-
             std::vector<AuthenticatorTransportType> transports{};
 
             if (Transports) {

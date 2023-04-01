@@ -31,7 +31,7 @@ namespace WebAuthN::Util {
             char encodedString[encodedLength];
             sodium_memzero(encodedString, encodedLength);
             sodium_bin2base64(encodedString, encodedLength, str, length, encodingVariant);
-            
+
             return std::string(encodedString);
         }
 

@@ -48,17 +48,14 @@ namespace WebAuthN::Util::Time {
             if (result != EOF && 6 < result) {
 
                 if (tzh < 0) {
-
                     tzm = -tzm;    // Fix the sign on minutes.
                 }
             }
         } else {
-        
             result = sscanf(dateTime.c_str(), "%d-%d-%dT%d:%d:%fZ", &year, &month, &day, &hour, &minute, &second);
         }
 
         if (result < 6) {
-
             return unexpected("Failed to parse ISO8601 date time string "s + dateTime);
         }
 

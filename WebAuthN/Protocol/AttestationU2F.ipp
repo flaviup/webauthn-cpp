@@ -20,7 +20,7 @@ namespace WebAuthN::Protocol {
 
     using namespace std::string_literals;
     using json = nlohmann::json;
-    
+
     inline const std::string U2F_ATTESTATION_KEY = "fido-u2f";
 
 #pragma GCC visibility push(hidden)

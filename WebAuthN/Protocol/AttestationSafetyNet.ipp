@@ -24,7 +24,7 @@
 namespace WebAuthN::Protocol {
 
     using json = nlohmann::json;
-    
+
     inline const std::string SAFETYNET_ATTESTATION_KEY = "android-safetynet";
 
 #pragma GCC visibility push(hidden)
@@ -92,6 +92,7 @@ namespace WebAuthN::Protocol {
             if (x5c != nullptr) {
 
                 try {
+
                     auto j = json::parse(x5c);
 
                     if (!j.empty() && j.is_array()) {

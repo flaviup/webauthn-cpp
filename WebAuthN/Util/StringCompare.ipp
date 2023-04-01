@@ -43,7 +43,7 @@ namespace WebAuthN::Util::StringCompare {
     inline bool ConstantTimeEqual(const std::string& s1, const std::string& s2) noexcept {
 
         /*assert(s1.size() == s2.size());
-        
+
         volatile char c = 0;
         volatile auto n = s1.size();
         volatile const char* p1 = s1.data();
@@ -60,7 +60,7 @@ namespace WebAuthN::Util::StringCompare {
     inline bool ConstantTimeEqual(const std::vector<uint8_t>& v1, const std::vector<uint8_t>& v2) noexcept {
 
         /*assert(v1.size() == v2.size());
-        
+
         volatile uint8_t c = 0;
         volatile auto n = v1.size();
         volatile const uint8_t* p1 = v1.data();

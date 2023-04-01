@@ -151,7 +151,6 @@ namespace WebAuthN::Protocol {
 
             // Assertion Step 7. Verify that the value of Type is the string webauthn.get.
             if (Type != ceremony) {
-
                 return ErrVerification().WithDetails("Error validating ceremony type")
                                         .WithInfo(fmt::format("Expected Value: {}, Received: {}",
                                                               json(ceremony).get<std::string>(),
@@ -166,7 +165,6 @@ namespace WebAuthN::Protocol {
             // passed to the get() call.
 
             if (!Util::StringCompare::ConstantTimeEqual(storedChallenge, Challenge)) {
-
                 return ErrVerification().WithDetails("Error validating challenge")
                                         .WithInfo(fmt::format("Expected b Value: {}\nReceived b: {}\n", storedChallenge, Challenge));
             }
@@ -177,16 +175,13 @@ namespace WebAuthN::Protocol {
             auto ok = Util::Url::FullyQualifiedOrigin(Origin, fqOrigin);
 
             if (!ok) {
-
                 return ErrParsingData().WithDetails("Error decoding clientData origin as URL");
             }
-
             auto found = std::any_of(rpOrigins.cbegin(), 
                                      rpOrigins.cend(), 
                                      [&fqOrigin](const std::string& origin) { return Util::StringCompare::Utf8EqualFold(fqOrigin, origin); });
 
             if (!found) {
-
                 return ErrVerification().WithDetails("Error validating origin")
                                         .WithInfo(fmt::format("Expected Values: {}, Received: {}",
                                                               fmt::join(rpOrigins, ", "),
@@ -200,7 +195,6 @@ namespace WebAuthN::Protocol {
             if (TokenBinding) {
 
                 if (TokenBinding.value().Status == TokenBindingStatusType::Invalid) {
-
                     return ErrParsingData().WithDetails("Error decoding clientData, token binding present without status");
                 }
 
