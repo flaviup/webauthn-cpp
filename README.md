@@ -17,7 +17,7 @@ To build as shared library:
 
 ```
 premake5 --os=macosx gmake2 &&
-make config=sharedlib-release  
+MACOSX_DEPLOYMENT_TARGET=12.6 make config=sharedlib-release  
 ```
 
 To generate the XCode workspace:

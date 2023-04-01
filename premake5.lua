@@ -16,6 +16,8 @@ project "webauthn-cpp"
     
     files { 
         "**.hpp",
+        "**.hh",
+        "**.h",
         "**.ipp",
         "**.cpp", 
         "**.cc",
@@ -25,7 +27,8 @@ project "webauthn-cpp"
     removefiles { "**/test/**" }
 
     includedirs {
-        "WebAuthN/Util/tpm2-tss"
+        "WebAuthN/Util/tpm2-tss",
+        "WebAuthN/Util/tpm2-tss/tss2"
     }
 
     externalincludedirs {
@@ -68,11 +71,13 @@ project "webauthn-cpp"
         kind "SharedLib"
         defines { "DEBUG" }
         symbols "On"
+        targetsuffix ".1.0.0"
 
     filter "configurations:SharedLib-Release"
         kind "SharedLib"
         defines { "NDEBUG" }
         optimize "On"
+        targetsuffix ".1.0.0"
 
     filter { "system:not macosx" }
         links { "icu" }
