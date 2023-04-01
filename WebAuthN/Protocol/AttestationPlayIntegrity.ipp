@@ -32,7 +32,6 @@ namespace WebAuthN::Protocol {
     namespace {
 
         enum class DeviceRecognitionVerdictType {
-
             MeetsBasicIntegrity,
             MeetsDeviceIntegrity,
             MeetsStrongIntegrity,
@@ -50,7 +49,6 @@ namespace WebAuthN::Protocol {
         })
 
         enum class AppRecognitionVerdictType {
-
             PlayRecognized,
             UnrecognizedVersion,
             Unevaluated
@@ -66,7 +64,6 @@ namespace WebAuthN::Protocol {
         })
 
         enum class AppLicensingVerdictType {
-
             Licensed,
             Unlicensed,
             Unevaluated

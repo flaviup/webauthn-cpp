@@ -618,6 +618,16 @@ namespace WebAuthN::Protocol {
                     return unexpected(ErrAttestationFormat().WithDetails("AIK certificate basic constraints missing or CA is true"s));
                 }
 
+                // see https://medium.com/webauthnworks/verifying-fido-tpm2-0-attestation-fc7243847498
+                // TBD: steps 4, 7, 8, 9
+                // 4. Check that certificate is not expired and is started.
+                // 7. If certificate contains id-fido-gen-ce-aaguid(1.3.6.1.4.1.45724.1.1.4) extension, check that it’s value is set to the same AAGUID 
+                //    as in authData.
+                // 8. For attestationRoot in metadata.attestationRootCertificates, generate verification chain verifX5C by appending attestationRoot 
+                //    to the x5c. Try verifying verifX5C. If successful go to next step. If fail try next attestationRoot. 
+                //    If no attestationRoots left to try, fail.
+                // 9. Verify signature over certInfo with the public key extracted from AIK certificate.
+
                 // If successful, return attestation type AttCA with the attestation trust path set to x5c.
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::AttCA).get<std::string>(), std::optional<json>{x5c});
             }

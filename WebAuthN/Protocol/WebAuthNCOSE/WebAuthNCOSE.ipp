@@ -45,7 +45,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     //
     // Specification: §5.8.5. Cryptographic Algorithm Identifier (https://www.w3.org/TR/webauthn/#sctn-alg-identifier)
     enum class COSEAlgorithmIdentifierType : int {
-
         // AlgES256 ECDSA with SHA-256.
         AlgES256 = -7,
         // AlgES384 ECDSA with SHA-384.
@@ -115,7 +114,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // COSEKeyType is The Key type derived from the IANA COSE AuthData.
     enum class COSEKeyType : int {
-
         // KeyTypeReserved is a reserved value.
         KeyTypeReserved,
         // OctetKey is an Octet Key.
@@ -157,7 +155,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     //
     // Specification: https://www.iana.org/assignments/cose/cose.xhtml#elliptic-curves
     enum class COSEEllipticCurveType : int {
-
         // EllipticCurveReserved is the COSE EC Reserved value.
         EllipticCurveReserved,
         // P256 represents NIST P-256 also known as secp256r1.
@@ -220,7 +217,6 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
 
     // SignatureAlgorithmType represents algorithm enumerations used for COSE signatures.
     enum class SignatureAlgorithmType : int {
-
         UnknownSignatureAlgorithm,
         MD2WithRSA,
         MD5WithRSA,

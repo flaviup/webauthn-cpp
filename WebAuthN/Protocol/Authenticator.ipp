@@ -44,17 +44,14 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.4.5. Authenticator Attachment Enumeration (https://www.w3.org/TR/webauthn/#enum-attachment)
     enum class AuthenticatorAttachmentType {
-
         // Platform represents a platform authenticator is attached using a client device-specific transport, called
         // platform attachment, and is usually not removable from the client device. A public key credential bound to a
         // platform authenticator is called a platform credential.
         Platform,
-
         // CrossPlatform represents a roaming authenticator is attached using cross-platform transports, called
         // cross-platform attachment. Authenticators of this class are removable from, and can "roam" among, client devices.
         // A public key credential bound to a roaming authenticator is called a roaming credential.
         CrossPlatform,
-
         // Invalid value
         Invalid = -1
     };
@@ -82,18 +79,14 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.4.6. Resident Key Requirement Enumeration (https://www.w3.org/TR/webauthn/#enumdef-residentkeyrequirement)
     enum class ResidentKeyRequirementType {
-
         // Discouraged indicates the Relying Party prefers creating a server-side credential, but will
         // accept a client-side discoverable credential. This is the default.
         Discouraged,
-
         // Preferred indicates to the client we would prefer a discoverable credential.
         Preferred,
-
         // Required indicates the Relying Party requires a client-side discoverable credential, and is
         // prepared to receive an error if a client-side discoverable credential cannot be created.
         Required,
-
         // Invalid value
         Invalid = -1
     };
@@ -117,27 +110,21 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.8.4. Authenticator Transport Enumeration (https://www.w3.org/TR/webauthn/#enumdef-authenticatortransport)
     enum class AuthenticatorTransportType {
-
         // USB indicates the respective authenticator can be contacted over removable USB.
         USB,
-
         // NFC indicates the respective authenticator can be contacted over Near Field Communication (NFC).
         NFC,
-
         // BLE indicates the respective authenticator can be contacted over Bluetooth Smart (Bluetooth Low Energy / BLE).
         BLE,
-
         // Hybrid indicates the respective authenticator can be contacted using a combination of (often separate)
         // data-transport and proximity mechanisms. This supports, for example, authentication on a desktop computer using
         // a smartphone.
         //
         // WebAuthn Level 3.
         Hybrid,
-
         // Internal indicates the respective authenticator is contacted using a client device-specific transport, i.e., it
         // is a platform authenticator. These authenticators are not removable from the client device.
         Internal,
-
         // Invalid value
         Invalid = -1
     };
@@ -160,16 +147,12 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.8.6. User Verification Requirement Enumeration (https://www.w3.org/TR/webauthn/#enum-userVerificationRequirement)
     enum class UserVerificationRequirementType {
-
         // Required User verification is required to create/release a credential
         Required,
-
         // Preferred User verification is preferred to create/release a credential
         Preferred, // This is the default
-
         // Discouraged The authenticator should not verify the user for the credential
         Discouraged,
-
         // Invalid value
         Invalid = -1
     };
@@ -189,35 +172,25 @@ namespace WebAuthN::Protocol {
     // there is attestation or extension data present. Bit 0 is the least significant bit.
     //
     // Specification: §6.1. Authenticator Data - Flags (https://www.w3.org/TR/webauthn/#flags)
-    enum class AuthenticatorFlagsType : uint8_t {
-
-        // The bits that do not have flags are reserved for future use.
-
+    enum class AuthenticatorFlagsType : uint8_t { // The bits that do not have flags are reserved for future use.
         // UserPresent Bit 00000001 in the byte sequence. Tells us if user is present. Also referred to as the UP flag.
         UserPresent = static_cast<uint8_t>(1U), // Referred to as UP
-
         // RFU1 is a reserved for future use flag.
         RFU1 = static_cast<uint8_t>(1U << 1),
-
         // UserVerified Bit 00000100 in the byte sequence. Tells us if user is verified
         // by the authenticator using a biometric or PIN. Also referred to as the UV flag.
         UserVerified = static_cast<uint8_t>(1U << 2),
-
         // BackupEligible Bit 00001000 in the byte sequence. Tells us if a backup is eligible for device. Also referred
         // to as the BE flag.
         BackupEligible = static_cast<uint8_t>(1U << 3), // Referred to as BE
-
         // BackupState Bit 00010000 in the byte sequence. Tells us if a backup state for device. Also referred to as the
         // BS flag.
         BackupState = static_cast<uint8_t>(1U << 4),
-
         // RFU2 is a reserved for future use flag.
         RFU2 = static_cast<uint8_t>(1U << 5),
-
         // AttestedCredentialData Bit 01000000 in the byte sequence. Indicates whether
         // the authenticator added attested credential data. Also referred to as the AT flag.
         AttestedCredentialData = static_cast<uint8_t>(1U << 6),
-
         // HasExtensions Bit 10000000 in the byte sequence. Indicates if the authenticator data has extensions. Also
         // referred to as the ED flag.
         HasExtensions = static_cast<uint8_t>(1U << 7)

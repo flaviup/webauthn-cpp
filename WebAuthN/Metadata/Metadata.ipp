@@ -46,7 +46,6 @@ namespace WebAuthN::Metadata {
     // AuthenticatorAttestationType - The ATTESTATION constants are 16 bit long integers indicating the specific attestation that authenticator supports.
     // Each constant has a case-sensitive string representation (in quotes), which is used in the authoritative metadata for FIDO authenticators.
     enum class AuthenticatorAttestationType {
-
         // BasicFull - Indicates full basic attestation, based on an attestation private key shared among a class of authenticators (e.g. same model). Authenticators must provide its attestation signature during the registration process for the same reason. The attestation trust anchor is shared with FIDO Servers out of band (as part of the Metadata). This sharing process should be done according to [UAFMetadataService].
         BasicFull,
         // BasicSurrogate - Just syntactically a Basic Attestation. The attestation object self-signed, i.e. it is signed using the UAuth.priv key, i.e. the key corresponding to the UAuth.pub key included in the attestation object. As a consequence it does not provide a cryptographic proof of the security characteristics. But it is the best thing we can do if the authenticator is not able to have an attestation private key.
@@ -78,7 +77,6 @@ namespace WebAuthN::Metadata {
     // AuthenticatorStatusType - This enumeration describes the status of an authenticator model as identified by its AAID and potentially some additional information (such as a specific attestation key).
     // https://fidoalliance.org/specs/mds/fido-metadata-service-v3.0-ps-20210518.html#authenticatorstatus-enum
     enum class AuthenticatorStatusType {
-
         // NotFidoCertified - This authenticator is not FIDO certified.
         NotFidoCertified,
         // FidoCertified - This authenticator has passed FIDO functional certification. This certification scheme is phased out and will be replaced by FIDO_CERTIFIED_L1.
@@ -151,7 +149,6 @@ namespace WebAuthN::Metadata {
     }
 
     enum class PublicKeyAlgAndEncodingType {
-
         // Raw ANSI X9.62 formatted Elliptic Curve public key.
         ALG_KEY_ECC_X962_RAW,
         // DER ITU-X690-2008 encoded ANSI X.9.62 formatted SubjectPublicKeyInfo RFC5480 specifying an elliptic curve public key.
@@ -178,7 +175,6 @@ namespace WebAuthN::Metadata {
     })
 
     enum class AuthenticationAlgorithmType {
-
         // An ECDSA signature on the NIST secp256r1 curve which must have raw R and S buffers, encoded in big-endian order.
         ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW,
         // DER ITU-X690-2008 encoded ECDSA signature RFC5480 on the NIST secp256r1 curve.

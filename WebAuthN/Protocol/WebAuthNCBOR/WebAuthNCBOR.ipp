@@ -25,7 +25,7 @@ namespace WebAuthN::Protocol::WebAuthNCBOR {
 
     using json = nlohmann::json;
 
-    inline constexpr const auto NESTED_LEVELS_ALLOWED = 4;
+    //inline constexpr const auto NESTED_LEVELS_ALLOWED = 4;
 
     inline std::string VectorUint8ToHexString(const std::vector<uint8_t>& v) {
         

@@ -35,7 +35,6 @@ namespace WebAuthN::Protocol {
          * Possible purposes of a key (or pair).
          */
         enum class KmPurposeType : int {
-
             Encrypt,           /* Usable with RSA, EC and AES keys. */
             Decrypt,           /* Usable with RSA, EC and AES keys. */
             Sign,              /* Usable with RSA, EC and HMAC keys. */
@@ -51,7 +50,6 @@ namespace WebAuthN::Protocol {
          * hardware-enforced list is guaranteed never to have existed outide the secure hardware.
          */
         enum class KmKeyOriginType : int {
-
             Generated,        /* Generated in keymaster.  Should not exist outside the TEE. */
             Derived,          /* Derived inside keymaster.  Likely exists off-device. */
             Imported,         /* Imported into keymaster.  Existed as clear text in Android. */
@@ -62,7 +60,6 @@ namespace WebAuthN::Protocol {
         };
 
         enum class VerifiedBootStateType : int {
-
             Verified,
             SelfSigned,
             Unverified,
@@ -70,7 +67,6 @@ namespace WebAuthN::Protocol {
         };
 
         enum class SecurityLevelType : int {
-
             Software,
             TrustedEnvironment,
             StrongBox
@@ -86,7 +82,6 @@ namespace WebAuthN::Protocol {
 
         /** Specifies the types of user authenticators that may be used to authorize this key. */
         enum class UserAuthType : int {
-
             None,
             Password,
             Fingerprint,
