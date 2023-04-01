@@ -32,7 +32,6 @@ project "webauthn-cpp"
     }
 
     externalincludedirs {
-        "/usr/local/opt/icu4c/include",
         "/usr/include",
         "/usr/local/include"
     }
@@ -41,6 +40,7 @@ project "webauthn-cpp"
         "cbor",
         "crypto",
         "fmt",
+        "icuuc",
         "jwt",
         "sodium",
         "ssl",
@@ -52,7 +52,6 @@ project "webauthn-cpp"
     }
 
     syslibdirs {
-        "/usr/local/opt/icu4c/lib",
         "/usr/lib",
         "/usr/local/lib"
     }
@@ -79,11 +78,13 @@ project "webauthn-cpp"
         optimize "On"
         targetsuffix ".1.0.0"
 
-    filter { "system:not macosx" }
-        links { "icu" }
-
     filter { "system:macosx" }
+        externalincludedirs {
+            "/usr/local/opt/icu4c/include"
+        }
         links {
-            "icuuc",
             "Cocoa.framework"
+        }
+        syslibdirs {
+            "/usr/local/opt/icu4c/lib"
         }
