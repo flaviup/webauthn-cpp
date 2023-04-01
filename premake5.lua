@@ -18,23 +18,38 @@ project "webauthn-cpp"
         "**.hpp",
         "**.ipp",
         "**.cpp", 
-        "**.cc"
+        "**.cc",
+        "**.c"
     }
 
     removefiles { "**/test/**" }
 
     includedirs {
+        "WebAuthN/Util/tpm2-tss"
+    }
+
+    externalincludedirs {
+        "/usr/local/opt/icu4c/include",
         "/usr/include",
         "/usr/local/include"
     }
 
     links {
         "cbor",
+        "crypto",
+        "fmt",
+        "jwt",
         "sodium",
-        "ssl"
+        "ssl",
+        "uuid"
     }
 
-    libdirs {
+    defines {
+        "MAXLOGLEVEL=4"
+    }
+
+    syslibdirs {
+        "/usr/local/opt/icu4c/lib",
         "/usr/lib",
         "/usr/local/lib"
     }
@@ -59,5 +74,11 @@ project "webauthn-cpp"
         defines { "NDEBUG" }
         optimize "On"
 
+    filter { "system:not macosx" }
+        links { "icu" }
+
     filter { "system:macosx" }
-        links { "Cocoa.framework" }
+        links {
+            "icuuc",
+            "Cocoa.framework"
+        }
