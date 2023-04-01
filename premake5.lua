@@ -25,7 +25,8 @@ project "webauthn-cpp"
     removefiles { "**/test/**" }
 
     includedirs {
-        "WebAuthN/Util/tpm2-tss"
+        "WebAuthN/Util/tpm2-tss",
+        "WebAuthN/Util/tpm2-tss/tss2"
     }
 
     externalincludedirs {
