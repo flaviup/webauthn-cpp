@@ -31,7 +31,7 @@ namespace WebAuthN::WebAuthN {
     private:
 
         WebAuthNType() noexcept = default;
-        
+
         WebAuthNType(const ConfigType& config) noexcept : _config(config) {
         }
 
