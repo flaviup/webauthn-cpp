@@ -2102,7 +2102,7 @@ namespace WebAuthN::Metadata {
     struct MetadataError : public ErrorType {
 
         MetadataError() noexcept :
-            ErrorType() {
+            ErrorType("metadata_error", "Metadata error") {
         }
 
         MetadataError(std::string&& type, std::string&& details) noexcept :
