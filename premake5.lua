@@ -78,6 +78,12 @@ project "webauthn-cpp"
         optimize "On"
         targetsuffix ".1.0.0"
 
+    filter { "system:linux" }
+        syslibdirs {
+            "/usr/lib64",
+            "/usr/local/lib64"
+        }
+
     filter { "system:macosx" }
         externalincludedirs {
             "/usr/local/opt/icu4c/include"
