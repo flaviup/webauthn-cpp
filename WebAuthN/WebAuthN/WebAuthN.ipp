@@ -348,7 +348,7 @@ namespace WebAuthN::WebAuthN {
             return _BeginLogin(std::nullopt, std::nullopt, std::nullopt, std::nullopt, opts);
         }
 
-        // FinishLogin takes the response from the client and validate it against the user credentials and stored session data.
+        // FinishLogin takes the response from the client and validates it against the user credentials and stored session data.
         expected<CredentialType>
         FinishLogin(const IUser& user, 
                     const SessionDataType& sessionData,
@@ -369,7 +369,7 @@ namespace WebAuthN::WebAuthN {
                       const SessionDataType& sessionData, 
                       const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
-            if (user.GetWebAuthNID() != sessionData.UserID) {
+            if (user.GetWebAuthNID() != sessionData.UserID.value()) {
                 return unexpected(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
 
@@ -380,9 +380,23 @@ namespace WebAuthN::WebAuthN {
             return _ValidateLogin(user, sessionData, parsedResponse);
         }
 
+        expected<CredentialType>
+        FinishDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType discoverableUserHandler, 
+                                const SessionDataType& sessionData,
+                                const std::string& response) noexcept {
+
+            auto parsedResponse = Protocol::ParseCredentialRequestResponse(response);   
+
+            if (!parsedResponse) {
+                return unexpected(parsedResponse.error());
+            }
+
+            return ValidateDiscoverableLogin(discoverableUserHandler, sessionData, parsedResponse.value());
+        }
+
         // ValidateDiscoverableLogin is an overloaded version of ValidateLogin that allows for discoverable credentials.
         expected<CredentialType>
-        ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType handler, 
+        ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType discoverableUserHandler, 
                                   const SessionDataType& sessionData, 
                                   const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
@@ -393,7 +407,7 @@ namespace WebAuthN::WebAuthN {
             if (parsedResponse.Response.UserHandle.empty()) {
                 return unexpected(ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle"));
             }
-            auto handlerResult = handler(parsedResponse.RawID, parsedResponse.Response.UserHandle);
+            auto handlerResult = discoverableUserHandler(parsedResponse.RawID, parsedResponse.Response.UserHandle);
 
             if (!handlerResult || handlerResult.value() == nullptr) {
                 return unexpected(ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
