@@ -40,8 +40,6 @@ namespace WebAuthN::Protocol {
 
         // map DeviceRecognitionVerdictType values to JSON as strings
         NLOHMANN_JSON_SERIALIZE_ENUM(DeviceRecognitionVerdictType, {
-            { DeviceRecognitionVerdictType::MeetsBasicIntegrity,                     nullptr },
-            { DeviceRecognitionVerdictType::MeetsBasicIntegrity,                          "" },
             { DeviceRecognitionVerdictType::MeetsBasicIntegrity,     "MEETS_BASIC_INTEGRITY" },
             { DeviceRecognitionVerdictType::MeetsDeviceIntegrity,   "MEETS_DEVICE_INTEGRITY" },
             { DeviceRecognitionVerdictType::MeetsStrongIntegrity,   "MEETS_STRONG_INTEGRITY" },
@@ -56,11 +54,9 @@ namespace WebAuthN::Protocol {
 
         // map AppRecognitionVerdictType values to JSON as strings
         NLOHMANN_JSON_SERIALIZE_ENUM(AppRecognitionVerdictType, {
-            { AppRecognitionVerdictType::UnrecognizedVersion,                nullptr },
-            { AppRecognitionVerdictType::UnrecognizedVersion,                     "" },
-            { AppRecognitionVerdictType::Unevaluated,                  "UNEVALUATED" },
             { AppRecognitionVerdictType::PlayRecognized,           "PLAY_RECOGNIZED" },
-            { AppRecognitionVerdictType::UnrecognizedVersion, "UNRECOGNIZED_VERSION" }
+            { AppRecognitionVerdictType::UnrecognizedVersion, "UNRECOGNIZED_VERSION" },
+            { AppRecognitionVerdictType::Unevaluated,                  "UNEVALUATED" }
         })
 
         enum class AppLicensingVerdictType {
@@ -71,11 +67,9 @@ namespace WebAuthN::Protocol {
 
         // map AppLicensingVerdictType values to JSON as strings
         NLOHMANN_JSON_SERIALIZE_ENUM(AppLicensingVerdictType, {
-            { AppLicensingVerdictType::Unevaluated,                        nullptr },
-            { AppLicensingVerdictType::Unevaluated,                             "" },
-            { AppLicensingVerdictType::Unevaluated,                  "UNEVALUATED" },
             { AppLicensingVerdictType::Licensed,                        "LICENSED" },
-            { AppLicensingVerdictType::Unlicensed,                    "UNLICENSED" }
+            { AppLicensingVerdictType::Unlicensed,                    "UNLICENSED" },
+            { AppLicensingVerdictType::Unevaluated,                  "UNEVALUATED" }
         })
 
         struct RequestDetailsType {
