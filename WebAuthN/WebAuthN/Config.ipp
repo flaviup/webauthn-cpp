@@ -26,6 +26,14 @@ namespace WebAuthN::WebAuthN {
         using Duration = std::chrono::milliseconds;
         using DurationIntegerType = Duration::rep;
 
+        TimeoutConfigType() noexcept = default;
+
+        TimeoutConfigType(const json& j) :
+            Enforce(j["enforce"].get<bool>()),
+            Timeout(Duration{j["timeout"].get<TimeoutConfigType::DurationIntegerType>()}),
+            TimeoutUVD(Duration{j["timeoutUVD"].get<TimeoutConfigType::DurationIntegerType>()}) {
+        }
+
         // Enforce the timeouts at the Relying Party / Server. This means if enabled and the user takes too long that even
         // if the browser does not enforce the timeout the Relying Party / Server will.
         bool Enforce{false};
@@ -55,6 +63,13 @@ namespace WebAuthN::WebAuthN {
     // TimeoutsConfig represents the WebAuthN timeouts configuration.
     struct TimeoutsConfigType  {
 
+        TimeoutsConfigType() noexcept = default;
+
+        TimeoutsConfigType(const json& j) :
+            Login(j["login"].get<TimeoutConfigType>()),
+            Registration(j["registration"].get<TimeoutConfigType>()) {
+        }
+
         TimeoutConfigType Login;
         TimeoutConfigType Registration;
     };
@@ -75,6 +90,20 @@ namespace WebAuthN::WebAuthN {
 
     // ConfigType represents the WebAuthN configuration.
     struct ConfigType {
+
+        ConfigType() noexcept = default;
+
+        ConfigType(const json& j) :
+            RPID(j["rpID"].get<std::string>()),
+            RPDisplayName(j["rpDisplayName"].get<std::string>()),
+            RPOrigins(j["rpOrigins"].get<std::vector<std::string>>()),
+            AttestationPreference(j["attestationPreference"].get<Protocol::ConveyancePreferenceType>()),
+            AuthenticatorSelection(j["authenticatorSelection"].get<Protocol::AuthenticatorSelectionType>()),
+            Debug(j["debug"].get<bool>()),
+            EncodeUserIDAsString(j["encodeUserIDAsString"].get<bool>()),
+            Timeouts(j["timeouts"].get<TimeoutsConfigType>()),
+            RPIcon(j["rpIcon"].get<std::string>()) {
+        }
 
         // Validate that the config flags in Config are properly set
         inline std::optional<ErrorType> Validate() const noexcept {
@@ -176,6 +205,7 @@ namespace WebAuthN::WebAuthN {
         j = json{
             { "rpID",                                     config.RPID },
             { "rpDisplayName",                   config.RPDisplayName },
+            { "rpOrigins",                           config.RPOrigins },
             { "attestationPreference",   config.AttestationPreference },
             { "authenticatorSelection", config.AuthenticatorSelection },
             { "debug",                                   config.Debug },
@@ -189,6 +219,7 @@ namespace WebAuthN::WebAuthN {
 
         j.at("rpID").get_to(config.RPID);
         j.at("rpDisplayName").get_to(config.RPDisplayName);
+        j.at("rpOrigins").get_to(config.RPOrigins);
         j.at("attestationPreference").get_to(config.AttestationPreference);
         j.at("authenticatorSelection").get_to(config.AuthenticatorSelection);
         j.at("debug").get_to(config.Debug);

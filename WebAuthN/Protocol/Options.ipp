@@ -298,7 +298,7 @@ namespace WebAuthN::Protocol {
     //
     // Specification: §5.4.4. Authenticator Selection Criteria (https://www.w3.org/TR/webauthn/#dictionary-authenticatorSelection)
     struct AuthenticatorSelectionType {
-        
+
         AuthenticatorSelectionType() noexcept = default;
 
         AuthenticatorSelectionType(const std::optional<AuthenticatorAttachmentType>& authenticatorAttachment,
