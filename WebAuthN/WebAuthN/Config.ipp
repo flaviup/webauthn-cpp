@@ -18,18 +18,39 @@
 
 namespace WebAuthN::WebAuthN {
 
+    using json = nlohmann::json;
+
     // TimeoutConfigType represents the WebAuthN timeouts configuration for either registration or login.
     struct TimeoutConfigType {
+        
+        using Duration = std::chrono::milliseconds;
+        using DurationIntegerType = Duration::rep;
 
         // Enforce the timeouts at the Relying Party / Server. This means if enabled and the user takes too long that even
         // if the browser does not enforce the timeout the Relying Party / Server will.
-        bool Enforce;
+        bool Enforce{false};
         // Timeout is the timeout for logins/registrations when the UserVerificationRequirement is set to anything other
         // than discouraged.
-        std::chrono::milliseconds Timeout;
+        Duration Timeout;
         // TimeoutUVD is the timeout for logins/registrations when the UserVerificationRequirement is set to discouraged.
-        std::chrono::milliseconds TimeoutUVD;
+        Duration TimeoutUVD;
     };
+
+    inline void to_json(json& j, const TimeoutConfigType& timeoutConfig) {
+
+        j = json{
+            { "enforce",               timeoutConfig.Enforce },
+            { "timeout",       timeoutConfig.Timeout.count() },
+            { "timeoutUVD", timeoutConfig.TimeoutUVD.count() }
+        };
+    }
+
+    inline void from_json(const json& j, TimeoutConfigType& timeoutConfig) {
+
+        j.at("enforce").get_to(timeoutConfig.Enforce);
+        timeoutConfig.Timeout = TimeoutConfigType::Duration{j["timeout"].get<TimeoutConfigType::DurationIntegerType>()};
+        timeoutConfig.TimeoutUVD = TimeoutConfigType::Duration{j["timeoutUVD"].get<TimeoutConfigType::DurationIntegerType>()};
+    }
 
     // TimeoutsConfig represents the WebAuthN timeouts configuration.
     struct TimeoutsConfigType  {
@@ -37,6 +58,20 @@ namespace WebAuthN::WebAuthN {
         TimeoutConfigType Login;
         TimeoutConfigType Registration;
     };
+
+    inline void to_json(json& j, const TimeoutsConfigType& timeoutsConfig) {
+
+        j = json{
+            { "login",               timeoutsConfig.Login },
+            { "registration", timeoutsConfig.Registration }
+        };
+    }
+
+    inline void from_json(const json& j, TimeoutsConfigType& timeoutsConfig) {
+
+        j.at("login").get_to(timeoutsConfig.Login);
+        j.at("registration").get_to(timeoutsConfig.Registration);
+    }
 
     // ConfigType represents the WebAuthN configuration.
     struct ConfigType {
@@ -101,10 +136,19 @@ namespace WebAuthN::WebAuthN {
             return std::nullopt;
         }
 
+        static inline ConfigType Load(const std::string& configFilePath) noexcept {
+
+            std::ifstream cfgFileStream(configFilePath);
+            json j;
+            cfgFileStream >> j;
+
+            return ConfigType{j};
+        }
+
         // RPID configures the Relying Party Server ID. This should generally be the origin without a scheme and port.
         std::string RPID;
         // RPDisplayName configures the display name for the Relying Party Server. This can be any string.
-        std::string  RPDisplayName;
+        std::string RPDisplayName;
         // RPOrigins configures the list of Relying Party Server Origins that are permitted. These should be fully
         // qualified origins.
         std::vector<std::string> RPOrigins;
@@ -113,19 +157,45 @@ namespace WebAuthN::WebAuthN {
         // AuthenticatorSelection sets the default authenticator selection options.
         mutable Protocol::AuthenticatorSelectionType AuthenticatorSelection;
         // Debug enables various debug options.
-        bool Debug;
+        bool Debug{false};
         // EncodeUserIDAsString ensures the user.id value during registrations is encoded as a raw UTF8 string. This is
         // useful when you only use printable ASCII characters for the random user.id but the browser library does not
         // decode the URL Safe Base64 data.
-        bool EncodeUserIDAsString;
+        bool EncodeUserIDAsString{false};
         // Timeouts configures various timeouts.
         mutable TimeoutsConfigType Timeouts;
-        mutable bool Validated;
+        mutable bool Validated{false};
         // RPIcon sets the icon URL for the Relying Party Server.
         //
         // Deprecated: this option has been removed from newer specifications due to security considerations.
         std::string RPIcon;
     };
+
+    inline void to_json(json& j, const ConfigType& config) {
+
+        j = json{
+            { "rpID",                                     config.RPID },
+            { "rpDisplayName",                   config.RPDisplayName },
+            { "attestationPreference",   config.AttestationPreference },
+            { "authenticatorSelection", config.AuthenticatorSelection },
+            { "debug",                                   config.Debug },
+            { "encodeUserIDAsString",     config.EncodeUserIDAsString },
+            { "timeouts",                             config.Timeouts },
+            { "rpIcon",                                 config.RPIcon }
+        };
+    }
+
+    inline void from_json(const json& j, ConfigType& config) {
+
+        j.at("rpID").get_to(config.RPID);
+        j.at("rpDisplayName").get_to(config.RPDisplayName);
+        j.at("attestationPreference").get_to(config.AttestationPreference);
+        j.at("authenticatorSelection").get_to(config.AuthenticatorSelection);
+        j.at("debug").get_to(config.Debug);
+        j.at("encodeUserIDAsString").get_to(config.EncodeUserIDAsString);
+        j.at("timeouts").get_to(config.Timeouts);
+        j.at("rpIcon").get_to(config.RPIcon);
+    }
 } // namespace WebAuthN::WebAuthN
 
 #pragma GCC visibility pop
