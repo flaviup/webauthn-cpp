@@ -46,18 +46,18 @@ namespace WebAuthN::WebAuthN {
         // Create will return a credential on successful validation of a registration response.
         inline static CredentialType Create(const Protocol::ParsedCredentialCreationDataType& c) noexcept {
 
-            return CredentialType{
+            return {
                 .ID              = c.Response.AttestationObject.AuthData.AttData.CredentialID,
                 .PublicKey       = c.Response.AttestationObject.AuthData.AttData.CredentialPublicKey,
                 .AttestationType = c.Response.AttestationObject.Format,
                 .Transports      = c.Response.Transports,
-                .Flags           = CredentialFlagsType{
+                .Flags           = {
                     .UserPresent    = Protocol::HasUserPresent(c.Response.AttestationObject.AuthData.Flags),
                     .UserVerified   = Protocol::HasUserVerified(c.Response.AttestationObject.AuthData.Flags),
                     .BackupEligible = Protocol::HasBackupEligible(c.Response.AttestationObject.AuthData.Flags),
                     .BackupState    = Protocol::HasBackupState(c.Response.AttestationObject.AuthData.Flags)
                 },
-                .Authenticator   = AuthenticatorType{
+                .Authenticator   = {
                     .AAGUID      = c.Response.AttestationObject.AuthData.AttData.AAGUID,
                     .SignCount   = c.Response.AttestationObject.AuthData.Counter,
                     .Attachment  = c.AuthenticatorAttachment

@@ -92,6 +92,24 @@ namespace WebAuthN::WebAuthN {
     struct ConfigType {
 
         ConfigType() noexcept = default;
+        
+        ConfigType(const std::string& rpID,
+                   const std::string& rpDisplayName,
+                   const std::vector<std::string>& rpOrigins,
+                   Protocol::ConveyancePreferenceType attestationPreference = Protocol::ConveyancePreferenceType::IndirectAttestation,
+                   const Protocol::AuthenticatorSelectionType& authenticatorSelection = Protocol::AuthenticatorSelectionType{},
+                   bool debug = false,
+                   bool encodeUserIDAsString = false,
+                   const TimeoutsConfigType& timeouts = TimeoutsConfigType{}) noexcept :
+            RPID(rpID),
+            RPDisplayName(rpDisplayName),
+            RPOrigins(rpOrigins),
+            AttestationPreference(attestationPreference),
+            AuthenticatorSelection(authenticatorSelection),
+            Debug(debug),
+            EncodeUserIDAsString(encodeUserIDAsString),
+            Timeouts(timeouts) {
+        }
 
         ConfigType(const json& j) :
             RPID(j["rpID"].get<std::string>()),

@@ -114,26 +114,13 @@ std::string loadTextFromFile(const std::string& filePath) {
 int main(int argc, const char * argv[]) {
 
     // Configuration object
-    /*WebAuthN::WebAuthN::ConfigType cfg{
-        .RPID = "northern-subsequent-stock.glitch.me", //"github.github.com", // change this
-        .RPDisplayName = "testweb",
-        .RPOrigins = { "https://northern-subsequent-stock.glitch.me", "android:apk-key-hash:" }, //{ "https://github.github.com" }, // change this
-        .Debug = true,
-        .AttestationPreference = WebAuthN::Protocol::ConveyancePreferenceType::IndirectAttestation
-    };*/
-    /*WebAuthN::WebAuthN::ConfigType cfg{
-        .RPID = "successful-foil-olive.glitch.me", //"github.github.com", // change this
-        .RPDisplayName = "testweb",
-        .RPOrigins = { "https://successful-foil-olive.glitch.me", "android:apk-key-hash:" }, //{ "https://github.github.com" }, // change this
-        .Debug = true,
-        .AttestationPreference = WebAuthN::Protocol::ConveyancePreferenceType::IndirectAttestation
-    };*/
     WebAuthN::WebAuthN::ConfigType cfg{
-        .RPID = "github.github.com", // change this
-        .RPDisplayName = "testweb",
-        .RPOrigins = { "https://github.github.com" }, // change this
-        .Debug = true,
-        .AttestationPreference = WebAuthN::Protocol::ConveyancePreferenceType::IndirectAttestation
+        "github.github.com", // rpID, change this
+        "testweb", // rpDisplayName
+        { "https://github.github.com" }, // rpOrigins, change this
+        WebAuthN::Protocol::ConveyancePreferenceType::IndirectAttestation, // attestationPreference
+        WebAuthN::Protocol::AuthenticatorSelectionType{}, // authenticatorSelection
+        true // debug
     };
 
     // Create WebAuthN object
