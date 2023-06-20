@@ -80,8 +80,8 @@ namespace WebAuthN::WebAuthN {
         std::optional<std::string> UserName;
         std::optional<std::string> UserDisplayName;
         std::optional<std::vector<std::vector<uint8_t>>> AllowedCredentialIDs;
-        int64_t Expires;
-        Protocol::UserVerificationRequirementType UserVerification;
+        int64_t Expires{0};
+        Protocol::UserVerificationRequirementType UserVerification{};
         std::optional<Protocol::AuthenticationExtensionsType> Extensions;
     };
 

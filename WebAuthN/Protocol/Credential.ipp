@@ -184,7 +184,7 @@ namespace WebAuthN::Protocol {
         GetAppID(const std::optional<AuthenticationExtensionsType>& authExt, 
                  const std::string& credentialAttestationType) const noexcept {
 
-            bool enableAppID = false;
+            bool enableAppID{false};
 
             if (!authExt || authExt.value().empty() || !ClientExtensionResults || ClientExtensionResults.value().empty()) {
                 return "";

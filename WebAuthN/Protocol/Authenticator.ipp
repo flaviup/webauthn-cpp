@@ -517,8 +517,8 @@ namespace WebAuthN::Protocol {
         }
 
         std::vector<uint8_t> RPIDHash;
-        AuthenticatorFlagsType Flags;
-        uint32_t Counter;
+        AuthenticatorFlagsType Flags{};
+        uint32_t Counter{0};
         AttestedCredentialDataType AttData;
         std::vector<uint8_t> ExtData;
 

@@ -53,12 +53,12 @@ namespace WebAuthN::Protocol {
             SafetyNetResponseType& operator =(SafetyNetResponseType&& other) noexcept = default;
 
             Util::Base64EncodedType Nonce;
-            int64_t TimestampMs;
+            int64_t TimestampMs{0};
             std::string ApkPackageName;
             std::string ApkDigestSha256;
-            bool CtsProfileMatch;
+            bool CtsProfileMatch{false};
             std::vector<json> ApkCertificateDigestSha256;
-            bool BasicIntegrity;
+            bool BasicIntegrity{false};
         };
 
         static inline void to_json(json& j, const SafetyNetResponseType& safetyNetResponse) {

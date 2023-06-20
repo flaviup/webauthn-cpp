@@ -35,7 +35,7 @@ namespace WebAuthN::Util::TPM {
     struct RSAParametersType {
 
         std::vector<uint8_t> ModulusRaw;
-        uint32_t             Exponent;
+        uint32_t             Exponent{0};
     };
 
     struct PublicAreaInfoType {

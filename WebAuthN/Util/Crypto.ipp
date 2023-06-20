@@ -135,7 +135,7 @@ namespace WebAuthN::Util::Crypto {
 
             std::string ID;
             std::vector<uint8_t> Value;
-            bool IsCritical;
+            bool IsCritical{false};
         };
 
         std::vector<ExtensionType> Extensions;
@@ -145,8 +145,8 @@ namespace WebAuthN::Util::Crypto {
         std::string NotBefore;
         std::string NotAfter;
 
-        long Version;
-        bool IsCA;
+        long Version{0};
+        bool IsCA{false};
     };
 
 #pragma GCC visibility push(hidden)
@@ -384,7 +384,7 @@ namespace WebAuthN::Util::Crypto {
             parsedCertificate.Subject.CommonName = commonNameResult ? commonNameResult.value() : "";
         }
         auto extensions = X509_get0_extensions(certificate);
-        int extCount{};
+        int extCount{0};
         extCount = (extensions != nullptr) ? sk_X509_EXTENSION_num(extensions) : 0;
 
         if (extCount < 0) {

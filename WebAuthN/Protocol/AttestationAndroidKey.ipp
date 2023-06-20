@@ -75,8 +75,8 @@ namespace WebAuthN::Protocol {
         struct RootOfTrustType {
 
             std::vector<uint8_t> VerifiedBootKey;
-            bool DeviceLocked;
-            VerifiedBootStateType VerifiedBootState;
+            bool DeviceLocked{false};
+            VerifiedBootStateType VerifiedBootState{};
             std::vector<uint8_t> VerifiedBootHash;
         };
 
@@ -92,7 +92,7 @@ namespace WebAuthN::Protocol {
         struct AttestationPackageInfoType {
 
             std::string PackageName;
-            int64_t Version;
+            int64_t Version{0};
         };
 
         /**
@@ -153,53 +153,53 @@ namespace WebAuthN::Protocol {
             static inline constexpr auto DEVICE_UNIQUE_ATTESTATION_TAG      = 720;
             static inline constexpr auto IDENTITY_CREDENTIAL_KEY_TAG        = 721;
 
-            std::optional<KmPurposeType>                Purpose;                     // `asn1:"tag:1,explicit,set,optional"`
-            std::optional<int32_t>                      Algorithm;                   // `asn1:"tag:2,explicit,optional"`
-            std::optional<int32_t>                      KeySize;                     // `asn1:"tag:3,explicit,optional"`
-            std::optional<std::set<int32_t>>            Digest;                      // `asn1:"tag:5,explicit,set,optional"`
-            std::optional<std::set<int32_t>>            Padding;                     // `asn1:"tag:6,explicit,set,optional"`
-            std::optional<int32_t>                      EcCurve;                     // `asn1:"tag:10,explicit,optional"`
-            std::optional<int64_t>                      RsaPublicExponent;           // `asn1:"tag:200,explicit,optional"`
-            bool                                        RollbackResistance;          // `asn1:"tag:303,explicit"`
-            std::optional<int32_t>                      ActiveDateTime;              // `asn1:"tag:400,explicit,optional"`
-            std::optional<int32_t>                      OriginationExpireDateTime;   // `asn1:"tag:401,explicit,optional"`
-            std::optional<int32_t>                      UsageExpireDateTime;         // `asn1:"tag:402,explicit,optional"`
-            bool                                        NoAuthRequired;              // `asn1:"tag:503,explicit"`
-            std::optional<UserAuthType>                 UserAuthType;                // `asn1:"tag:504,explicit,optional"`
-            std::optional<int32_t>                      AuthTimeout;                 // `asn1:"tag:505,explicit,optional"`
-            bool                                        AllowWhileOnBody;            // `asn1:"tag:506,explicit"`
-            bool                                        TrustedUserPresenceRequired; // `asn1:"tag:507,explicit"`
-            bool                                        TrustedConfirmationRequired; // `asn1:"tag:508,explicit"`
-            bool                                        UnlockedDeviceRequired;      // `asn1:"tag:509,explicit"`
-            bool                                        AllApplications;             // `asn1:"tag:600,explicit"`
-            std::optional<std::vector<uint8_t>>         ApplicationID;               // `asn1:"tag:601,explicit,optional"`
-            std::optional<int64_t>                      CreationDateTime;            // `asn1:"tag:701,explicit,optional"`
-            std::optional<KmKeyOriginType>              Origin;                      // `asn1:"tag:702,explicit,optional"`
-            bool                                        RollbackResistant;           // `asn1:"tag:703,explicit"`
-            std::optional<RootOfTrustType>              RootOfTrust;                 // `asn1:"tag:704,explicit,optional"`
-            std::optional<int32_t>                      OsVersion;                   // `asn1:"tag:705,explicit,optional"`
-            std::optional<int32_t>                      OsPatchLevel;                // `asn1:"tag:706,explicit,optional"`
-            std::optional<AttestationApplicationIDType> AttestationApplicationID;    // `asn1:"tag:709,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDBrand;          // `asn1:"tag:710,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDDevice;         // `asn1:"tag:711,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDProduct;        // `asn1:"tag:712,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDSerial;         // `asn1:"tag:713,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDImei;           // `asn1:"tag:714,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDMeid;           // `asn1:"tag:715,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDManufacturer;   // `asn1:"tag:716,explicit,optional"`
-            std::optional<std::vector<uint8_t>>         AttestationIDModel;          // `asn1:"tag:717,explicit,optional"`
-            std::optional<int32_t>                      VendorPatchLevel;            // `asn1:"tag:718,explicit,optional"`
-            std::optional<int32_t>                      BootPatchLevel;              // `asn1:"tag:719,explicit,optional"`
-            bool                                        DeviceUniqueAttestation;     // `asn1:"tag:720,explicit"`
-            bool                                        IdentityCredentialKey;       // `asn1:"tag:721,explicit"`
+            std::optional<KmPurposeType>                Purpose;                            // `asn1:"tag:1,explicit,set,optional"`
+            std::optional<int32_t>                      Algorithm;                          // `asn1:"tag:2,explicit,optional"`
+            std::optional<int32_t>                      KeySize;                            // `asn1:"tag:3,explicit,optional"`
+            std::optional<std::set<int32_t>>            Digest;                             // `asn1:"tag:5,explicit,set,optional"`
+            std::optional<std::set<int32_t>>            Padding;                            // `asn1:"tag:6,explicit,set,optional"`
+            std::optional<int32_t>                      EcCurve;                            // `asn1:"tag:10,explicit,optional"`
+            std::optional<int64_t>                      RsaPublicExponent;                  // `asn1:"tag:200,explicit,optional"`
+            bool                                        RollbackResistance{false};          // `asn1:"tag:303,explicit"`
+            std::optional<int32_t>                      ActiveDateTime;                     // `asn1:"tag:400,explicit,optional"`
+            std::optional<int32_t>                      OriginationExpireDateTime;          // `asn1:"tag:401,explicit,optional"`
+            std::optional<int32_t>                      UsageExpireDateTime;                // `asn1:"tag:402,explicit,optional"`
+            bool                                        NoAuthRequired{false};              // `asn1:"tag:503,explicit"`
+            std::optional<UserAuthType>                 UserAuthType{};                     // `asn1:"tag:504,explicit,optional"`
+            std::optional<int32_t>                      AuthTimeout;                        // `asn1:"tag:505,explicit,optional"`
+            bool                                        AllowWhileOnBody{false};            // `asn1:"tag:506,explicit"`
+            bool                                        TrustedUserPresenceRequired{false}; // `asn1:"tag:507,explicit"`
+            bool                                        TrustedConfirmationRequired{false}; // `asn1:"tag:508,explicit"`
+            bool                                        UnlockedDeviceRequired{false};      // `asn1:"tag:509,explicit"`
+            bool                                        AllApplications{false};             // `asn1:"tag:600,explicit"`
+            std::optional<std::vector<uint8_t>>         ApplicationID;                      // `asn1:"tag:601,explicit,optional"`
+            std::optional<int64_t>                      CreationDateTime;                   // `asn1:"tag:701,explicit,optional"`
+            std::optional<KmKeyOriginType>              Origin;                             // `asn1:"tag:702,explicit,optional"`
+            bool                                        RollbackResistant{false};           // `asn1:"tag:703,explicit"`
+            std::optional<RootOfTrustType>              RootOfTrust;                        // `asn1:"tag:704,explicit,optional"`
+            std::optional<int32_t>                      OsVersion;                          // `asn1:"tag:705,explicit,optional"`
+            std::optional<int32_t>                      OsPatchLevel;                       // `asn1:"tag:706,explicit,optional"`
+            std::optional<AttestationApplicationIDType> AttestationApplicationID;           // `asn1:"tag:709,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDBrand;                 // `asn1:"tag:710,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDDevice;                // `asn1:"tag:711,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDProduct;               // `asn1:"tag:712,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDSerial;                // `asn1:"tag:713,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDImei;                  // `asn1:"tag:714,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDMeid;                  // `asn1:"tag:715,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDManufacturer;          // `asn1:"tag:716,explicit,optional"`
+            std::optional<std::vector<uint8_t>>         AttestationIDModel;                 // `asn1:"tag:717,explicit,optional"`
+            std::optional<int32_t>                      VendorPatchLevel;                   // `asn1:"tag:718,explicit,optional"`
+            std::optional<int32_t>                      BootPatchLevel;                     // `asn1:"tag:719,explicit,optional"`
+            bool                                        DeviceUniqueAttestation{false};     // `asn1:"tag:720,explicit"`
+            bool                                        IdentityCredentialKey{false};       // `asn1:"tag:721,explicit"`
         };
 
         struct KeyDescriptionType {
 
-            int32_t               AttestationVersion;
-            SecurityLevelType     AttestationSecurityLevel;
-            int32_t               KeymasterVersion;
-            SecurityLevelType     KeymasterSecurityLevel;
+            int32_t               AttestationVersion{0};
+            SecurityLevelType     AttestationSecurityLevel{};
+            int32_t               KeymasterVersion{0};
+            SecurityLevelType     KeymasterSecurityLevel{};
             std::vector<uint8_t>  AttestationChallenge;
             std::vector<uint8_t>  UniqueID;
             AuthorizationListType SoftwareEnforced;

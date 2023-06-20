@@ -82,7 +82,7 @@ namespace WebAuthN::Protocol {
             Util::URLEncodedBase64Type Nonce;
             // The timestamp in milliseconds when the request was made
             // (computed on the server).
-            int64_t TimestampMillis;
+            int64_t TimestampMillis{0};
         };
 
         static inline void to_json(json& j, const RequestDetailsType& requestDetails) {
@@ -103,7 +103,7 @@ namespace WebAuthN::Protocol {
 
         struct AppIntegrityType {
 
-            AppRecognitionVerdictType AppRecognitionVerdict;
+            AppRecognitionVerdictType AppRecognitionVerdict{};
             // The package name of the app.
             // This field is populated iff AppRecognitionVerdict != Unevaluated.
             std::string PackageName;
@@ -112,7 +112,7 @@ namespace WebAuthN::Protocol {
             std::vector<json> CertificateSha256Digest;
             // The version of the app.
             // This field is populated iff AppRecognitionVerdict != Unevaluated.
-            int64_t VersionCode;
+            int64_t VersionCode{0};
         };
 
         static inline void to_json(json& j, const AppIntegrityType& appIntegrity) {
@@ -152,7 +152,7 @@ namespace WebAuthN::Protocol {
 
         struct AccountDetailsType {
 
-            AppLicensingVerdictType AppLicensingVerdict;
+            AppLicensingVerdictType AppLicensingVerdict{};
         };
 
         static inline void to_json(json& j, const AccountDetailsType& accountDetails) {

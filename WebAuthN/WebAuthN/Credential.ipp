@@ -19,14 +19,14 @@ namespace WebAuthN::WebAuthN {
     struct CredentialFlagsType {
 
         // Flag UP indicates the users presence.
-        bool UserPresent;
+        bool UserPresent{false};
         // Flag UV indicates the user performed verification.
-        bool UserVerified;
+        bool UserVerified{false};
         // Flag BE indicates the credential is able to be backed up and/or sync'd between devices. This should NEVER change.
-        bool BackupEligible;
+        bool BackupEligible{false};
         // Flag BS indicates the credential has been backed up and/or sync'd. This value can change but it's recommended
         // that RP's keep track of this value.
-        bool BackupState;
+        bool BackupState{false};
     };
 
     // CredentialType contains all needed information about a WebAuthn credential for storage.

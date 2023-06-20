@@ -38,7 +38,7 @@ namespace WebAuthN::Util::Time {
         const auto count = std::count(dateTime.cbegin(), dateTime.cend(), ':');
         int year{0}, month{0}, day{0}, hour{0}, minute{0};
         float second{0};
-        int result = 0;
+        int result{0};
 
         if (count > 2) {
 

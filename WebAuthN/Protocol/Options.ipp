@@ -196,8 +196,8 @@ namespace WebAuthN::Protocol {
         CredentialParameterType& operator =(const CredentialParameterType& other) noexcept = default;
         CredentialParameterType& operator =(CredentialParameterType&& other) noexcept = default;
 
-        CredentialTypeType Type;
-        WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
+        CredentialTypeType Type{};
+        WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm{};
     };
 
     inline void to_json(json& j, const CredentialParameterType& credentialParameter) {
@@ -255,7 +255,7 @@ namespace WebAuthN::Protocol {
         CredentialDescriptorType& operator =(CredentialDescriptorType&& other) noexcept = default;
 
         // The valid credential types.
-        CredentialTypeType Type;
+        CredentialTypeType Type{};
 
         // CredentialID The ID of a credential to allow/disallow.
         std::vector<uint8_t> CredentialID;
@@ -759,7 +759,7 @@ namespace WebAuthN::Protocol {
         ServerResponseType& operator =(const ServerResponseType& other) noexcept = default;
         ServerResponseType& operator =(ServerResponseType&& other) noexcept = default;
 
-        ServerResponseStatusType Status;
+        ServerResponseStatusType Status{};
         std::string Message;
     };
 

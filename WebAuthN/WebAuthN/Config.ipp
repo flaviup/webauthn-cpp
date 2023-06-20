@@ -9,6 +9,7 @@
 #ifndef WEBAUTHN_WEBAUTHN_CONFIG_IPP
 #define WEBAUTHN_WEBAUTHN_CONFIG_IPP
 
+#include <fstream>
 #include <fmt/format.h>
 #include "Consts.ipp"
 #include "../Protocol/Options.ipp"
@@ -39,9 +40,9 @@ namespace WebAuthN::WebAuthN {
         bool Enforce{false};
         // Timeout is the timeout for logins/registrations when the UserVerificationRequirement is set to anything other
         // than discouraged.
-        Duration Timeout;
+        Duration Timeout{};
         // TimeoutUVD is the timeout for logins/registrations when the UserVerificationRequirement is set to discouraged.
-        Duration TimeoutUVD;
+        Duration TimeoutUVD{};
     };
 
     inline void to_json(json& j, const TimeoutConfigType& timeoutConfig) {
@@ -200,7 +201,7 @@ namespace WebAuthN::WebAuthN {
         // qualified origins.
         std::vector<std::string> RPOrigins;
         // AttestationPreference sets the default attestation conveyance preferences.
-        Protocol::ConveyancePreferenceType AttestationPreference;
+        Protocol::ConveyancePreferenceType AttestationPreference{};
         // AuthenticatorSelection sets the default authenticator selection options.
         mutable Protocol::AuthenticatorSelectionType AuthenticatorSelection;
         // Debug enables various debug options.

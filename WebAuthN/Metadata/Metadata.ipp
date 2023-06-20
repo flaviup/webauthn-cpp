@@ -249,9 +249,9 @@ namespace WebAuthN::Metadata {
     // TODO: this goes away after WebAuthNCOSE::CredentialPublicKey gets implemented
 /*    struct AlgKeyCose {
         
-        WebAuthNCOSE::COSEKeyType KeyType;
-        WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm;
-        WebAuthNCOSE::COSEEllipticCurveType Curve;
+        WebAuthNCOSE::COSEKeyType KeyType{};
+        WebAuthNCOSE::COSEAlgorithmIdentifierType Algorithm{};
+        WebAuthNCOSE::COSEEllipticCurveType Curve{};
 
         constexpr auto operator <=>(const AlgKeyCose&) const noexcept = default;
     };
@@ -326,7 +326,7 @@ namespace WebAuthN::Metadata {
         PublicKeyCredentialParametersType& operator =(PublicKeyCredentialParametersType&& other) noexcept = default;
 
         std::string Type;
-        WebAuthNCOSE::COSEAlgorithmIdentifierType Alg;
+        WebAuthNCOSE::COSEAlgorithmIdentifierType Alg{};
     };
 
     inline void to_json(json& j, const PublicKeyCredentialParametersType& publicKeyCredentialParameters) {
@@ -709,9 +709,9 @@ namespace WebAuthN::Metadata {
         CodeAccuracyDescriptorType& operator =(CodeAccuracyDescriptorType&& other) noexcept = default;
 
         // The numeric system base (radix) of the code, e.g. 10 in the case of decimal digits.
-        uint16_t Base;
+        uint16_t Base{0};
         // The minimum number of digits of the given base required for that code, e.g. 4 in the case of 4 digits.
-        uint16_t MinLength;
+        uint16_t MinLength{0};
         // Maximum number of false attempts before the authenticator will block this method (at least for some time). 0 means it will never block.
         std::optional<uint16_t> MaxRetries;
         // Enforced minimum number of seconds wait time after blocking (e.g. due to forced reboot or similar).
@@ -872,7 +872,7 @@ namespace WebAuthN::Metadata {
         PatternAccuracyDescriptorType& operator =(PatternAccuracyDescriptorType&& other) noexcept = default;
 
         // Number of possible patterns (having the minimum length) out of which exactly one would be the right one, i.e. 1/probability in the case of equal distribution.
-        uint32_t MinComplexity;
+        uint32_t MinComplexity{0};
         // Maximum number of false attempts before the authenticator will block authentication using this method (at least temporarily). 0 means it will never block.
         std::optional<uint16_t> MaxRetries;
         // Enforced minimum number of seconds wait time after blocking (due to forced reboot or similar mechanism).
@@ -1009,11 +1009,11 @@ namespace WebAuthN::Metadata {
         RGBPaletteEntryType& operator =(RGBPaletteEntryType&& other) noexcept = default;
 
         // Red channel sample value
-        uint16_t R;
+        uint16_t R{0};
         // Green channel sample value
-        uint16_t G;
+        uint16_t G{0};
         // Blue channel sample value
-        uint16_t B;
+        uint16_t B{0};
     };
 
     inline void to_json(json& j, const RGBPaletteEntryType& rgbPaletteEntry) {
@@ -1059,19 +1059,19 @@ namespace WebAuthN::Metadata {
         DisplayPNGCharacteristicsDescriptorType& operator =(DisplayPNGCharacteristicsDescriptorType&& other) noexcept = default;
 
         // image width
-        uint32_t Width;
+        uint32_t Width{0};
         // image height
-        uint32_t Height;
+        uint32_t Height{0};
         // Bit depth - bits per sample or per palette index.
-        uint8_t BitDepth;
+        uint8_t BitDepth{0};
         // Color type defines the PNG image type.
-        uint8_t ColorType;
+        uint8_t ColorType{0};
         // Compression method used to compress the image data.
-        uint8_t Compression;
+        uint8_t Compression{0};
         // Filter method is the preprocessing method applied to the image data before compression.
-        uint8_t Filter;
+        uint8_t Filter{0};
         // Interlace method is the transmission order of the image data.
-        uint8_t Interlace;
+        uint8_t Interlace{0};
         // 1 to 256 palette entries
         std::optional<std::vector<RGBPaletteEntryType>> Plte;
     };
@@ -1197,7 +1197,7 @@ namespace WebAuthN::Metadata {
         // Contains arbitrary data further describing the extension and/or data needed to correctly process the extension.
         std::optional<std::string> Data;
         // Indicates whether unknown extensions must be ignored (false) or must lead to an error (true) when the extension is to be processed by the FIDO Server, FIDO Client, ASM, or FIDO Authenticator.
-        bool FailIfUnknown;
+        bool FailIfUnknown{false};
     };
 
     inline void to_json(json& j, const ExtensionDescriptorType& extensionDescriptor) {
@@ -1249,9 +1249,9 @@ namespace WebAuthN::Metadata {
         VersionType& operator =(VersionType&& other) noexcept = default;
 
         // Major version.
-        uint16_t Major;
+        uint16_t Major{0};
         // Minor version.
-        uint16_t Minor;
+        uint16_t Minor{0};
     };
 
     inline void to_json(json& j, const VersionType& version) {
@@ -1369,12 +1369,12 @@ namespace WebAuthN::Metadata {
         // A list of human-readable short descriptions of the authenticator in different languages.
         std::optional<std::map<std::string, std::string>> AlternativeDescriptions;
         // Earliest (i.e. lowest) trustworthy authenticatorVersion meeting the requirements specified in this metadata statement.
-        uint32_t AuthenticatorVersion;
+        uint32_t AuthenticatorVersion{0};
         // The FIDO protocol family. The values "uaf", "u2f", and "fido2" are supported.
         std::string ProtocolFamily;
         // The FIDO Metadata Schema version
         // Metadata schema version defines what schema of the metadata statement is currently present.
-        uint16_t Schema;
+        uint16_t Schema{0};
         // The FIDO unified protocol version(s) (related to the specific protocol family) supported by this authenticator.
         std::vector<VersionType> Upv;
         // The list of authentication algorithms supported by the authenticator.
@@ -1619,7 +1619,7 @@ namespace WebAuthN::Metadata {
         BiometricStatusReportType& operator =(BiometricStatusReportType&& other) noexcept = default;
 
         // Achieved level of the biometric certification of this biometric component of the authenticator
-        uint16_t CertLevel;
+        uint16_t CertLevel{0};
         // A single USER_VERIFY constant indicating the modality of the biometric component
         std::string Modality;
         // ISO-8601 formatted date since when the certLevel achieved, if applicable. If no date is given, the status is assumed to be effective while present.

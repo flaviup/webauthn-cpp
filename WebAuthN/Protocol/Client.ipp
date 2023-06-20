@@ -80,7 +80,7 @@ namespace WebAuthN::Protocol {
         TokenBindingType& operator =(const TokenBindingType& other) noexcept = default;
         TokenBindingType& operator =(TokenBindingType&& other) noexcept = default;
 
-        TokenBindingStatusType Status;
+        TokenBindingStatusType Status{};
         std::optional<std::string> ID;
     };
 
@@ -217,7 +217,7 @@ namespace WebAuthN::Protocol {
         // and "webauthn.get" when getting an assertion from an existing credential. The
         // purpose of this member is to prevent certain types of signature confusion attacks
         // (where an attacker substitutes one legitimate signature for another).
-        CeremonyType Type;
+        CeremonyType Type{};
         std::string Challenge;
         std::string Origin;
         std::optional<bool> CrossOrigin;

@@ -303,10 +303,10 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
     inline constexpr HasherHandlerType DEFAULT_HASHER = Util::Crypto::SHA256;
 
     inline const struct {
-        SignatureAlgorithmType Algo;
-        COSEAlgorithmIdentifierType COSEAlg;
+        SignatureAlgorithmType Algo{};
+        COSEAlgorithmIdentifierType COSEAlg{};
         std::string Name;
-        HasherHandlerType Hasher;
+        HasherHandlerType Hasher{nullptr};
     } SIGNATURE_ALGORITHM_DETAILS[] {
         { SignatureAlgorithmType::SHA1WithRSA,                 COSEAlgorithmIdentifierType::AlgRS1,      "SHA1-RSA"s,   Util::Crypto::SHA1 },
         { SignatureAlgorithmType::SHA256WithRSA,             COSEAlgorithmIdentifierType::AlgRS256,    "SHA256-RSA"s, Util::Crypto::SHA256 },
@@ -379,11 +379,11 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
         }
 
         // Decode the results to int by default.
-        bool _struct;      // cbor:",keyasint"
+        bool _struct{false};      // cbor:",keyasint"
         // The type of key created. Should be OKP, EC2, or RSA.
-        int64_t KeyType;   // cbor:"1,keyasint"
+        int64_t KeyType{0};   // cbor:"1,keyasint"
         // A COSEAlgorithmIdentifier for the algorithm used to derive the key signature.
-        int64_t Algorithm; // cbor:"3,keyasint"
+        int64_t Algorithm{0}; // cbor:"3,keyasint"
     };
 
     inline void to_json(json& j, const PublicKeyDataType& publicKeyData) {
@@ -921,7 +921,7 @@ namespace WebAuthN::Protocol::WebAuthNCOSE {
             }
         }
 
-        int64_t Curve;
+        int64_t Curve{0};
         // A byte string that holds the x coordinate of the key.
         std::optional<std::vector<uint8_t>> XCoord; // cbor:"-2,keyasint,omitempty"
     };
