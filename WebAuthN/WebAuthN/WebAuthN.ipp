@@ -64,7 +64,7 @@ namespace WebAuthN::WebAuthN {
                                 OPENSSL_INIT_ENGINE_AFALG, nullptr);
             auto sodiumInit = sodium_init();
 
-            if (sodiumInit != 0) {
+            if (sodiumInit < 0) {
                 return unexpected(fmt::format("Could not initialize sodium: error {}", sodiumInit));
             }
 
