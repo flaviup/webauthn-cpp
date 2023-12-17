@@ -425,7 +425,7 @@ namespace WebAuthN::Protocol {
             if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
                 return MakeOptionalError(ErrBadRequest().WithDetails("Authenticator data length too short")
                                                         .WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes",
-                                                                  MIN_AUTH_DATA_LENGTH, rawAuthData.size())));
+                                                                              MIN_AUTH_DATA_LENGTH, rawAuthData.size())));
             }
 
             RPIDHash = std::vector<uint8_t>(rawAuthData.cbegin(), rawAuthData.cbegin() + 32);
@@ -485,8 +485,8 @@ namespace WebAuthN::Protocol {
             // hash of the RP ID expected by the RP.
             if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
                 return MakeOptionalError(ErrVerification().WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}",
-                                                                    fmt::join(RPIDHash, ", "),
-                                                                    fmt::join(rpIdHash, ", "))));
+                                                                                fmt::join(RPIDHash, ", "),
+                                                                                fmt::join(rpIdHash, ", "))));
             }
 
             // Registration Step 10 & Assertion Step 12
