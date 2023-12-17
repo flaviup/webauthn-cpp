@@ -9,7 +9,6 @@
 #ifndef WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
 #define WEBAUTHN_WEBAUTHN_WEBAUTHN_IPP
 
-#include <functional>
 #include <tuple>
 #include "IUser.ipp"
 #include "Config.ipp"
@@ -20,6 +19,7 @@
 #include "../Protocol/Options.ipp"
 #include "../Protocol/WebAuthNCOSE/WebAuthNCOSE.ipp"
 #include "../Util/Time.ipp"
+#include "../../libUtilCpp/MoveOnlyFunction.hpp"
 
 #pragma GCC visibility push(default)
 
@@ -83,7 +83,8 @@ namespace WebAuthN::WebAuthN {
         // RegistrationOptionHandlerType describes a function which modifies the registration Protocol::PublicKeyCredentialCreationOptionsType
         // values.
         //using RegistrationOptionHandlerType = void (*)(Protocol::PublicKeyCredentialCreationOptionsType&);
-        using RegistrationOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialCreationOptionsType&)>;
+        //using RegistrationOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialCreationOptionsType&)>;
+        using RegistrationOptionHandlerType = UtilCpp::MoveOnlyFunction<void(Protocol::PublicKeyCredentialCreationOptionsType&)>;
 
         inline static RegistrationOptionHandlerType WithDefaultRegistrationOptions() noexcept {
 
@@ -91,14 +92,14 @@ namespace WebAuthN::WebAuthN {
             };
         }
 
-        inline static const RegistrationOptionHandlerType DEFAULT_REGISTRATION_OPTIONS[]{
+        inline static RegistrationOptionHandlerType DEFAULT_REGISTRATION_OPTIONS[]{
             WithDefaultRegistrationOptions()
         };
 
         // BeginRegistration generates a new set of registration data to be sent to the client and authenticator.
         template<size_t N>
         expected<std::tuple<Protocol::CredentialCreationType, SessionDataType>>
-        BeginRegistration(const IUser& user, const RegistrationOptionHandlerType (&opts)[N] = DEFAULT_REGISTRATION_OPTIONS) noexcept {
+        BeginRegistration(const IUser& user, RegistrationOptionHandlerType (&opts)[N] = DEFAULT_REGISTRATION_OPTIONS) noexcept {
 
             auto err = _config.Validate();
 
@@ -296,7 +297,8 @@ namespace WebAuthN::WebAuthN {
 
         // LoginOptionHandlerType is used to provide parameters that modify the default Credential Assertion Payload that is sent to the user.
         //using LoginOptionHandlerType = void (*)(Protocol::PublicKeyCredentialRequestOptionsType&);
-        using LoginOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialRequestOptionsType&)>;
+        //using LoginOptionHandlerType = std::function<void(Protocol::PublicKeyCredentialRequestOptionsType&)>;
+        using LoginOptionHandlerType = UtilCpp::MoveOnlyFunction<void(Protocol::PublicKeyCredentialRequestOptionsType&)>;
 
         inline static LoginOptionHandlerType WithDefaultLoginOptions() noexcept {
 
@@ -304,13 +306,14 @@ namespace WebAuthN::WebAuthN {
             };
         }
 
-        inline static const LoginOptionHandlerType DEFAULT_LOGIN_OPTIONS[]{
+        inline static LoginOptionHandlerType DEFAULT_LOGIN_OPTIONS[]{
             WithDefaultLoginOptions()
         };
 
         // DiscoverableUserHandlerType returns a *User given the provided userHandle.
         //using DiscoverableUserHandlerType = Protocol::expected<IUser> (*)(const std::vector<uint8_t>&, const std::vector<uint8_t>&);
-        using DiscoverableUserHandlerType = std::function<expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
+        //using DiscoverableUserHandlerType = std::function<expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
+        using DiscoverableUserHandlerType = UtilCpp::MoveOnlyFunction<expected<IUser*>(const std::vector<uint8_t>&, const std::vector<uint8_t>&)>;
 
         // BeginLogin creates the Protocol::CredentialAssertionType data payload that should be sent to the user agent for beginning
         // the login/assertion process. The format of this data can be seen in §5.5 of the WebAuthn specification. These default
@@ -322,7 +325,7 @@ namespace WebAuthN::WebAuthN {
         template<size_t N>
         expected<std::tuple<Protocol::CredentialAssertionType, SessionDataType>>
         BeginLogin(const IUser& user,
-                   const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
+                   LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             auto credentials = user.GetWebAuthNCredentials();
 
@@ -343,7 +346,7 @@ namespace WebAuthN::WebAuthN {
         // BeginDiscoverableLogin begins a client-side discoverable login, previously known as Resident Key logins.
         template<size_t N>
         expected<std::tuple<Protocol::CredentialAssertionType, SessionDataType>>
-        BeginDiscoverableLogin(const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
+        BeginDiscoverableLogin(LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
 
             return _BeginLogin(std::nullopt, std::nullopt, std::nullopt, std::nullopt, opts);
         }
@@ -381,7 +384,7 @@ namespace WebAuthN::WebAuthN {
         }
 
         expected<CredentialType>
-        FinishDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType discoverableUserHandler, 
+        FinishDiscoverableLogin(WebAuthNType::DiscoverableUserHandlerType&& discoverableUserHandler, 
                                 const SessionDataType& sessionData,
                                 const std::string& response) noexcept {
 
@@ -391,12 +394,12 @@ namespace WebAuthN::WebAuthN {
                 return MakeError(parsedResponse.error());
             }
 
-            return ValidateDiscoverableLogin(discoverableUserHandler, sessionData, parsedResponse.value());
+            return ValidateDiscoverableLogin(std::move(discoverableUserHandler), sessionData, parsedResponse.value());
         }
 
         // ValidateDiscoverableLogin is an overloaded version of ValidateLogin that allows for discoverable credentials.
         expected<CredentialType>
-        ValidateDiscoverableLogin(const WebAuthNType::DiscoverableUserHandlerType discoverableUserHandler, 
+        ValidateDiscoverableLogin(WebAuthNType::DiscoverableUserHandlerType&& discoverableUserHandler, 
                                   const SessionDataType& sessionData, 
                                   const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
@@ -552,7 +555,7 @@ namespace WebAuthN::WebAuthN {
                     const std::optional<std::string>& userName, 
                     const std::optional<std::string>& userDisplayName, 
                     const std::optional<std::vector<Protocol::CredentialDescriptorType>>& allowedCredentials,
-                    const LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
+                    LoginOptionHandlerType (&opts)[N] = DEFAULT_LOGIN_OPTIONS) noexcept {
     
             auto validationResult = _config.Validate();
 

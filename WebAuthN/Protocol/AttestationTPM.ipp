@@ -9,12 +9,12 @@
 #ifndef WEBAUTHN_PROTOCOL_ATTESTATION_TPM_IPP
 #define WEBAUTHN_PROTOCOL_ATTESTATION_TPM_IPP
 
-#include <functional>
 #include <fmt/format.h>
 #include "Attestation.ipp"
 #include "../Util/Crypto.ipp"
 #include "../Util/ASN1.ipp"
 #include "../Util/TPM.ipp"
+#include "../../libUtilCpp/MoveOnlyFunction.hpp"
 #include "WebAuthNCOSE/WebAuthNCOSE.ipp"
 
 #pragma GCC visibility push(default)
@@ -232,7 +232,8 @@ namespace WebAuthN::Protocol {
         }
 
         //using SANParsingHandlerType = OptionalError (*)(int tag, const std::vector<uint8_t>& data);
-        using SANParsingHandlerType = std::function<OptionalError(int,  const std::vector<uint8_t>&)>;
+        //using SANParsingHandlerType = std::function<OptionalError(int,  const std::vector<uint8_t>&)>;
+        using SANParsingHandlerType = UtilCpp::MoveOnlyFunction<OptionalError(int,  const std::vector<uint8_t>&)>;
 
         static inline OptionalError
         _ForEachSAN(const std::vector<uint8_t>& extension, SANParsingHandlerType&& callback) noexcept {
