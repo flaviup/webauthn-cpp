@@ -142,7 +142,7 @@ namespace WebAuthN::Protocol {
         // new credential and steps 7 through 10 of verifying an authentication assertion
         // See https://www.w3.org/TR/webauthn/#registering-a-new-credential
         // and https://www.w3.org/TR/webauthn/#verifying-assertion
-        inline  std::optional<ErrorType>
+        inline OptionalError
         Verify(const std::string& storedChallenge, 
                CeremonyType ceremony, 
                const std::vector<std::string>& rpOrigins) const noexcept {
@@ -151,10 +151,10 @@ namespace WebAuthN::Protocol {
 
             // Assertion Step 7. Verify that the value of Type is the string webauthn.get.
             if (Type != ceremony) {
-                return ErrVerification().WithDetails("Error validating ceremony type")
-                                        .WithInfo(fmt::format("Expected Value: {}, Received: {}",
-                                                              json(ceremony).get<std::string>(),
-                                                              json(Type).get<std::string>()));
+                return MakeOptionalError(ErrVerification().WithDetails("Error validating ceremony type")
+                                                          .WithInfo(fmt::format("Expected Value: {}, Received: {}",
+                                                                                json(ceremony).get<std::string>(),
+                                                                                json(Type).get<std::string>())));
             }
 
             // Registration Step 4. Verify that the value of Challenge matches the challenge
@@ -165,8 +165,8 @@ namespace WebAuthN::Protocol {
             // passed to the get() call.
 
             if (!Util::StringCompare::ConstantTimeEqual(storedChallenge, Challenge)) {
-                return ErrVerification().WithDetails("Error validating challenge")
-                                        .WithInfo(fmt::format("Expected b Value: {}\nReceived b: {}\n", storedChallenge, Challenge));
+                return MakeOptionalError(ErrVerification().WithDetails("Error validating challenge")
+                                                          .WithInfo(fmt::format("Expected b Value: {}\nReceived b: {}\n", storedChallenge, Challenge)));
             }
 
             // Registration Step 5 & Assertion Step 9. Verify that the value of C.origin matches
@@ -175,17 +175,17 @@ namespace WebAuthN::Protocol {
             auto ok = Util::Url::FullyQualifiedOrigin(Origin, fqOrigin);
 
             if (!ok) {
-                return ErrParsingData().WithDetails("Error decoding clientData origin as URL");
+                return MakeOptionalError(ErrParsingData().WithDetails("Error decoding clientData origin as URL"));
             }
             auto found = std::any_of(rpOrigins.cbegin(), 
                                      rpOrigins.cend(), 
                                      [&fqOrigin](const std::string& origin) { return Util::StringCompare::Utf8EqualFold(fqOrigin, origin); });
 
             if (!found) {
-                return ErrVerification().WithDetails("Error validating origin")
-                                        .WithInfo(fmt::format("Expected Values: {}, Received: {}",
-                                                              fmt::join(rpOrigins, ", "),
-                                                              fqOrigin));
+                return MakeOptionalError(ErrVerification().WithDetails("Error validating origin")
+                                                          .WithInfo(fmt::format("Expected Values: {}, Received: {}",
+                                                                                fmt::join(rpOrigins, ", "),
+                                                                                fqOrigin)));
             }
 
             // Registration Step 6 and Assertion Step 10. Verify that the value of C.tokenBinding.status
@@ -195,22 +195,22 @@ namespace WebAuthN::Protocol {
             if (TokenBinding) {
 
                 if (TokenBinding.value().Status == TokenBindingStatusType::Invalid) {
-                    return ErrParsingData().WithDetails("Error decoding clientData, token binding present without status");
+                    return MakeOptionalError(ErrParsingData().WithDetails("Error decoding clientData, token binding present without status"));
                 }
 
                 if (TokenBinding.value().Status != TokenBindingStatusType::Present && 
                     TokenBinding.value().Status != TokenBindingStatusType::Supported && 
                     TokenBinding.value().Status != TokenBindingStatusType::NotSupported) {
 
-                    return ErrParsingData().WithDetails("Error decoding clientData, token binding present with invalid status")
-                                           .WithInfo(fmt::format("Got: {}",
-                                                                 json(TokenBinding.value().Status).get<std::string>()));
+                    return MakeOptionalError(ErrParsingData().WithDetails("Error decoding clientData, token binding present with invalid status")
+                                                             .WithInfo(fmt::format("Got: {}",
+                                                                                   json(TokenBinding.value().Status).get<std::string>())));
                 }
             }
 
             // Not yet fully implemented by the spec, browsers, and me.
 
-            return std::nullopt;
+            return NoError;
         }
 
         // Type the string "webauthn.create" when creating new credentials,

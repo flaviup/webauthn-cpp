@@ -211,7 +211,7 @@ namespace WebAuthN::Util::ASN1 {
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
         if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SEQUENCE) {
-            return unexpected("Could not parse ASN1 data as sequence"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as sequence"s));
         }
 
         return length;
@@ -224,7 +224,7 @@ namespace WebAuthN::Util::ASN1 {
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
         if ((ret != V_ASN1_CONSTRUCTED && ret != 0) || tagID != V_ASN1_BOOLEAN) {
-            return unexpected("Could not parse ASN1 data as boolean"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as boolean"s));
         }
 
         return length;
@@ -252,7 +252,7 @@ namespace WebAuthN::Util::ASN1 {
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
         if (ret != V_ASN1_CONSTRUCTED || tagID != V_ASN1_SET) {
-            return unexpected("Could not parse ASN1 data as set"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as set"s));
         }
 
         return length;
@@ -292,7 +292,7 @@ namespace WebAuthN::Util::ASN1 {
         }
 
         if (ret != 0 || length < 1 || (tagID != V_ASN1_INTEGER && tagID != V_ASN1_ENUMERATED && tagID != V_ASN1_BOOLEAN)) {
-            return unexpected("Could not parse ASN1 data as int"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as int"s));
         }
 
         auto value = length > 7 ? MAKE_UINT64(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]) :
@@ -318,7 +318,7 @@ namespace WebAuthN::Util::ASN1 {
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
         if ((ret & 0x80) || (ret == 0xa0) || tagID != V_ASN1_OBJECT) {
-            return unexpected("Could not parse ASN1 data as object"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as object"s));
         }
 
         if (length == 0) {
@@ -338,7 +338,7 @@ namespace WebAuthN::Util::ASN1 {
         auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
         if ((ret & 0x80) || (ret == 0xa0)) {
-            return unexpected("Could not parse ASN1 data as bytes"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as bytes"s));
         }
         auto value = length > 0 ? std::vector<uint8_t>(data, data + length) : std::vector<uint8_t>{};
         data += length;
@@ -365,7 +365,7 @@ namespace WebAuthN::Util::ASN1 {
             auto ret = ASN1_get_object(&data, &length, &tagID, &classID, 1L << 24);
 
             if ((ret & 0x80) || (ret == 0xa0) || tagID == V_ASN1_EOC) {
-                return unexpected("Could not parse ASN1 data"s);
+                return MakeError(ErrorType("Could not parse ASN1 data"s));
             }
             asn1Map[tagID] = length > 0 ? BufferSliceType{data, length} : BufferSliceType{};
             data += length;
@@ -389,7 +389,7 @@ namespace WebAuthN::Util::ASN1 {
     ToBool(const BufferSliceType& bufferSlice) noexcept {
 
         if (std::get<size_t>(bufferSlice) < size_t(1)) {
-            return unexpected("Buffer slice is empty"s);
+            return MakeError(ErrorType("Buffer slice is empty"s));
         }
         auto p = std::get<const uint8_t*>(bufferSlice);
         auto retInt = GetInt(p);
@@ -398,14 +398,14 @@ namespace WebAuthN::Util::ASN1 {
             return retInt.value() != 0;
         }
 
-        return unexpected("Could not parse ASN1 data as int32"s);
+        return MakeError(ErrorType("Could not parse ASN1 data as int32"s));
     }
 
     static inline expected<int32_t>
     ToInt32(const BufferSliceType& bufferSlice) noexcept {
 
         if (std::get<size_t>(bufferSlice) < size_t(1)) {
-            return unexpected("Buffer slice is empty"s);
+            return MakeError(ErrorType("Buffer slice is empty"s));
         }
         auto p = std::get<const uint8_t*>(bufferSlice);
         auto retInt = GetInt(p);
@@ -414,14 +414,14 @@ namespace WebAuthN::Util::ASN1 {
             return retInt.value();
         }
 
-        return unexpected("Could not parse ASN1 data as int32"s);
+        return MakeError(ErrorType("Could not parse ASN1 data as int32"s));
     }
 
     static inline expected<int64_t>
     ToInt64(const BufferSliceType& bufferSlice) noexcept {
 
         if (std::get<size_t>(bufferSlice) < size_t(1)) {
-            return unexpected("Buffer slice is empty"s);
+            return MakeError(ErrorType("Buffer slice is empty"s));
         }
         auto p = std::get<const uint8_t*>(bufferSlice);
         auto retInt = GetInt<int64_t>(p);
@@ -430,21 +430,21 @@ namespace WebAuthN::Util::ASN1 {
             return retInt.value();
         }
 
-        return unexpected("Could not parse ASN1 data as int64"s);
+        return MakeError(ErrorType("Could not parse ASN1 data as int64"s));
     }
 
     static inline expected<std::set<int32_t>>
     ToInt32Set(const BufferSliceType& bufferSlice) noexcept {
 
         if (std::get<size_t>(bufferSlice) < size_t(1)) {
-            return unexpected("Buffer slice is empty"s);
+            return MakeError(ErrorType("Buffer slice is empty"s));
         }
         auto p = std::get<const uint8_t*>(bufferSlice);
         auto end = p + std::get<size_t>(bufferSlice);
         auto retSet = GetSet(p);
 
         if (!retSet || p + retSet.value() != end) {
-            return  unexpected("Could not parse ASN1 data as set"s);
+            return MakeError(ErrorType("Could not parse ASN1 data as set"s));
         }
         std::set<int32_t> value{};
 
@@ -455,7 +455,7 @@ namespace WebAuthN::Util::ASN1 {
             if (retInt) {
                 value.insert(retInt.value());
             } else {
-                return  unexpected("Could not parse ASN1 data as set"s);
+                return MakeError(ErrorType("Could not parse ASN1 data as set"s));
             }
         }
 
@@ -467,7 +467,7 @@ namespace WebAuthN::Util::ASN1 {
     ToIntEnum(const BufferSliceType& bufferSlice) noexcept {
 
         if (std::get<size_t>(bufferSlice) < size_t(1)) {
-            return unexpected("Buffer slice is empty"s);
+            return MakeError(ErrorType("Buffer slice is empty"s));
         }
         auto p = std::get<const uint8_t*>(bufferSlice);
         auto end = p + std::get<size_t>(bufferSlice);
@@ -484,7 +484,7 @@ namespace WebAuthN::Util::ASN1 {
                 if (retInt) {
                     t = static_cast<T>(static_cast<int>(t) | static_cast<int>(retInt.value()));
                 } else {
-                    return unexpected("Could not parse ASN1 data as int32"s);
+                    return MakeError(ErrorType("Could not parse ASN1 data as int32"s));
                 }
             }
 
@@ -498,7 +498,7 @@ namespace WebAuthN::Util::ASN1 {
             }
         }
 
-        return unexpected("Could not parse ASN1 data as int32"s);
+        return MakeError(ErrorType("Could not parse ASN1 data as int32"s));
     }
 } // namespace WebAuthN::Util::ASN1
 

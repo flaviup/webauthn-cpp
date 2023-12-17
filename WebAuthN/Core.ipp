@@ -11,7 +11,6 @@
 
 #define JSON_DISABLE_ENUM_SERIALIZATION 1
 
-#include "Util/expected.hh"
 #include "Errors.ipp"
 
 #pragma GCC visibility push(default)
@@ -24,9 +23,15 @@ namespace WebAuthN {
         const T& Value;
     };
 
+    using OptionalError = UtilCpp::OptionalError;
+    using SuccessResult = UtilCpp::SuccessResult;
+    using ErrorWrapper = UtilCpp::ErrorWrapper;
+    using UtilCpp::MakeOptionalError;
+    using UtilCpp::MakeResultError;
+    using UtilCpp::MakeError;
     template<typename T>
-    using expected = tl::expected<T, ErrorType>;
-    using unexpected = tl::unexpected<ErrorType>;
+    using expected = UtilCpp::expected<T>;
+    inline constexpr auto NoError = UtilCpp::NoError;
 } // namespace WebAuthN::Protocol
 
 #pragma GCC visibility pop

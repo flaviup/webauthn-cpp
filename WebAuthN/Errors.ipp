@@ -12,113 +12,71 @@
 #include <vector>
 #include <optional>
 #include <nlohmann/json.hpp>
+#include "../libUtilCpp/Error.ipp"
 
 #pragma GCC visibility push(default)
 
 namespace WebAuthN {
 
     using json = nlohmann::json;
-
-    struct ErrorType {
-
-        ErrorType() noexcept = default;
-      
-        ErrorType(const std::string& details) noexcept :
-            Details(details) {
-        }
-
-        ErrorType(std::string&& details) noexcept :
-            Details(std::move(details)) {
-        }
-
-        ErrorType(const std::string& type, const std::string& details) noexcept :
-            Type(type),
-            Details(details) {
-        }
-
-        ErrorType(std::string&& type, std::string&& details) noexcept :
-            Type(std::move(type)),
-            Details(std::move(details)) {
-        }
-
-        ErrorType(const json& j) :
-            Type(j["type"].get<std::string>()),
-            Details(j["error"].get<std::string>()),
-            DevInfo(j["debug"].get<std::string>()) {
-        }
-
-        ErrorType(const ErrorType& error) noexcept = default;
-        ErrorType(ErrorType&& error) noexcept = default;
-        virtual ~ErrorType() noexcept = default;
-
-        ErrorType& operator =(const ErrorType& other) noexcept = default;
-        ErrorType& operator =(ErrorType&& other) noexcept = default;
-
-        explicit inline operator std::string() const noexcept {
-
-            return Details; 
-        }
-
-        inline ErrorType& WithDetails(const std::string& details) noexcept {
-
-            Details = details;
-            return *this;
-        }
-
-        inline ErrorType& WithInfo(const std::string& info) noexcept {
-            
-            DevInfo = info;
-            return *this;
-        }
-
-        // Short name for the type of error that has occurred.
-        std::string Type;
-        // Additional details about the error.
-        std::string Details;
-        // Information to help debug the error.
-        std::string DevInfo;
-    };
+    using IError = UtilCpp::IError;
+    using ErrorType = UtilCpp::Error;
 
     inline void to_json(json& j, const ErrorType& error) {
 
         j = json{
-            { "type",     error.Type },
-            { "error", error.Details },
-            { "debug", error.DevInfo }
+            { "type",     error.GetType() },
+            { "error", error.GetDetails() },
+            { "debug",    error.GetInfo() }
         };
     }
 
     inline void from_json(const json& j, ErrorType& error) {
-
-        j.at("type").get_to(error.Type);
-        j.at("error").get_to(error.Details);
-        j.at("debug").get_to(error.DevInfo);
+        error = ErrorType(j.at("type").get<std::string>(), j.at("error").get<std::string>()).WithInfo(j.at("debug").get<std::string>());
     }
 
-    struct ErrBadRequest : public ErrorType {
+    struct ErrBadRequest final : public ErrorType {
 
         ErrBadRequest() noexcept :
             ErrorType(
                 "invalid_request",
                 "Error reading the request data") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrChallengeMismatch : public ErrorType {
+    struct ErrChallengeMismatch final : public ErrorType {
 
         ErrChallengeMismatch() noexcept :
             ErrorType(
                 "challenge_mismatch",
                 "Stored challenge and received challenge do not match") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrParsingData : public ErrorType {
+    struct ErrParsingData final : public ErrorType {
 
         ErrParsingData() noexcept :
             ErrorType(
                 "parse_error",
                 "Error parsing the authenticator response") {
+        }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
         }
     };
 
@@ -131,12 +89,18 @@ namespace WebAuthN {
         }
     };
 
-    struct ErrVerification : public ErrorType {
+    struct ErrVerification final : public ErrorType {
 
         ErrVerification() noexcept :
             ErrorType(
                 "verification_error",
                 "Error validating the authenticator response") {
+        }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
         }
     };
 
@@ -149,75 +113,123 @@ namespace WebAuthN {
         }
     };
 
-    struct ErrInvalidAttestation : public ErrorType {
+    struct ErrInvalidAttestation final : public ErrorType {
 
         ErrInvalidAttestation() noexcept :
             ErrorType(
                 "invalid_attestation",
                 "Invalid attestation data") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrAttestationFormat : public ErrorType {
+    struct ErrAttestationFormat final : public ErrorType {
 
         ErrAttestationFormat() noexcept :
             ErrorType(
                 "invalid_attestation",
                 "Invalid attestation format") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrAttestationCertificate : public ErrorType {
+    struct ErrAttestationCertificate final : public ErrorType {
 
         ErrAttestationCertificate() noexcept :
             ErrorType(
                 "invalid_certificate",
                 "Invalid attestation certificate") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrAssertionSignature : public ErrorType {
+    struct ErrAssertionSignature final : public ErrorType {
 
         ErrAssertionSignature() noexcept :
             ErrorType(
                 "invalid_signature",
                 "Assertion Signature against auth data and client hash is not valid") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrUnsupportedKey : public ErrorType {
+    struct ErrUnsupportedKey final : public ErrorType {
 
         ErrUnsupportedKey() noexcept :
             ErrorType(
                 "invalid_key_type",
                 "Unsupported Public Key Type") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrUnsupportedAlgorithm : public ErrorType {
+    struct ErrUnsupportedAlgorithm final : public ErrorType {
 
         ErrUnsupportedAlgorithm() noexcept :
             ErrorType(
                 "unsupported_key_algorithm",
                 "Unsupported public key algorithm") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrNotSpecImplemented : public ErrorType {
+    struct ErrNotSpecImplemented final : public ErrorType {
 
         ErrNotSpecImplemented() noexcept :
             ErrorType(
                 "spec_unimplemented",
                 "This field is not yet supported by the WebAuthn spec") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrNotImplemented : public ErrorType {
+    struct ErrNotImplemented final : public ErrorType {
 
         ErrNotImplemented() noexcept :
             ErrorType(
                 "not_implemented",
                 "This field is not yet supported by this library") {
+        }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
         }
     };
 } // namespace WebAuthN::Protocol

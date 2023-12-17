@@ -49,7 +49,7 @@ namespace WebAuthN::Util {
                                 encoded.data(), encoded.size(),
                                 nullptr, &decodedLength,
                                 nullptr, encodingVariant) != 0) {
-                return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
+                return MakeError(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
             }
 
             return std::vector<uint8_t>(decodedData, decodedData + decodedLength);
@@ -72,7 +72,7 @@ namespace WebAuthN::Util {
                               encoded, size,
                               nullptr, &decodedLength,
                               nullptr, encodingVariant) != 0) {
-            return unexpected(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
+            return MakeError(ErrParsingData().WithInfo("base64_decode_error").WithDetails("Error base64 decoding"));
         }
 
         return std::string(reinterpret_cast<const char*>(decodedData));

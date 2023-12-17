@@ -62,7 +62,7 @@ namespace WebAuthN::Util::TPM {
         auto result = Tss2_MU_TPMT_PUBLIC_Unmarshal(publicAreaData.data(), publicAreaData.size(), &offset, &pub);
 
         if (result != TSS2_RC_SUCCESS) {
-            return unexpected(ErrorType("Could not decode public area data"s));
+            return MakeError(ErrorType("Could not decode public area data"s));
         }
         auto isECC = false;
         auto isRSA = false;
@@ -81,7 +81,7 @@ namespace WebAuthN::Util::TPM {
             case TPM2_ALG_ECDSA: isECC = true;
                 break;
 
-            default: return unexpected(ErrorType("Unsupported algorithm"s));
+            default: return MakeError(ErrorType("Unsupported algorithm"s));
         }
 
         PublicAreaInfoType publicAreaInfo{
@@ -112,11 +112,11 @@ namespace WebAuthN::Util::TPM {
         auto result = Tss2_MU_TPMS_ATTEST_Unmarshal(certInfoData.data(), certInfoData.size(), &offset, &attest);
 
         if (result != TSS2_RC_SUCCESS) {
-            return unexpected(ErrorType("Could not decode attestation data"s));
+            return MakeError(ErrorType("Could not decode attestation data"s));
         }
         
         if (attest.magic != TPM2_GENERATED_VALUE) {
-            return unexpected(ErrorType("Magic number not set to TPM2_GENERATED_VALUE"s));
+            return MakeError(ErrorType("Magic number not set to TPM2_GENERATED_VALUE"s));
         }
 
         CertInfoType certInfo{
@@ -158,10 +158,10 @@ namespace WebAuthN::Util::TPM {
                 case TPM2_ALG_SHA512: publicAreaHash = Util::Crypto::SHA512(publicAreaData);
                     break;
 
-                case TPM2_ALG_SM3_256: return unexpected(ErrorType("SM3-256 hash algorithm of attested is not supported"s));
+                case TPM2_ALG_SM3_256: return MakeError(ErrorType("SM3-256 hash algorithm of attested is not supported"s));
                     break;
 
-                default: unexpected(ErrorType("The hash algorithm of attested is unknown"s));
+                default: MakeError(ErrorType("The hash algorithm of attested is unknown"s));
             }
             const auto SZ = sizeof(attHashAlg) + publicAreaHash.size();
             std::vector<uint8_t> attestedName(SZ);
@@ -175,10 +175,10 @@ namespace WebAuthN::Util::TPM {
             if (NAME_DIGEST_SIZE == SZ) {
                 return Util::StringCompare::ConstantTimeEqual(attestedCertifyInfo.name.name, attestedName.data(), SZ);
             } else {
-                return unexpected(ErrorType("The hash algorithm sizes of attested and public area info do not match"s));
+                return MakeError(ErrorType("The hash algorithm sizes of attested and public area info do not match"s));
             }
         } else {
-            return unexpected(ErrorType("The hash algorithm ids of attested and public area info do not match"s));
+            return MakeError(ErrorType("The hash algorithm ids of attested and public area info do not match"s));
         }
 
         return false;

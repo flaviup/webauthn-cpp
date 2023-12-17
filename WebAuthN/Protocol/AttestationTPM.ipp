@@ -110,9 +110,9 @@ namespace WebAuthN::Protocol {
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence) {
-                return unexpected(retSequence.error());
+                return MakeError(retSequence.error());
             } else if (p + retSequence.value() != end) {
-                return unexpected(ErrorType("x509: trailing data present for extended key usage"s));
+                return MakeError(ErrorType("x509: trailing data present for extended key usage"s));
             }
             std::vector<std::string> eku{};
 
@@ -121,7 +121,7 @@ namespace WebAuthN::Protocol {
                 auto objResult = ASN1::GetObject(p);
 
                 if (!objResult) {
-                    return unexpected(objResult.error());
+                    return MakeError(objResult.error());
                 }
                 auto value = objResult.value();
                 eku.push_back(value);
@@ -138,9 +138,9 @@ namespace WebAuthN::Protocol {
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence) {
-                return unexpected(retSequence.error());
+                return MakeError(retSequence.error());
             } else if (p + retSequence.value() != end) {
-                return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
+                return MakeError(ErrorType("AIK certificate basic constraints contains extra data"s));
             }
 
             if (retSequence.value() > 0) {
@@ -154,7 +154,7 @@ namespace WebAuthN::Protocol {
                     auto retInt = ASN1::GetInt(p, &tag);
 
                     if (p != end) {
-                        return unexpected(ErrorType("AIK certificate basic constraints contains extra data"s));
+                        return MakeError(ErrorType("AIK certificate basic constraints contains extra data"s));
                     }
 
                     return BasicConstraintsType{
@@ -178,9 +178,9 @@ namespace WebAuthN::Protocol {
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence) {
-                return unexpected(retSequence.error());
+                return MakeError(retSequence.error());
             } else if (p + retSequence.value() != end) {
-                return unexpected(ErrorType("x509: trailing data present"s));
+                return MakeError(ErrorType("x509: trailing data present"s));
             }
             RDNSequenceType seq{};
 
@@ -189,7 +189,7 @@ namespace WebAuthN::Protocol {
                 auto retSet = ASN1::GetSet(p);
 
                 if (!retSet) {
-                    return unexpected(retSet.error());
+                    return MakeError(retSet.error());
                 }
                 auto end2 = p + retSet.value();
                 RelativeDistinguishedNameSetType rdnSet{};
@@ -199,7 +199,7 @@ namespace WebAuthN::Protocol {
                     retSequence = ASN1::GetSequence(p);
 
                     if (!retSequence) {
-                        return unexpected(retSequence.error());
+                        return MakeError(retSequence.error());
                     }
 
                     if (retSequence.value() > 0) {
@@ -207,7 +207,7 @@ namespace WebAuthN::Protocol {
                         auto objResult = ASN1::GetObject(p);
 
                         if (!objResult) {
-                            return unexpected(objResult.error());
+                            return MakeError(objResult.error());
                         }
                         auto type = objResult.value();
 
@@ -216,7 +216,7 @@ namespace WebAuthN::Protocol {
                             auto dataResult = ASN1::GetBytes(p);
 
                             if (!dataResult) {
-                                return unexpected(dataResult.error());
+                                return MakeError(dataResult.error());
                             }
                             rdnSet.push_back(AttributeTypeAndValueType{
                                 .Type = type,
@@ -231,10 +231,10 @@ namespace WebAuthN::Protocol {
             return seq;
         }
 
-        //using SANParsingHandlerType = std::optional<ErrorType> (*)(int tag, const std::vector<uint8_t>& data);
-        using SANParsingHandlerType = std::function<std::optional<ErrorType>(int,  const std::vector<uint8_t>&)>;
+        //using SANParsingHandlerType = OptionalError (*)(int tag, const std::vector<uint8_t>& data);
+        using SANParsingHandlerType = std::function<OptionalError(int,  const std::vector<uint8_t>&)>;
 
-        static inline std::optional<ErrorType>
+        static inline OptionalError
         _ForEachSAN(const std::vector<uint8_t>& extension, SANParsingHandlerType&& callback) noexcept {
 
             // RFC 5280, 4.2.1.6
@@ -261,7 +261,7 @@ namespace WebAuthN::Protocol {
             if (!retSequence) {
                 return retSequence.error();
             } else if (p + retSequence.value() != end) {
-                return ErrorType("x509: trailing data after X.509 extension"s);
+                return MakeOptionalError(ErrorType("x509: trailing data after X.509 extension"s));
             }
 
             while (p < end) {
@@ -279,7 +279,7 @@ namespace WebAuthN::Protocol {
                 }
             }
 
-            return std::nullopt;
+            return NoError;
         }
 
         static inline std::string _TrimPrefix(const std::string& str, const std::string& prefix) noexcept {
@@ -293,7 +293,7 @@ namespace WebAuthN::Protocol {
 
             auto manufacturer = ""s, model = ""s, version = ""s;
 
-            auto err = _ForEachSAN(value, [&manufacturer, &model, &version](int tag, const std::vector<uint8_t>& data) -> std::optional<ErrorType> {
+            auto err = _ForEachSAN(value, [&manufacturer, &model, &version](int tag, const std::vector<uint8_t>& data) -> OptionalError {
 
                 switch (tag) {
 
@@ -332,11 +332,11 @@ namespace WebAuthN::Protocol {
                     }
                 }
 
-                return std::nullopt;
+                return NoError;
             });
 
             if (err) {
-                return unexpected(err.value());
+                return MakeError(err.value());
             }
 
             return std::make_tuple(manufacturer, model, version);
@@ -356,44 +356,44 @@ namespace WebAuthN::Protocol {
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("ver") == atts.cend()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving ver value"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving ver value"s));
                 }
                 auto ver = atts["ver"].get<std::string>();
 
                 if (ver != "2.0"s) {
-                    return unexpected(ErrAttestationFormat().WithDetails("WebAuthn only supports TPM 2.0 currently"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("WebAuthn only supports TPM 2.0 currently"s));
                 }
 
                 if (atts.find("alg") == atts.cend()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving alg value"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving alg value"s));
                 }
                 auto alg = atts["alg"].get<int64_t>();
 
                 if (atts.find("x5c") == atts.cend()) { // If x5c is not present, return an error
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving x5c value"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving x5c value"s));
                 }
                 auto x5c = atts["x5c"]; // If x5c is present, this indicates that the attestation type is not ECDAA.
 
                 if (x5c.empty()) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"s));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"s));
                 }
 
                 if (atts.find("ecdaaKeyId") != atts.cend()) {
-                    return unexpected(ErrNotImplemented());
+                    return MakeError(ErrNotImplemented());
                 }
 
                 if (atts.find("sig") == atts.cend() || !atts["sig"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving sig value"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving sig value"s));
                 }
                 auto signature = atts["sig"].get_binary();
 
                 if (atts.find("certInfo") == atts.cend() || !atts["certInfo"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving certInfo value"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving certInfo value"s));
                 }
                 auto certInfoData = atts["certInfo"].get_binary();
 
                 if (atts.find("pubArea") == atts.cend() || !atts["pubArea"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving pubArea value"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving pubArea value"s));
                 }
                 auto pubArea = atts["pubArea"].get_binary();
 
@@ -402,20 +402,20 @@ namespace WebAuthN::Protocol {
                 auto pubAreaDecodeResult = TPM::DecodePublicArea(pubArea);
 
                 if (!pubAreaDecodeResult) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Unable to decode TPMT_PUBLIC in attestation statement"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Unable to decode TPMT_PUBLIC in attestation statement"s));
                 }
                 auto pubAreaInfo = pubAreaDecodeResult.value();
                 auto ok = WebAuthNCOSE::ParsePublicKey(att.AuthData.AttData.CredentialPublicKey);
 
                 if (!ok) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}", std::string(ok.error()))));
+                    return MakeError(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}", std::string(ok.error()))));
                 }
                 auto success = false;
                 auto pubKey = ok.value();
                 auto vpk = WebAuthNCOSE::KeyCast(pubKey, success);
 
                 if (!success) {
-                    return unexpected(ErrUnsupportedKey());
+                    return MakeError(ErrUnsupportedKey());
                 }
                 const auto& key = vpk.Value;
                 auto keyType = static_cast<WebAuthNCOSE::COSEKeyType>(key.KeyType);
@@ -431,7 +431,7 @@ namespace WebAuthN::Protocol {
                             pubAreaInfo.ECCParameters.Point.XRaw != ec2Key.XCoord.value() ||
                             pubAreaInfo.ECCParameters.Point.YRaw != ec2Key.YCoord.value()) {
 
-                            return unexpected(ErrAttestationFormat().WithDetails("Mismatch between ECCParameters in pubArea and credentialPublicKey"s));
+                            return MakeError(ErrAttestationFormat().WithDetails("Mismatch between ECCParameters in pubArea and credentialPublicKey"s));
                         }
                         break;
                     }
@@ -449,13 +449,13 @@ namespace WebAuthN::Protocol {
                             pubAreaInfo.RSAParameters.ModulusRaw != rsaKey.Modulus.value() ||
                             pubAreaInfo.RSAParameters.Exponent != exp) {
 
-                            return unexpected(ErrAttestationFormat().WithDetails("Mismatch between RSAParameters in pubArea and credentialPublicKey"s));
+                            return MakeError(ErrAttestationFormat().WithDetails("Mismatch between RSAParameters in pubArea and credentialPublicKey"s));
                         }
                         break;
                     }
 
                     default:
-                        return unexpected(ErrUnsupportedKey());
+                        return MakeError(ErrUnsupportedKey());
                 }
                 std::vector<uint8_t> attToBeSigned(att.RawAuthData.size() + clientDataHash.size());
                 std::memcpy(attToBeSigned.data(), att.RawAuthData.data(), att.RawAuthData.size());
@@ -466,13 +466,13 @@ namespace WebAuthN::Protocol {
                 auto certInfoResult = TPM::DecodeAttestationData(certInfoData);
 
                 if (!certInfoResult) {
-                    return unexpected(certInfoResult.error());
+                    return MakeError(certInfoResult.error());
                 }
                 auto certInfo = certInfoResult.value();
 
                 // 2/4 Verify that type is set to TPM2_ST_ATTEST_CERTIFY.
                 if (certInfo.Type != TPM2_ST_ATTEST_CERTIFY) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Type is not set to TPM_ST_ATTEST_CERTIFY"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Type is not set to TPM_ST_ATTEST_CERTIFY"s));
                 }
 
                 // 3/4 Verify that extraData is set to the hash of attToBeSigned using the hash algorithm employed in "alg".
@@ -480,7 +480,7 @@ namespace WebAuthN::Protocol {
                 auto hasher = WebAuthNCOSE::HasherFromCOSEAlg(coseAlg);
 
                 if (certInfo.ExtraData != hasher(attToBeSigned)) {
-                    return unexpected(ErrAttestationFormat().WithDetails("ExtraData is not set to hash of attToBeSigned"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("ExtraData is not set to hash of attToBeSigned"s));
                 }
 
                 // 4/4 Verify that attested contains a TPMS_CERTIFY_INFO structure as specified in
@@ -490,11 +490,11 @@ namespace WebAuthN::Protocol {
                 auto matchResult = TPM::NameMatchesPublicArea(certInfo.AttestedCertifyInfo, pubAreaInfo.NameAlg, pubArea);
 
                 if (!matchResult) {
-                    return unexpected(matchResult.error());
+                    return MakeError(matchResult.error());
                 }
 
                 if (!matchResult.value()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Hash value mismatch attested and pubArea"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Hash value mismatch attested and pubArea"s));
                 }
 
                 // Note that the remaining fields in the "Standard Attestation Structure"
@@ -507,12 +507,12 @@ namespace WebAuthN::Protocol {
                 try {
                     aikCertBytes = x5c[0].get_binary();
                 } catch (const std::exception&) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"s));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"s));
                 }
                 auto aikCertResult = Util::Crypto::ParseCertificate(aikCertBytes);
 
                 if (!aikCertResult) {
-                    return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(aikCertResult.error()))));
+                    return MakeError(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(aikCertResult.error()))));
                 }
                 auto aikCert = aikCertResult.value();
                 auto sigAlg = WebAuthNCOSE::SigAlgFromCOSEAlg(coseAlg);
@@ -522,14 +522,14 @@ namespace WebAuthN::Protocol {
                                                                         signature);
 
                 if (!signatureCheckResult || !signatureCheckResult.value()) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error"s : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
+                    return MakeError(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error"s : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
                 }
 
                 // Verify that aikCert meets the requirements in §8.3.1 TPM Attestation Statement Certificate Requirements
 
                 // 1/6 Version MUST be 3 (value is set to 2).
                 if (aikCert.Version != 2L) {
-                    return unexpected(ErrAttestationFormat().WithDetails("AIK certificate version must be 3"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("AIK certificate version must be 3"s));
                 }
 
                 // 2/6 Subject field MUST be set to empty.
@@ -538,7 +538,7 @@ namespace WebAuthN::Protocol {
                     !aikCert.Subject.OrganizationalUnit.empty() ||
                     !aikCert.Subject.CommonName.empty()) {
 
-                    return unexpected(ErrAttestationFormat().WithDetails("AIK certificate subject must be empty"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("AIK certificate subject must be empty"s));
                 }
 
                 // 3/6 The Subject Alternative Name extension MUST be set as defined in [TPMv2-EK-Profile] section 3.2.9{}
@@ -551,23 +551,23 @@ namespace WebAuthN::Protocol {
                         auto sanParseResult = _ParseSANExtension(ext.Value);
 
                         if (!sanParseResult) {
-                            return unexpected(sanParseResult.error());
+                            return MakeError(sanParseResult.error());
                         }
                         auto [manufacturer, model, version] = sanParseResult.value();
                         
                         if (manufacturer.empty() || model.empty() || version.empty()) {
-                            return unexpected(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
+                            return MakeError(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
                         }
 
                         if (!_IsValidTPMManufacturer(manufacturer)) {
-                            return unexpected(ErrAttestationFormat().WithDetails("Invalid TPM manufacturer"s));
+                            return MakeError(ErrAttestationFormat().WithDetails("Invalid TPM manufacturer"s));
                         }
                         validSANData = true;
                     }
                 }
 
                 if (!validSANData) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("Invalid SAN data in AIK certificate"s));
                 }
 
                 // 4/6 The Extended Key Usage extension MUST contain the "joint-iso-itu-t(2) internationalorganizations(23) 133 tcg-kp(8) tcg-kp-AIKCertificate(3)" OID.
@@ -580,19 +580,19 @@ namespace WebAuthN::Protocol {
                         auto result =_ASN1UnmarshalExtendedKeyUsage(ext.Value);
 
                         if (!result) {
-                            return unexpected(ErrAttestationFormat().WithDetails("AIK certificate EKU missing 2.23.133.8.3"s));
+                            return MakeError(ErrAttestationFormat().WithDetails("AIK certificate EKU missing 2.23.133.8.3"s));
                         }
                         auto eku = result.value();
 
                         if (eku.empty() || !_TCG_KP_AIK_CERTIFICATE.Equals(eku[0])) {
-                            return unexpected(ErrAttestationFormat().WithDetails("AIK certificate EKU missing 2.23.133.8.3"s));
+                            return MakeError(ErrAttestationFormat().WithDetails("AIK certificate EKU missing 2.23.133.8.3"s));
                         }
                         ekuValid = true;
                     }
                 }
 
                 if (!ekuValid) {
-                    return unexpected(ErrAttestationFormat().WithDetails("AIK certificate missing EKU"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("AIK certificate missing EKU"s));
                 }
 
                 // 5/6 The Basic Constraints extension MUST have the CA component set to false.
@@ -605,7 +605,7 @@ namespace WebAuthN::Protocol {
                         auto result = _ASN1UnmarshalBasicConstraints(ext.Value);
 
                         if (!result) {
-                            return unexpected(ErrAttestationFormat().WithDetails(fmt::format("AIK certificate basic constraints malformed {}", std::string(result.error()))));
+                            return MakeError(ErrAttestationFormat().WithDetails(fmt::format("AIK certificate basic constraints malformed {}", std::string(result.error()))));
                         }
                         constraints = result.value();
                     }
@@ -615,7 +615,7 @@ namespace WebAuthN::Protocol {
                 // extension [RFC5280] are both OPTIONAL as the status of many attestation certificates is available
                 // through metadata services. See, for example, the FIDO Metadata Service.
                 if (constraints.IsCA) {
-                    return unexpected(ErrAttestationFormat().WithDetails("AIK certificate basic constraints missing or CA is true"s));
+                    return MakeError(ErrAttestationFormat().WithDetails("AIK certificate basic constraints missing or CA is true"s));
                 }
 
                 // see https://medium.com/webauthnworks/verifying-fido-tpm2-0-attestation-fc7243847498
@@ -632,7 +632,7 @@ namespace WebAuthN::Protocol {
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::AttCA).get<std::string>(), std::optional<json>{x5c});
             }
 
-            return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"s));
+            return MakeError(ErrAttestationFormat().WithDetails("No attestation statement provided"s));
         }
     } // namespace
 

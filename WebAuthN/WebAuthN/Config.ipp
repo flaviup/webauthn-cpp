@@ -125,28 +125,28 @@ namespace WebAuthN::WebAuthN {
         }
 
         // Validate that the config flags in Config are properly set
-        inline std::optional<ErrorType> Validate() const noexcept {
+        inline OptionalError Validate() const noexcept {
 
             if (Validated) {
-                return std::nullopt;
+                return NoError;
             }
 
             if (RPDisplayName.empty()) {
-                return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPDisplayName"));
+                return MakeOptionalError(ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPDisplayName")));
             }
 
             if (RPID.empty()) {
-                return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPID"));
+                return MakeOptionalError(ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_EMPTY, "RPID")));
             }
 
             if (!Util::Url::Parse(RPID)) {
-                return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", RPID));
+                return MakeOptionalError(ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPID", RPID)));
             }
 
             if (!RPIcon.empty()) {
 
                 if (!Util::Url::Parse(RPIcon)) {
-                    return ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon));
+                    return MakeOptionalError(ErrorType().WithDetails(fmt::format(ERR_FMT_FIELD_NOT_VALID_URI, "RPIcon", RPIcon)));
                 }
             }
             auto defaultTimeoutConfig = DEFAULT_TIMEOUT;
@@ -169,7 +169,7 @@ namespace WebAuthN::WebAuthN {
             }
 
             if (RPOrigins.empty()) {
-                return ErrorType().WithDetails("must provide at least one value to the 'RPOrigins' field");
+                return MakeOptionalError(ErrorType().WithDetails("must provide at least one value to the 'RPOrigins' field"));
             }
 
             if (!AuthenticatorSelection.RequireResidentKey.has_value()) {
@@ -181,7 +181,7 @@ namespace WebAuthN::WebAuthN {
             }
             Validated = true;
 
-            return std::nullopt;
+            return NoError;
         }
 
         static inline ConfigType Load(const std::string& configFilePath) noexcept {

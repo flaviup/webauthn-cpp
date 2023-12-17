@@ -159,18 +159,18 @@ namespace WebAuthN::Util::Crypto {
         _ExtractNameEntry(const X509_NAME* name, int nid) noexcept {
 
             if (name == nullptr) {
-                return unexpected("Null X509_NAME"s);
+                return MakeError(ErrorType("Null X509_NAME"s));
             }
             auto position = X509_NAME_get_index_by_NID(name, nid, -1);
             auto entry = X509_NAME_get_entry(name, position);
 
             if (entry == nullptr) {
-                return unexpected("Null X509_NAME_ENTRY"s);
+                return MakeError(ErrorType("Null X509_NAME_ENTRY"s));
             }
             auto asn1Data = X509_NAME_ENTRY_get_data(entry);
 
             if (asn1Data == nullptr) {
-                return unexpected("Null ASN1_STRING"s);
+                return MakeError(ErrorType("Null ASN1_STRING"s));
             }
             auto entryString = ASN1_STRING_get0_data(asn1Data);
             std::string s(reinterpret_cast<const char*>(entryString));
@@ -182,19 +182,19 @@ namespace WebAuthN::Util::Crypto {
         _ConvertASN1TIME(const ASN1_TIME* t) noexcept {
 
             if (t == nullptr) {
-                return unexpected("Null ASN1_TIME"s);
+                return MakeError(ErrorType("Null ASN1_TIME"s));
             }
             auto bio = BIO_new(BIO_s_mem());
 
             if (bio == nullptr) {
-                return unexpected("Null BIO"s);
+                return MakeError(ErrorType("Null BIO"s));
             }
             auto rc = ASN1_TIME_print(bio, t);
             
             if (rc <= 0) {
 
                 BIO_free_all(bio);
-                return unexpected("ASN1_TIME_print failed or wrote no data"s);
+                return MakeError(ErrorType("ASN1_TIME_print failed or wrote no data"s));
             }
             constexpr auto DATE_LEN = 128;
             char buf[DATE_LEN]{};
@@ -203,7 +203,7 @@ namespace WebAuthN::Util::Crypto {
             if (rc <= 0) {
 
                 BIO_free_all(bio);
-                return unexpected("BIO_gets call failed to transfer contents to buf"s);
+                return MakeError(ErrorType("BIO_gets call failed to transfer contents to buf"s));
             }
             BIO_free_all(bio);
 
@@ -214,17 +214,17 @@ namespace WebAuthN::Util::Crypto {
         _GetExtension(const stack_st_X509_EXTENSION* extensions, const int index) noexcept {
 
             if (extensions == nullptr) {
-                return unexpected("Null stack_st_X509_EXTENSION"s);
+                return MakeError(ErrorType("Null stack_st_X509_EXTENSION"s));
             }
             auto extension = sk_X509_EXTENSION_value(extensions, index);
 
             if (extension == nullptr) {
-                return unexpected("Unable to extract extension from stack"s);
+                return MakeError(ErrorType("Unable to extract extension from stack"s));
             }
             auto obj = X509_EXTENSION_get_object(extension);
 
             if (obj == nullptr) {
-                return unexpected("Unable to extract ASN1 object from extension"s);
+                return MakeError(ErrorType("Unable to extract ASN1 object from extension"s));
             }
             X509CertificateType::ExtensionType parsedExtension{};
             parsedExtension.IsCritical = X509_EXTENSION_get_critical(extension) != 0;
@@ -236,7 +236,7 @@ namespace WebAuthN::Util::Crypto {
                 const auto size = OBJ_obj2txt(nullptr, 0, obj, 0);
 
                 if (size < 0) {
-                    return unexpected("Invalid extension name length"s);
+                    return MakeError(ErrorType("Invalid extension name length"s));
                 }
                 char* extensionName = new char[size + 1]{0};
                 OBJ_obj2txt(extensionName, size + 1, obj, 0);
@@ -248,7 +248,7 @@ namespace WebAuthN::Util::Crypto {
                 auto extensionName = OBJ_nid2ln(nid);
 
                 if (extensionName == nullptr) {
-                    return unexpected("Invalid X509v3 extension name"s);
+                    return MakeError(ErrorType("Invalid X509v3 extension name"s));
                 }
                 parsedExtension.ID = extensionName;
             }
@@ -259,7 +259,7 @@ namespace WebAuthN::Util::Crypto {
             }
 
             if (parsedExtension.ID.empty() && parsedExtension.Value.empty()) {
-                return unexpected("Could not parse X509_EXTENSION"s);
+                return MakeError(ErrorType("Could not parse X509_EXTENSION"s));
             }
 
             return parsedExtension;
@@ -272,24 +272,24 @@ namespace WebAuthN::Util::Crypto {
                         const std::vector<uint8_t>& signature) noexcept {
 
             if (certificate == nullptr) {
-                return unexpected("Null X509 certificate"s);
+                return MakeError(ErrorType("Null X509 certificate"s));
             }
             auto pKey = X509_get0_pubkey(certificate);
             
             if (pKey == nullptr) {
-                return unexpected("Could not get the public key from certificate"s);
+                return MakeError(ErrorType("Could not get the public key from certificate"s));
             }
             auto mdCtx = EVP_MD_CTX_new();
 
             if (mdCtx == nullptr) {
-                return unexpected("Could not create MD context"s);
+                return MakeError(ErrorType("Could not create MD context"s));
             }
             auto result = EVP_DigestVerifyInit_ex(mdCtx, nullptr, algorithmName.c_str(), nullptr, nullptr, pKey, nullptr);
 
             if (result != 1) {
 
                 EVP_MD_CTX_free(mdCtx);
-                return unexpected("Unable to init signature checking"s);
+                return MakeError(ErrorType("Unable to init signature checking"s));
             }
             result = EVP_DigestVerify(mdCtx, signature.data(), signature.size(), data.data(), data.size());
             EVP_MD_CTX_free(mdCtx);
@@ -298,7 +298,7 @@ namespace WebAuthN::Util::Crypto {
                 return result == 1;
             }
 
-            return unexpected("Could not check signature"s);
+            return MakeError(ErrorType("Could not check signature"s));
         }
     }
 
@@ -310,13 +310,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, data.data(), static_cast<int>(data.size())) != static_cast<int>(data.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate certificate data"s);
+            return MakeError(ErrorType("Could not duplicate certificate data"s));
         }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
@@ -324,7 +324,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not get names from X509 certificate"s);
+            return MakeError(ErrorType("Could not get names from X509 certificate"s));
         }
         auto subject = X509_get_subject_name(certificate);
         auto issuer = X509_get_issuer_name(certificate);
@@ -336,11 +336,11 @@ namespace WebAuthN::Util::Crypto {
         BIO_free_all(bio);
 
         if (!subjectNameResult) {
-            return unexpected(subjectNameResult.error());
+            return MakeError(subjectNameResult.error());
         }
 
         if (!issuerNameResult) {
-            return unexpected(issuerNameResult.error());
+            return MakeError(issuerNameResult.error());
         }
 
         return std::make_pair(subjectNameResult.value(), issuerNameResult.value());
@@ -352,13 +352,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, data.data(), static_cast<int>(data.size())) != static_cast<int>(data.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate certificate data"s);
+            return MakeError(ErrorType("Could not duplicate certificate data"s));
         }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
@@ -366,7 +366,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not parse X509 certificate"s);
+            return MakeError(ErrorType("Could not parse X509 certificate"s));
         }
         X509CertificateType parsedCertificate{};
         auto subject = X509_get_subject_name(certificate);
@@ -392,7 +392,7 @@ namespace WebAuthN::Util::Crypto {
             X509_free(certificate);
             BIO_free_all(bio);
 
-            return unexpected("Could not parse X509 certificate: invalid number of extensions"s);
+            return MakeError(ErrorType("Could not parse X509 certificate: invalid number of extensions"s));
         }
 
         for (int i = 0; i < extCount; ++i) {
@@ -415,7 +415,7 @@ namespace WebAuthN::Util::Crypto {
                 X509_free(certificate);
                 BIO_free_all(bio);
 
-                return unexpected(conversionResult.error());
+                return MakeError(conversionResult.error());
             }
             parsedCertificate.NotBefore = conversionResult.value();
         }
@@ -429,7 +429,7 @@ namespace WebAuthN::Util::Crypto {
                 X509_free(certificate);
                 BIO_free_all(bio);
 
-                return unexpected(conversionResult.error());
+                return MakeError(conversionResult.error());
             }
             parsedCertificate.NotAfter = conversionResult.value();
         }
@@ -451,13 +451,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate certificate data"s);
+            return MakeError(ErrorType("Could not duplicate certificate data"s));
         }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
@@ -465,7 +465,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not parse X509 certificate"s);
+            return MakeError(ErrorType("Could not parse X509 certificate"s));
         }
         auto result = _CheckSignature(certificate, algorithmName, data, signature);
         
@@ -481,13 +481,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate certificate data"s);
+            return MakeError(ErrorType("Could not duplicate certificate data"s));
         }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
@@ -495,7 +495,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not parse X509 certificate"s);
+            return MakeError(ErrorType("Could not parse X509 certificate"s));
         }
         auto pKey = X509_get0_pubkey(certificate);
             
@@ -504,7 +504,7 @@ namespace WebAuthN::Util::Crypto {
             X509_free(certificate);
             BIO_free_all(bio);
 
-            return unexpected("Could not get the public key from certificate"s);
+            return MakeError(ErrorType("Could not get the public key from certificate"s));
         }
         auto bioKey = BIO_new(BIO_s_mem());
         
@@ -513,7 +513,7 @@ namespace WebAuthN::Util::Crypto {
             X509_free(certificate);
             BIO_free_all(bio);
 
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
         const char* p = nullptr;
         long size = 0;
@@ -536,7 +536,7 @@ namespace WebAuthN::Util::Crypto {
         BIO_free_all(bio);
 
         if (!ok && p == nullptr) {
-            return unexpected("PEM_write_bio_PUBKEY failed"s);
+            return MakeError(ErrorType("PEM_write_bio_PUBKEY failed"s));
         }
 
         return s;
@@ -550,13 +550,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate certificate data"s);
+            return MakeError(ErrorType("Could not duplicate certificate data"s));
         }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
@@ -564,7 +564,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not parse X509 certificate"s);
+            return MakeError(ErrorType("Could not parse X509 certificate"s));
         }
         auto pKey = X509_get0_pubkey(certificate);
             
@@ -573,7 +573,7 @@ namespace WebAuthN::Util::Crypto {
             X509_free(certificate);
             BIO_free_all(bio);
 
-            return unexpected("Could not get the EC public key from certificate"s);
+            return MakeError(ErrorType("Could not get the EC public key from certificate"s));
         }
         auto algo = 0;
         std::optional<int> curve = std::nullopt;
@@ -646,13 +646,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, pubKeyData.data(), static_cast<int>(pubKeyData.size())) != static_cast<int>(pubKeyData.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate public key data"s);
+            return MakeError(ErrorType("Could not duplicate public key data"s));
         }
         EVP_PKEY* pKey = nullptr;
         pKey = PEM_read_bio_PUBKEY(bio, &pKey, nullptr, nullptr);
@@ -660,7 +660,7 @@ namespace WebAuthN::Util::Crypto {
         if (pKey == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not parse the RSA public key from data"s);
+            return MakeError(ErrorType("Could not parse the RSA public key from data"s));
         }
         auto algo = 0;
 
@@ -702,13 +702,13 @@ namespace WebAuthN::Util::Crypto {
         auto bio = BIO_new(BIO_s_mem());
 
         if (bio == nullptr) {
-            return unexpected("Null BIO"s);
+            return MakeError(ErrorType("Null BIO"s));
         }
 
         if (BIO_write(bio, certData.data(), static_cast<int>(certData.size())) != static_cast<int>(certData.size())) {
 
             BIO_free_all(bio);
-            return unexpected("Could not duplicate certificate data"s);
+            return MakeError(ErrorType("Could not duplicate certificate data"s));
         }
         X509* certificate = nullptr;
         d2i_X509_bio(bio, &certificate);
@@ -716,7 +716,7 @@ namespace WebAuthN::Util::Crypto {
         if (certificate == nullptr) {
 
             BIO_free_all(bio);
-            return unexpected("Could not parse X509 certificate"s);
+            return MakeError(ErrorType("Could not parse X509 certificate"s));
         }
         auto result = validate_hostname(hostname, certificate);
 
@@ -729,7 +729,7 @@ namespace WebAuthN::Util::Crypto {
             return false;
         }
 
-        return unexpected("Error verifying certificate hostname"s);
+        return MakeError(ErrorType("Error verifying certificate hostname"s));
     }
 } // namespace WebAuthN::Util::Crypto
 

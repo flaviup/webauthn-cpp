@@ -78,7 +78,7 @@ namespace WebAuthN::Protocol {
         //
         // Steps 9 through 12 are verified against the auth data. These steps are identical to 11 through 14 for assertion so we
         // handle them with AuthData.
-        inline std::optional<ErrorType>
+        inline OptionalError
         Verify(const std::string& relyingPartyID, 
                const std::vector<uint8_t>& clientDataHash, 
                bool verificationRequired) const noexcept {
@@ -110,7 +110,7 @@ namespace WebAuthN::Protocol {
                     return ErrAttestationFormat().WithInfo("Attestation format none with attestation present");
                 }
 
-                return std::nullopt;
+                return NoError;
             }
             auto formatHandlerIter = ATTESTATION_REGISTRY.find(Format);
             
@@ -141,7 +141,7 @@ namespace WebAuthN::Protocol {
                 for (const auto& s : meta.StatusReports) {
                     
                     if (Metadata::IsUndesiredAuthenticatorStatus(s.Status)) {
-                        return ErrInvalidAttestation().WithDetails("Authenticator with undesirable status encountered");
+                        return MakeOptionalError(ErrInvalidAttestation().WithDetails("Authenticator with undesirable status encountered"));
                     }
                 }
 
@@ -150,7 +150,7 @@ namespace WebAuthN::Protocol {
                     auto namesResult = Util::Crypto::GetNamesX509(x5c.value()[0]);
 
                     if (!namesResult) {
-                        return ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c");
+                        return MakeOptionalError(ErrInvalidAttestation().WithDetails("Unable to parse attestation certificate from x5c"));
                     }
                     auto [subjectName, issuerName] = namesResult.value();
 
@@ -169,7 +169,7 @@ namespace WebAuthN::Protocol {
                         }
 
                         if (!hasBasicFull) {
-                            return ErrInvalidAttestation().WithDetails("Attestation with full attestation from authenticator that does not support full attestation");
+                            return MakeOptionalError(ErrInvalidAttestation().WithDetails("Attestation with full attestation from authenticator that does not support full attestation"));
                         }
                     }
                 }
@@ -177,10 +177,10 @@ namespace WebAuthN::Protocol {
 
                 char strAaguid[37]{0};
                 uuid_unparse(aaguid, strAaguid);
-                return ErrInvalidAttestation().WithDetails(fmt::format("AAGUID {} not found in metadata during conformance testing", strAaguid));
+                return MakeOptionalError(ErrInvalidAttestation().WithDetails(fmt::format("AAGUID {} not found in metadata during conformance testing", strAaguid)));
             }
 
-            return std::nullopt;
+            return NoError;
         }
 
         // The authenticator data, including the newly created public key. See AuthenticatorData for more info
@@ -274,18 +274,18 @@ namespace WebAuthN::Protocol {
             auto decodedClientData = Util::URLEncodedBase64_Decode(ClientDataJSON);
 
             if (!decodedClientData) {
-                return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
+                return MakeError(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
             auto collectedClientData = decodedClientData.value(); //WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
             auto decodedAttestationData = Util::URLEncodedBase64_DecodeAsBinary(AttestationObject);
 
             if (!decodedAttestationData) {
-                return unexpected(ErrParsingData().WithDetails("Error unmarshalling attestation data"));
+                return MakeError(ErrParsingData().WithDetails("Error unmarshalling attestation data"));
             }
             auto attestationData = WebAuthNCBOR::JsonUnmarshal(decodedAttestationData.value());
 
             if (!attestationData) {
-                return unexpected(attestationData.error());
+                return MakeError(attestationData.error());
             }
             auto attestationObject = attestationData.value().get<AttestationObjectType>();
 
@@ -295,11 +295,11 @@ namespace WebAuthN::Protocol {
             auto err = attestationObject.AuthData.Unmarshal(attestationObject.RawAuthData);
 
             if (err) {
-                return unexpected(fmt::format("error decoding auth data: {}", std::string(err.value())));
+                return MakeError(ErrorType(fmt::format("error decoding auth data: {}", std::string(err.value()))));
             }
 
             if (!HasAttestedCredentialData(attestationObject.AuthData.Flags)) {
-                return unexpected(ErrAttestationFormat().WithInfo("Attestation missing attested credential data flag"));
+                return MakeError(ErrAttestationFormat().WithInfo("Attestation missing attested credential data flag"));
             }
             std::vector<AuthenticatorTransportType> transports{};
 

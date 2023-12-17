@@ -420,11 +420,12 @@ namespace WebAuthN::Protocol {
         // devices with limited capabilities and low power requirements, with much simpler software stacks than the client platform.
         // The authenticator data structure is a byte array of 37 bytes or more, and is laid out in this table:
         // https://www.w3.org/TR/webauthn/#table-authData
-        inline std::optional<ErrorType> Unmarshal(const std::vector<uint8_t>& rawAuthData) noexcept {
+        inline OptionalError Unmarshal(const std::vector<uint8_t>& rawAuthData) noexcept {
 
             if (MIN_AUTH_DATA_LENGTH > rawAuthData.size()) {
-                return ErrBadRequest().WithDetails("Authenticator data length too short")
-                                      .WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes", MIN_AUTH_DATA_LENGTH, rawAuthData.size()));
+                return MakeOptionalError(ErrBadRequest().WithDetails("Authenticator data length too short")
+                                                        .WithInfo(fmt::format("Expected data greater than {} bytes. Got {} bytes",
+                                                                  MIN_AUTH_DATA_LENGTH, rawAuthData.size())));
             }
 
             RPIDHash = std::vector<uint8_t>(rawAuthData.cbegin(), rawAuthData.cbegin() + 32);
@@ -445,12 +446,12 @@ namespace WebAuthN::Protocol {
                     auto attDataLen = AttData.AAGUID.size() + 2 + AttData.CredentialID.size() + AttData.CredentialPublicKey.size();
                     remaining = remaining - attDataLen;
                 } else {
-                    return ErrBadRequest().WithDetails("Attested credential flag set but data is missing");
+                    return MakeOptionalError(ErrBadRequest().WithDetails("Attested credential flag set but data is missing"));
                 }
             } else {
 
                 if (!HasExtensions(Flags) && rawAuthData.size() != 37) {
-                    return ErrBadRequest().WithDetails("Attested credential flag not set");
+                    return MakeOptionalError(ErrBadRequest().WithDetails("Attested credential flag not set"));
                 }
             }
 
@@ -461,20 +462,20 @@ namespace WebAuthN::Protocol {
                     ExtData = std::vector<uint8_t>(rawAuthData.cend() - remaining, rawAuthData.cend());
                     remaining -= ExtData.size();
                 } else {
-                    return ErrBadRequest().WithDetails("Extensions flag set but extensions data is missing");
+                    return MakeOptionalError(ErrBadRequest().WithDetails("Extensions flag set but extensions data is missing"));
                 }
             }
 
             if (remaining != 0) {
-                return ErrBadRequest().WithDetails("Leftover bytes decoding AuthenticatorData");
+                return MakeOptionalError(ErrBadRequest().WithDetails("Leftover bytes decoding AuthenticatorData"));
             }
 
-            return std::nullopt;
+            return NoError;
         }
 
         // Verify on AuthenticatorData handles Steps 9 through 12 for Registration
         // and Steps 11 through 14 for Assertion.
-        inline std::optional<ErrorType>
+        inline OptionalError
         Verify(const std::vector<uint8_t>& rpIdHash, 
                const std::vector<uint8_t>& appIDHash, 
                bool userVerificationRequired) const noexcept {
@@ -483,22 +484,22 @@ namespace WebAuthN::Protocol {
             // Verify that the RP ID hash in authData is indeed the SHA-256
             // hash of the RP ID expected by the RP.
             if (RPIDHash != rpIdHash && RPIDHash != appIDHash) {
-                return ErrVerification().WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}",
-                                                              fmt::join(RPIDHash, ", "),
-                                                              fmt::join(rpIdHash, ", ")));
+                return MakeOptionalError(ErrVerification().WithInfo(fmt::format("RP Hash mismatch. Expected {} and Received {}",
+                                                                    fmt::join(RPIDHash, ", "),
+                                                                    fmt::join(rpIdHash, ", "))));
             }
 
             // Registration Step 10 & Assertion Step 12
             // Verify that the User Present bit of the flags in authData is set.
             if (!HasUserPresent(Flags)) {
-                return ErrVerification().WithInfo("User presence flag not set by authenticator");
+                return MakeOptionalError(ErrVerification().WithInfo("User presence flag not set by authenticator"));
             }
 
             // Registration Step 11 & Assertion Step 13
             // If user verification is required for this assertion, verify that
             // the User Verified bit of the flags in authData is set.
             if (userVerificationRequired && !HasUserVerified(Flags)) {
-                return ErrVerification().WithInfo("User verification required but flag not set by authenticator");
+                return MakeOptionalError(ErrVerification().WithInfo("User verification required but flag not set by authenticator"));
             }
 
             // Registration Step 12 & Assertion Step 14
@@ -513,7 +514,7 @@ namespace WebAuthN::Protocol {
 
             // This is not yet fully implemented by the spec or by browsers.
 
-            return std::nullopt;
+            return NoError;
         }
 
         std::vector<uint8_t> RPIDHash;
@@ -524,18 +525,18 @@ namespace WebAuthN::Protocol {
 
     private:
         // If Attestation Data is present, unmarshall that into the appropriate public key structure.
-        inline std::optional<ErrorType>
+        inline OptionalError
         _UnmarshalAttestedData(const std::vector<uint8_t>& rawAuthData) noexcept {
 
             AttData.AAGUID = std::vector<uint8_t>(rawAuthData.cbegin() + 37, rawAuthData.cbegin() + 53);
             auto idLength = MAKE_UINT16(rawAuthData[53], rawAuthData[54]);
 
             if (rawAuthData.size() < static_cast<size_t>(MIN_ATTESTED_AUTH_LENGTH + idLength)) {
-                return ErrBadRequest().WithDetails("Authenticator attestation data length too short");
+                return MakeOptionalError(ErrBadRequest().WithDetails("Authenticator attestation data length too short"));
             }
 
             if (idLength > MAX_CREDENTIAL_ID_LENGTH) {
-                return ErrBadRequest().WithDetails("Authenticator attestation data credential id length too long");
+                return MakeOptionalError(ErrBadRequest().WithDetails("Authenticator attestation data credential id length too long"));
             }
 
             AttData.CredentialID = std::vector<uint8_t>(rawAuthData.cbegin() + MIN_ATTESTED_AUTH_LENGTH, rawAuthData.cbegin() + MIN_ATTESTED_AUTH_LENGTH + idLength);
@@ -544,11 +545,11 @@ namespace WebAuthN::Protocol {
             auto data = _UnmarshalCredentialPublicKey(lastChunk);
 
             if (!data) {
-                return ErrBadRequest().WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", std::string(data.error())));
+                return MakeOptionalError(ErrBadRequest().WithDetails(fmt::format("Could not unmarshal Credential Public Key: {}", std::string(data.error()))));
             }
             AttData.CredentialPublicKey = data.value();
 
-            return std::nullopt;
+            return NoError;
         }
 
         // Unmarshall the credential's Public Key into CBOR encoding.

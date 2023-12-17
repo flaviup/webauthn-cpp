@@ -40,24 +40,24 @@ namespace WebAuthN::Protocol {
         _ASN1UnmarshalAppleAnonymousAttestation(const std::vector<uint8_t>& data) noexcept {
 
             if (data.size() < 4) {
-                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
+                return MakeError(ErrorType("ASN1 parsing error of AppleAnonymousAttestationType"s));
             }
             auto p = data.data();
             auto end = p + data.size();
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
-                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
+                return MakeError(ErrorType("ASN1 parsing error of AppleAnonymousAttestationType"s));
             }
             auto retBoolSeq = ASN1::GetBooleanSequence(p);
 
             if (!retBoolSeq || p + retBoolSeq.value() != end || retBoolSeq.value() < 1) {
-                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
+                return MakeError(ErrorType("ASN1 parsing error of AppleAnonymousAttestationType"s));
             }
             auto retBytes = ASN1::GetBytes(p);
 
             if (!retBytes/* || p != end*/) {
-                return unexpected("ASN1 parsing error of AppleAnonymousAttestationType"s);
+                return MakeError(ErrorType("ASN1 parsing error of AppleAnonymousAttestationType"s));
             }
 
             return AppleAnonymousAttestationType{
@@ -87,24 +87,24 @@ namespace WebAuthN::Protocol {
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("x5c") == atts.cend()) { // If x5c is not present, return an error
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving x5c value"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving x5c value"));
                 }
                 auto x5c = atts["x5c"];
 
                 if (x5c.empty()) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
                 std::vector<uint8_t> attCertBytes{};
 
                 try {
                     attCertBytes = x5c[0].get_binary();
                 } catch (const std::exception&) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
                 auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
 
                 if (!attCertResult) {
-                    return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
+                    return MakeError(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
                 }
                 auto attCert = attCertResult.value();
 
@@ -126,34 +126,34 @@ namespace WebAuthN::Protocol {
 
                         /*if (extension.IsCritical) {
 
-                            return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
+                            return MakeError(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
                         }*/
                         attExtBytes = extension.Value;
                     }
                 }
 
                 if (attExtBytes.empty()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.2.840.113635.100.8.2"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.2.840.113635.100.8.2"));
                 }
                 auto decodedResult = _ASN1UnmarshalAppleAnonymousAttestation(attExtBytes);
 
                 if (!decodedResult) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Unable to parse Apple attestation certificate extensions"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Unable to parse Apple attestation certificate extensions"));
                 }
                 auto decoded = decodedResult.value();
 
                 if (!Util::StringCompare::ConstantTimeEqual(decoded.Nonce, nonce)) {
-                    return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate does not contain expected nonce"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("Attestation certificate does not contain expected nonce"));
                 }
 
                 // Step 5. Verify that the credential public key equals the Subject Public Key of attCert.
                 auto ok = WebAuthNCOSE::ParsePublicKey(att.AuthData.AttData.CredentialPublicKey);
 
                 if (!ok) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
+                    return MakeError(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
                 }
                 auto pubKey = ok.value();
-                std::optional<ErrorType> err = std::nullopt;
+                OptionalError err = NoError;
 
                 try {
                 
@@ -180,22 +180,22 @@ namespace WebAuthN::Protocol {
                         };
 
                         if (credKey != subjectKey) {
-                            err = ErrInvalidAttestation().WithDetails("Certificate public key does not match public key in authData");
+                            err = MakeOptionalError(ErrInvalidAttestation().WithDetails("Certificate public key does not match public key in authData"));
                         }
                     }
                 } catch(const std::bad_any_cast&) {
-                    err = ErrUnsupportedKey();
+                    err = MakeOptionalError(ErrUnsupportedKey());
                 }
 
                 if (err) {
-                    return unexpected(err.value());
+                    return MakeError(err.value());
                 }
 
                 // Step 6. If successful, return implementation-specific values representing attestation type Anonymization CA and attestation trust path x5c.
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::AnonCA).get<std::string>(), std::optional<json>{x5c});
             }
 
-            return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
+            return MakeError(ErrAttestationFormat().WithDetails("No attestation statement provided"));
         }
     } // namespace
 

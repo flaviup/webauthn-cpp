@@ -204,7 +204,7 @@ namespace WebAuthN::Protocol {
             try {
                 enableAppID = (itCer->second).get<bool>();
             } catch (const std::exception&) {
-                return unexpected(ErrBadRequest().WithDetails("Client Output appid did not have the expected type"));
+                return MakeError(ErrBadRequest().WithDetails("Client Output appid did not have the expected type"));
             }
 
             if (!enableAppID) {
@@ -213,13 +213,13 @@ namespace WebAuthN::Protocol {
             auto it = authExt.value().find(EXTENSION_APPID);
 
             if (it == authExt.value().end() || it->second.empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Session Data does not have an appid but Client Output indicates it should be set"));
+                return MakeError(ErrBadRequest().WithDetails("Session Data does not have an appid but Client Output indicates it should be set"));
             }
 
             try {
                 return (it->second).get<std::string>();
             } catch (const std::exception&) {
-                return unexpected(ErrBadRequest().WithDetails("Session Data appid did not have the expected type"));
+                return MakeError(ErrBadRequest().WithDetails("Session Data appid did not have the expected type"));
             }
         }
 
@@ -331,27 +331,27 @@ namespace WebAuthN::Protocol {
         inline static expected<ParsedCredentialCreationDataType> Parse(const CredentialCreationResponseType& credentialCreationResponse) noexcept {
 
             if (credentialCreationResponse.ID.empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing ID"));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing ID"));
             }
             auto testB64Result = Util::URLEncodedBase64_Decode(credentialCreationResponse.ID);
 
             if (!testB64Result || testB64Result.value().empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("ID not base64 URL Encoded"));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("ID not base64 URL Encoded"));
             }
 
             if (credentialCreationResponse.Type.empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing type"));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo("Missing type"));
             }
 
             if (json(credentialCreationResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Registration")
-                                                 .WithInfo(fmt::format("Type not {}",
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Registration")
+                                                .WithInfo(fmt::format("Type not {}",
                                                                        json(CredentialTypeType::PublicKey).get<std::string>())));
             }
             auto responseParseResult = credentialCreationResponse.AttestationResponse.Parse();
 
             if (!responseParseResult) {
-                return unexpected(ErrParsingData().WithDetails("Error parsing attestation response"));
+                return MakeError(ErrParsingData().WithDetails("Error parsing attestation response"));
             }
             auto response = responseParseResult.value();
 
@@ -363,7 +363,7 @@ namespace WebAuthN::Protocol {
                     auto authT = json(t).get<AuthenticatorTransportType>();
 
                     if (authT == AuthenticatorTransportType::Invalid) {
-                        return unexpected(ErrParsingData().WithDetails("Error parsing authenticator transport type " + t));
+                        return MakeError(ErrParsingData().WithDetails("Error parsing authenticator transport type " + t));
                     }
                     response.Transports.push_back(authT);
                 }
@@ -387,7 +387,7 @@ namespace WebAuthN::Protocol {
         // Verify the Client and Attestation data.
         //
         // Specification: §7.1. Registering a New Credential (https://www.w3.org/TR/webauthn/#sctn-registering-a-new-credential)
-        inline std::optional<ErrorType>
+        inline OptionalError
         Verify(const std::string& storedChallenge,
                bool verifyUser,
                const std::string& relyingPartyID,
@@ -456,7 +456,7 @@ namespace WebAuthN::Protocol {
 
             // TODO: Not implemented for the reasons mentioned under Step 16
 
-            return std::nullopt;
+            return NoError;
         }
 
         ParsedAttestationResponseType Response;
@@ -478,7 +478,7 @@ namespace WebAuthN::Protocol {
     inline expected<ParsedCredentialCreationDataType> ParseCredentialCreationResponse(const std::string& response) noexcept {
 
         if (response.empty()) {
-            return unexpected(ErrBadRequest().WithDetails("No response given"));
+            return MakeError(ErrBadRequest().WithDetails("No response given"));
         }
 
         try {
@@ -486,7 +486,7 @@ namespace WebAuthN::Protocol {
             auto credentialCreationResponse = json::parse(response).get<CredentialCreationResponseType>();
             return ParsedCredentialCreationDataType::Parse(credentialCreationResponse);
         } catch (const std::exception& e) {
-            return unexpected(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(e.what()));
+            return MakeError(ErrBadRequest().WithDetails("Parse error for Registration").WithInfo(e.what()));
         }
     }
 } // namespace WebAuthN::Protocol

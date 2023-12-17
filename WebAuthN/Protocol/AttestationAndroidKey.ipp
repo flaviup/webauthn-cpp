@@ -210,7 +210,7 @@ namespace WebAuthN::Protocol {
 auto result = (y);\
 \
 if (!result) {\
-    return unexpected("ASN1 map parsing error"s);\
+    return MakeError(ErrorType("ASN1 map parsing error"s));\
 }\
 x = result.value()
 
@@ -224,7 +224,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         _ASN1UnmarshalAttestPackageInfos(const uint8_t*& data, const long length) noexcept {
 
             if (length == 0) {
-                return unexpected("ASN1 parsing error of AttestationPackageInfoTypes in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationPackageInfoTypes in Android Key Attestation"s));
             }
             auto end = data + length;
             std::vector<AttestationPackageInfoType> attPackageInfos{};
@@ -235,7 +235,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 auto retSequence = ASN1::GetSequence(data);
 
                 if (!retSequence) {
-                    return unexpected("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s);
+                    return MakeError(ErrorType("ASN1 parsing error of AttestationPackageInfoType in Android Key Attestation"s));
                 }
 
                 if (retSequence.value() > 0) {
@@ -249,14 +249,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                         attPackageInfo.PackageName = std::string(v.data(), v.data() + v.size());
 
                     } else {
-                        return unexpected("ASN1 parsing error of AttestationPackageInfoType::PackageName in Android Key Attestation"s);
+                        return MakeError(ErrorType("ASN1 parsing error of AttestationPackageInfoType::PackageName in Android Key Attestation"s));
                     }
-                    auto retInt = data < end2 ? ASN1::GetInt<int64_t>(data) : unexpected(""s);
+                    auto retInt = data < end2 ? ASN1::GetInt<int64_t>(data) : MakeError(ErrorType(""s));
 
                     if (retInt) {
                         attPackageInfo.Version = retInt.value();
                     } else {
-                        return unexpected("ASN1 parsing error of AttestationPackageInfoType::Version in Android Key Attestation"s);
+                        return MakeError(ErrorType("ASN1 parsing error of AttestationPackageInfoType::Version in Android Key Attestation"s));
                     }
 
                     attPackageInfos.push_back(attPackageInfo);
@@ -270,7 +270,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         _ASN1UnmarshalAttestSignatureDigests(const uint8_t*& data, const long length) noexcept {
 
             if (length == 0) {
-                return unexpected("ASN1 parsing error of SignatureDigests in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of SignatureDigests in Android Key Attestation"s));
             }
             auto end = data + length;
             std::vector<std::vector<uint8_t>> attSignatureDigests{};
@@ -282,7 +282,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 if (retBytes) {
                     attSignatureDigests.push_back(retBytes.value());
                 } else {
-                    return unexpected("ASN1 parsing error of SignatureDigests in Android Key Attestation"s);
+                    return MakeError(ErrorType("ASN1 parsing error of SignatureDigests in Android Key Attestation"s));
                 }
             }
 
@@ -293,7 +293,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         _ASN1UnmarshalAttestAppID(const ASN1::BufferSliceType& bufferSlice) noexcept {
 
             if (std::get<size_t>(bufferSlice) < size_t(1)) {
-                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s));
             }
             AttestationApplicationIDType attAppID{};
             auto p = std::get<const uint8_t*>(bufferSlice);
@@ -301,14 +301,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto retBytes = ASN1::GetBytes(p);
 
             if (!retBytes || p != end) {
-                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s));
             }
             p = retBytes.value().data();
             end = p + retBytes.value().size();
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
-                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s));
             }
             auto retSet = ASN1::GetSet(p);
 
@@ -317,28 +317,28 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 auto result = _ASN1UnmarshalAttestPackageInfos(p, retSet.value());
 
                 if (!result) {
-                    return unexpected("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s);
+                    return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s));
                 }
                 attAppID.PackageInfos = result.value();
             } else {
-                return unexpected("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType::PackageInfos in Android Key Attestation"s));
             }
-            retSet = p < end ? ASN1::GetSet(p) : unexpected(""s);
+            retSet = p < end ? ASN1::GetSet(p) : MakeError(ErrorType(""s));
 
             if (retSet) {
 
                 auto result = _ASN1UnmarshalAttestSignatureDigests(p, retSet.value());
 
                 if (!result) {
-                    return unexpected("ASN1 parsing error of AttestationApplicationIDType::SignatureDigests in Android Key Attestation"s);
+                    return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType::SignatureDigests in Android Key Attestation"s));
                 }
                 attAppID.SignatureDigests = result.value();
             } else {
-                return unexpected("ASN1 parsing error of AttestationApplicationIDType::SignatureDigests in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType::SignatureDigests in Android Key Attestation"s));
             }
 
             if (p != end) {
-                return unexpected("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of AttestationApplicationIDType in Android Key Attestation"s));
             }
 
             return attAppID;
@@ -348,14 +348,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         _ASN1UnmarshalRootOfTrust(const ASN1::BufferSliceType& bufferSlice) noexcept {
 
             if (std::get<size_t>(bufferSlice) < size_t(1)) {
-                return unexpected("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s));
             }
             auto p = std::get<const uint8_t*>(bufferSlice);
             auto end = p + std::get<size_t>(bufferSlice);
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
-                return unexpected("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of RootOfTrustType in Android Key Attestation"s));
             }
             RootOfTrustType rootOfTrust{};
             auto retBytes = ASN1::GetBytes(p);
@@ -363,28 +363,28 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             if (retBytes) {
                 rootOfTrust.VerifiedBootKey = retBytes.value();
             } else {
-                return unexpected("ASN1 parsing error of RootOfTrustType::VerifiedBootKey in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of RootOfTrustType::VerifiedBootKey in Android Key Attestation"s));
             }
-            auto retInt = p < end ? ASN1::GetInt(p) : unexpected(""s);
+            auto retInt = p < end ? ASN1::GetInt(p) : MakeError(ErrorType(""s));
 
             if (retInt) {
                 rootOfTrust.DeviceLocked = retInt.value() != 0;
             } else {
-                return unexpected("ASN1 parsing error of RootOfTrustType::DeviceLocked in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of RootOfTrustType::DeviceLocked in Android Key Attestation"s));
             }
-            retInt = p < end ? ASN1::GetInt(p) : unexpected(""s);
+            retInt = p < end ? ASN1::GetInt(p) : MakeError(ErrorType(""s));
 
             if (retInt) {
                 rootOfTrust.VerifiedBootState = static_cast<VerifiedBootStateType>(retInt.value());
             } else {
-                return unexpected("ASN1 parsing error of RootOfTrustType::VerifiedBootState in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of RootOfTrustType::VerifiedBootState in Android Key Attestation"s));
             }
-            retBytes = p < end ? ASN1::GetBytes(p) : unexpected(""s);
+            retBytes = p < end ? ASN1::GetBytes(p) : MakeError(ErrorType(""s));
 
             if (retBytes) {
                 rootOfTrust.VerifiedBootHash = retBytes.value();
             } else {
-                return unexpected("ASN1 parsing error of RootOfTrustType::VerifiedBootHash in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of RootOfTrustType::VerifiedBootHash in Android Key Attestation"s));
             }
 
             return rootOfTrust;
@@ -397,7 +397,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto asn1MapResult = ASN1::GetMap(data, size);
 
             if (!asn1MapResult) {
-                return unexpected("ASN1 map parsing error"s);
+                return MakeError(ErrorType("ASN1 map parsing error"s));
             }
             auto asn1Map = asn1MapResult.value();
             using ALT = AuthorizationListType;
@@ -449,7 +449,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
         _ASN1UnmarshalKeyDescription(const std::vector<uint8_t>& data) noexcept {
 
             if (data.size() < 4) {
-                return unexpected("ASN1 parsing error of KeyDescriptionType in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType in Android Key Attestation"s));
             }
             KeyDescriptionType keyDesc{};
             auto p = data.data();
@@ -457,51 +457,51 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
             auto retSequence = ASN1::GetSequence(p);
 
             if (!retSequence || p + retSequence.value() != end || retSequence.value() < 1) {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s));
             }
             auto retInt = ASN1::GetInt(p);
 
             if (retInt) {
                 keyDesc.AttestationVersion = retInt.value();
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::AttestationVersion in Android Key Attestation"s));
             }
-            retInt = p < end ? ASN1::GetInt(p) : unexpected(""s);
+            retInt = p < end ? ASN1::GetInt(p) : MakeError(ErrorType(""s));
 
             if (retInt) {
                 keyDesc.AttestationSecurityLevel = static_cast<SecurityLevelType>(retInt.value());
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationSecurityLevel in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::AttestationSecurityLevel in Android Key Attestation"s));
             }
-            retInt = p < end ? ASN1::GetInt(p) : unexpected(""s);
+            retInt = p < end ? ASN1::GetInt(p) : MakeError(ErrorType(""s));
 
             if (retInt) {
                 keyDesc.KeymasterVersion = retInt.value();
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::KeymasterVersion in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::KeymasterVersion in Android Key Attestation"s));
             }
-            retInt = p < end ? ASN1::GetInt(p) : unexpected(""s);
+            retInt = p < end ? ASN1::GetInt(p) : MakeError(ErrorType(""s));
 
             if (retInt) {
                 keyDesc.KeymasterSecurityLevel = static_cast<SecurityLevelType>(retInt.value());
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::KeymasterSecurityLevel in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::KeymasterSecurityLevel in Android Key Attestation"s));
             }
-            auto retBytes = p < end ? ASN1::GetBytes(p) : unexpected(""s);
+            auto retBytes = p < end ? ASN1::GetBytes(p) : MakeError(ErrorType(""s));
 
             if (retBytes) {
                 keyDesc.AttestationChallenge = retBytes.value();
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::AttestationChallenge in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::AttestationChallenge in Android Key Attestation"s));
             }
-            retBytes = p < end ? ASN1::GetBytes(p) : unexpected(""s);
+            retBytes = p < end ? ASN1::GetBytes(p) : MakeError(ErrorType(""s));
 
             if (retBytes) {
                 keyDesc.UniqueID = retBytes.value();
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::UniqueID in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::UniqueID in Android Key Attestation"s));
             }
-            retSequence = p < end ? ASN1::GetSequence(p) : unexpected(""s);
+            retSequence = p < end ? ASN1::GetSequence(p) : MakeError(ErrorType(""s));
 
             if (retSequence) {
 
@@ -510,12 +510,12 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 if (ret) {
                     keyDesc.SoftwareEnforced = ret.value();
                 } else {
-                    return unexpected("ASN1 parsing error of KeyDescriptionType::SoftwareEnforced in Android Key Attestation"s);
+                    return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::SoftwareEnforced in Android Key Attestation"s));
                 }
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::SoftwareEnforced in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::SoftwareEnforced in Android Key Attestation"s));
             }
-            retSequence = p < end ? ASN1::GetSequence(p) : unexpected(""s);
+            retSequence = p < end ? ASN1::GetSequence(p) : MakeError(ErrorType(""s));
 
             if (retSequence) {
 
@@ -524,14 +524,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 if (ret) {
                     keyDesc.TeeEnforced = ret.value();
                 } else {
-                    return unexpected("ASN1 parsing error of KeyDescriptionType::TeeEnforced in Android Key Attestation"s);
+                    return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::TeeEnforced in Android Key Attestation"s));
                 }
             } else {
-                return unexpected("ASN1 parsing error of KeyDescriptionType::TeeEnforced in Android Key Attestation"s);
+                return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType::TeeEnforced in Android Key Attestation"s));
             }
 
             //if (p != end) {
-            //    return unexpected("ASN1 parsing error of KeyDescriptionType in Android Key Attestation"s);
+            //    return MakeError(ErrorType("ASN1 parsing error of KeyDescriptionType in Android Key Attestation"s));
             //}
 
             return keyDesc;
@@ -565,32 +565,32 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("alg") == atts.cend()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving alg value"));
+                    return MakeError(ErrorType(ErrAttestationFormat().WithDetails("Error retrieving alg value")));
                 }
                 auto alg = atts["alg"].get<int64_t>();
 
                 // Get the sig value - A byte string containing the attestation signature.
                 if (atts.find("sig") == atts.cend() || !atts["sig"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
+                    return MakeError(ErrorType(ErrAttestationFormat().WithDetails("Error retrieving sig value")));
                 }
                 auto signature = atts["sig"].get_binary();
 
                 if (atts.find("x5c") == atts.cend()) { // If x5c is not present, return an error
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving x5c value"));
+                    return MakeError(ErrorType(ErrAttestationFormat().WithDetails("Error retrieving x5c value")));
                 }
                 auto x5c = atts["x5c"];
 
                 // §8.4.2. Verify that sig is a valid signature over the concatenation of authenticatorData and clientDataHash
                 // using the public key in the first certificate in x5c with the algorithm specified in alg.
                 if (x5c.empty()) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrorType(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain")));
                 }
                 std::vector<uint8_t> attCertBytes{};
 
                 try {
                     attCertBytes = x5c[0].get_binary();
                 } catch (const std::exception&) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrorType(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain")));
                 }
                 std::vector<uint8_t> signatureData(att.RawAuthData.size() + clientDataHash.size());
                 std::memcpy(signatureData.data(), att.RawAuthData.data(), att.RawAuthData.size());
@@ -598,7 +598,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
 
                 if (!attCertResult) {
-                    return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
+                    return MakeError(ErrorType(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error())))));
                 }
                 auto attCert = attCertResult.value();
                 auto coseAlg = static_cast<WebAuthNCOSE::COSEAlgorithmIdentifierType>(alg);
@@ -609,17 +609,17 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                                                                         signature);
 
                 if (!signatureCheckResult || !signatureCheckResult.value()) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
+                    return MakeError(ErrorType(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error())))));
                 }
 
                 // Verify that the public key in the first certificate in x5c matches the credentialPublicKey in the attestedCredentialData in authenticatorData.
                 auto ok = WebAuthNCOSE::ParsePublicKey(att.AuthData.AttData.CredentialPublicKey);
 
                 if (!ok) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
+                    return MakeError(ErrorType(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error())))));
                 }
                 auto pubKey = ok.value();
-                std::optional<ErrorType> err = std::nullopt;
+                OptionalError err = NoError;
 
                 try {
 
@@ -629,10 +629,10 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     if (!verificationResult) {
                         err = verificationResult.error();
                     } else if (!verificationResult.value()) {
-                        err = ErrInvalidAttestation().WithDetails("Signature verification failed");
+                        err = MakeOptionalError(ErrInvalidAttestation().WithDetails("Signature verification failed"));
                     }
                 } catch(const std::bad_any_cast&) {
-                    err = ErrUnsupportedKey();
+                    err = MakeOptionalError(ErrUnsupportedKey());
                 }
                 // A more generic version of the above code
                 /*auto success = false;
@@ -645,14 +645,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     if (!verificationResult) {
                         err = verificationResult.error();
                     } else if (!verificationResult.value()) {
-                        return unexpected(ErrInvalidAttestation().WithDetails("Signature verification failed"));
+                        return MakeError(ErrInvalidAttestation().WithDetails("Signature verification failed"));
                     }
                 } else {
-                    err = ErrUnsupportedKey();
+                    err = MakeOptionalError(ErrUnsupportedKey());
                 }*/
 
                 if (err) {
-                    return unexpected(err.value());
+                    return MakeError(err.value());
                 }
 
                 constexpr auto ID_FIDO = "1.3.6.1.4.1.11129.2.1.17"; //asn1.ObjectIdentifier{1, 3, 6, 1, 4, 1, 11129, 2, 1, 17};
@@ -663,14 +663,14 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     if (extension.ID == ID_FIDO) {
 
                         if (extension.IsCritical) {
-                            return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
+                            return MakeError(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
                         }
                         attExtBytes = extension.Value;
                     }
                 }
 
                 if (attExtBytes.empty()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.3.6.1.4.1.11129.2.1.17"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation certificate extensions missing 1.3.6.1.4.1.11129.2.1.17"));
                 }
 
                 // As noted in §8.4.1 (https://www.w3.org/TR/webauthn/#key-attstn-cert-requirements) the Android Key Attestation attestation certificate's
@@ -678,18 +678,18 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                 auto decodedResult = _ASN1UnmarshalKeyDescription(attExtBytes);
 
                 if (!decodedResult) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Unable to parse Android Key attestation certificate extensions"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Unable to parse Android Key attestation certificate extensions"));
                 }
                 auto decoded = decodedResult.value();
 
                 // Verify that the attestationChallenge field in the attestation certificate extension data is identical to clientDataHash.
                 if (!Util::StringCompare::ConstantTimeEqual(decoded.AttestationChallenge, clientDataHash)) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation challenge not equal to clientDataHash"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation challenge not equal to clientDataHash"));
                 }
 
                 // The AuthorizationList.allApplications field is not present on either authorization list (softwareEnforced nor teeEnforced), since PublicKeyCredential MUST be scoped to the RP ID.
                 if (decoded.SoftwareEnforced.AllApplications || decoded.TeeEnforced.AllApplications) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains all applications field"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains all applications field"));
                 }
 
                 // For the following, use only the teeEnforced authorization list if the RP wants to accept only keys from a trusted execution environment, otherwise use the union of teeEnforced and softwareEnforced.
@@ -698,7 +698,7 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     (decoded.TeeEnforced.Origin && decoded.TeeEnforced.Origin.value() != KmKeyOriginType::Generated) ||
                     (!decoded.SoftwareEnforced.Origin && !decoded.TeeEnforced.Origin)) {
 
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with origin not equal KM_ORIGIN_GENERATED"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with origin not equal KM_ORIGIN_GENERATED"));
                 }
 
                 // The value in the AuthorizationList.purpose field is equal to KM_PURPOSE_SIGN. (which == 2)
@@ -707,12 +707,12 @@ if (asn1Map.find(fieldTag) == asn1Map.cend()) {\
                     (!decoded.TeeEnforced.Purpose || 
                      ((static_cast<int32_t>(decoded.TeeEnforced.Purpose.value()) & static_cast<int32_t>(KmPurposeType::Sign)) == 0))) {
 
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with purpose not equal KM_PURPOSE_SIGN"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation certificate extensions contains authorization list with purpose not equal KM_PURPOSE_SIGN"));
                 }
 
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
             } else {
-                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
+                return MakeError(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
         }
     } // namespace

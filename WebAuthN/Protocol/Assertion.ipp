@@ -84,19 +84,19 @@ namespace WebAuthN::Protocol {
             auto decodedClientData = Util::URLEncodedBase64_Decode(ClientDataJSON);
 
             if (!decodedClientData) {
-                return unexpected(ErrParsingData().WithDetails("Error unmarshalling client data json"));
+                return MakeError(ErrParsingData().WithDetails("Error unmarshalling client data json"));
             }
             auto collectedClientData = decodedClientData.value(); // WebAuthNCBOR::JsonUnmarshal(decodedClientData.value());
             AuthenticatorDataType auth{};
             auto binaryData = Util::URLEncodedBase64_DecodeAsBinary(AuthenticatorData);
 
             if (!binaryData || auth.Unmarshal(binaryData.value())) {
-                return unexpected(ErrParsingData().WithDetails("Error unmarshalling auth data"));
+                return MakeError(ErrParsingData().WithDetails("Error unmarshalling auth data"));
             }
             binaryData = Util::URLEncodedBase64_DecodeAsBinary(Signature);
 
             if (!binaryData) {
-                return unexpected(ErrParsingData().WithDetails("Error unmarshalling signature"));
+                return MakeError(ErrParsingData().WithDetails("Error unmarshalling signature"));
             }
             auto signature = binaryData.value();
             std::vector<uint8_t> userHandle{};
@@ -106,7 +106,7 @@ namespace WebAuthN::Protocol {
                 binaryData = Util::URLEncodedBase64_DecodeAsBinary(UserHandle.value());
 
                 if (!binaryData) {
-                    return unexpected(ErrParsingData().WithDetails("Error unmarshalling user handle"));
+                    return MakeError(ErrParsingData().WithDetails("Error unmarshalling user handle"));
                 }
                 userHandle = binaryData.value();
             }
@@ -212,28 +212,28 @@ namespace WebAuthN::Protocol {
         inline static expected<ParsedCredentialAssertionDataType> Parse(const CredentialAssertionResponseType& credentialAssertionResponse) noexcept {
 
             if (credentialAssertionResponse.ID.empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing ID"));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing ID"));
             }
             auto testB64Result = Util::URLEncodedBase64_Decode(credentialAssertionResponse.ID);
 
             if (!testB64Result || testB64Result.value().empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("ID not base64 URL Encoded"));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("ID not base64 URL Encoded"));
             }
 
             if (credentialAssertionResponse.Type.empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing type"));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo("Missing type"));
             }
 
             if (json(credentialAssertionResponse.Type).get<CredentialTypeType>() != CredentialTypeType::PublicKey) {
-                return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion")
-                                                 .WithInfo(fmt::format("Type not {}",
-                                                                       json(CredentialTypeType::PublicKey).get<std::string>())));
+                return MakeError(ErrBadRequest().WithDetails("Parse error for Assertion")
+                                                .WithInfo(fmt::format("Type not {}",
+                                                                      json(CredentialTypeType::PublicKey).get<std::string>())));
             }
 
             auto responseParseResult = credentialAssertionResponse.AssertionResponse.Parse();
 
             if (!responseParseResult) {
-                return unexpected(ErrParsingData().WithDetails("Error parsing assertion response"));
+                return MakeError(ErrParsingData().WithDetails("Error parsing assertion response"));
             }
             auto response = responseParseResult.value();
 
@@ -256,7 +256,7 @@ namespace WebAuthN::Protocol {
         // documentation.
         //
         // Specification: §7.2 Verifying an Authentication Assertion (https://www.w3.org/TR/webauthn/#sctn-verifying-assertion)
-        inline std::optional<ErrorType>
+        inline OptionalError
         Verify(const std::string& storedChallenge, 
                const std::string& relyingPartyID, 
                const std::vector<std::string>& relyingPartyOrigins, 
@@ -337,16 +337,16 @@ namespace WebAuthN::Protocol {
             }
 
             if (err) {
-                return ErrAssertionSignature().WithDetails(fmt::format("Error parsing the assertion public key: {}", std::string(err.value())));
+                return MakeOptionalError(ErrAssertionSignature().WithDetails(fmt::format("Error parsing the assertion public key: {}", std::string(err.value()))));
             }
 
             auto errSig = WebAuthNCOSE::VerifySignature(key, sigData, Response.Signature);
 
             if (!errSig) {
-                return ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", std::string(errSig.error())));
+                return MakeOptionalError(ErrAssertionSignature().WithDetails(fmt::format("Error validating the assertion signature: {}", std::string(errSig.error()))));
             }
 
-            return std::nullopt;
+            return NoError;
         }
 
         ParsedAssertionResponseType Response;
@@ -368,7 +368,7 @@ namespace WebAuthN::Protocol {
     inline expected<ParsedCredentialAssertionDataType> ParseCredentialRequestResponse(const std::string& response) noexcept {
 
         if (response.empty()) {
-            return unexpected(ErrBadRequest().WithDetails("No response given"));
+            return MakeError(ErrBadRequest().WithDetails("No response given"));
         }
 
         try {
@@ -376,7 +376,7 @@ namespace WebAuthN::Protocol {
             auto credentialAssertionResponse = json::parse(response).get<CredentialAssertionResponseType>();
             return ParsedCredentialAssertionDataType::Parse(credentialAssertionResponse);
         } catch (const std::exception& e) {
-            return unexpected(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo(e.what()));
+            return MakeError(ErrBadRequest().WithDetails("Parse error for Assertion").WithInfo(e.what()));
         }
     }
 } // namespace WebAuthN::Protocol

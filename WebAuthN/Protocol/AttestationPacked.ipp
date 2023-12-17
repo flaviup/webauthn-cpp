@@ -48,13 +48,13 @@ namespace WebAuthN::Protocol {
 
                     cb = c.get_binary();
                 } catch (const std::exception&) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
 
                 auto certParsingResult = Util::Crypto::ParseCertificate(cb);
 
                 if (!certParsingResult) {
-                    return unexpected(ErrAttestationFormat().
+                    return MakeError(ErrAttestationFormat().
                         WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(certParsingResult.error()))));
                 }
                 auto ct = certParsingResult.value();
@@ -62,26 +62,26 @@ namespace WebAuthN::Protocol {
                 auto notAfterResult = Util::Time::ParseISO8601(ct.NotAfter);
 
                 if (!notBeforeResult || !notAfterResult) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Cert in chain has no valid date times"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Cert in chain has no valid date times"));
                 }
                 auto notBefore = notBeforeResult.value();
                 auto notAfter = notAfterResult.value();
                 auto now = Util::Time::Timestamp();
 
                 if (notBefore > now || notAfter < now) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Cert in chain not time valid"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Cert in chain not time valid"));
                 }
             }
 
             if (x5c.empty()) {
-                return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
             }
             std::vector<uint8_t> attCertBytes{};
 
             try {
                 attCertBytes = x5c[0].get_binary();
             } catch (const std::exception&) {
-                return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
             }
             std::vector<uint8_t> signatureData(authData.size() + clientDataHash.size());
             std::memcpy(signatureData.data(), authData.data(), authData.size());
@@ -89,7 +89,7 @@ namespace WebAuthN::Protocol {
             auto attCertResult = Util::Crypto::ParseCertificate(attCertBytes);
 
             if (!attCertResult) {
-                return unexpected(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
+                return MakeError(ErrAttestation().WithDetails(fmt::format("Error parsing certificate from ASN.1 data: {}", std::string(attCertResult.error()))));
             }
             auto attCert = attCertResult.value();
 
@@ -101,7 +101,7 @@ namespace WebAuthN::Protocol {
                                                                      signature);
 
             if (!signatureCheckResult || !signatureCheckResult.value()) {
-                return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
+                return MakeError(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
             }
 
             // Step 2.2 Verify that attestnCert meets the requirements in §8.2.1 Packed attestation statement certificate requirements.
@@ -109,7 +109,7 @@ namespace WebAuthN::Protocol {
 
             // Step 2.2.1 (from §8.2.1) Version MUST be set to 3 (which is indicated by an ASN.1 INTEGER with value 2).
             if (attCert.Version != 3) {
-                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate is incorrect version"));
+                return MakeError(ErrAttestationCertificate().WithDetails("Attestation Certificate is incorrect version"));
             }
 
             // Step 2.2.2 (from §8.2.1) Subject field MUST be set to:
@@ -119,26 +119,26 @@ namespace WebAuthN::Protocol {
 
             // TODO: Find a good, useable, country code library. For now, check stringy-ness
             if (attCert.Subject.Country.empty()) {
-                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Country Code is invalid"));
+                return MakeError(ErrAttestationCertificate().WithDetails("Attestation Certificate Country Code is invalid"));
             }
 
             // Subject-O
             // Legal name of the Authenticator vendor (UTF8String)
             if (attCert.Subject.Organization.empty()) {
-                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Organization is invalid"));
+                return MakeError(ErrAttestationCertificate().WithDetails("Attestation Certificate Organization is invalid"));
             }
 
             // Subject-OU
             // Literal string “Authenticator Attestation” (UTF8String)
             if (attCert.Subject.OrganizationalUnit != "Authenticator Attestation") {
                 // TODO: Implement a return error when I'm more certain this is general practice
-                //return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate OrganizationalUnit is invalid"));
+                //return MakeError(ErrAttestationCertificate().WithDetails("Attestation Certificate OrganizationalUnit is invalid"));
             }
 
             // Subject-CN
             //  A UTF8String of the vendor’s choosing
             if (attCert.Subject.CommonName.empty()) {
-                return unexpected(ErrAttestationCertificate().WithDetails("Attestation Certificate Common Name is invalid"));
+                return MakeError(ErrAttestationCertificate().WithDetails("Attestation Certificate Common Name is invalid"));
             }
 
             // TODO: And then what
@@ -154,7 +154,7 @@ namespace WebAuthN::Protocol {
                 if (extension.ID == ID_FIDO) {
 
                     if (extension.IsCritical) {
-                        return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
+                        return MakeError(ErrInvalidAttestation().WithDetails("Attestation certificate FIDO extension marked as critical"));
                     }
                     foundAAGUID = extension.Value;
                 }
@@ -168,13 +168,13 @@ namespace WebAuthN::Protocol {
             if (!foundAAGUID.empty()) {
 
                 if (aaguid != foundAAGUID) {
-                    return unexpected(ErrInvalidAttestation().WithDetails("Certificate AAGUID does not match Auth Data certificate"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("Certificate AAGUID does not match Auth Data certificate"));
                 }
             }
 
             // Step 2.2.4 The Basic Constraints extension MUST have the CA component set to false.
             if (attCert.IsCA) {
-                return unexpected(ErrInvalidAttestation().WithDetails("Attestation certificate's Basic Constraints marked as CA"));
+                return MakeError(ErrInvalidAttestation().WithDetails("Attestation certificate's Basic Constraints marked as CA"));
             }
 
             // Note for 2.2.5 An Authority Information Access (AIA) extension with entry id-ad-ocsp and a CRL
@@ -194,17 +194,17 @@ namespace WebAuthN::Protocol {
                                 const std::vector<uint8_t>& clientDataHash, 
                                 const std::vector<uint8_t>& ecdaaKeyID) noexcept {
 
-            return unexpected(ErrNotSpecImplemented());
+            return MakeError(ErrNotSpecImplemented());
         }
 
-        static inline std::optional<ErrorType>
+        static inline OptionalError
         _VerifyKeyAlgorithm(const int64_t keyAlgorithm, const int64_t attestedAlgorithm) noexcept {
             
             if (keyAlgorithm != attestedAlgorithm) {
-                return ErrInvalidAttestation().WithDetails("Public key algorithm does not equal att statement algorithm");
+                return MakeOptionalError(ErrInvalidAttestation().WithDetails("Public key algorithm does not equal att statement algorithm"));
             }
 
-            return std::nullopt;
+            return NoError;
         }
 
         static inline expected<std::tuple<std::string, std::optional<json>>>
@@ -225,30 +225,30 @@ namespace WebAuthN::Protocol {
             auto ok = WebAuthNCOSE::ParsePublicKey(pubKey);
 
             if (!ok) {
-                return unexpected(ErrAttestationFormat().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
+                return MakeError(ErrAttestationFormat().WithDetails(fmt::format("Error parsing the public key: {}\n", std::string(ok.error()))));
             }
             auto key = ok.value();
-            std::optional<ErrorType> err = std::nullopt;
+            OptionalError err = NoError;
             auto success = false;
             auto vpk = WebAuthNCOSE::KeyCast(key, success);
 
             if (success) {
                 err = _VerifyKeyAlgorithm(vpk.Value.Algorithm, alg);
             } else {
-                err = ErrUnsupportedKey();
+                err = MakeOptionalError(ErrUnsupportedKey());
             }
 
             if (err) {
-                return unexpected(err.value());
+                return MakeError(err.value());
             }
             auto validationResult = WebAuthNCOSE::VerifySignature(key, verificationData, signature);
 
             if (validationResult && !validationResult.value()) {
-                return unexpected(ErrInvalidAttestation().WithDetails("Unable to verify signature"));
+                return MakeError(ErrInvalidAttestation().WithDetails("Unable to verify signature"));
             }
 
             if (!validationResult) {
-                return unexpected(validationResult.error());
+                return MakeError(validationResult.error());
             }
 
             return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicSurrogate).get<std::string>(), std::nullopt);
@@ -286,13 +286,13 @@ namespace WebAuthN::Protocol {
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("alg") == atts.cend()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving alg value"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving alg value"));
                 }
                 auto alg = atts["alg"].get<int64_t>();
 
                 // Get the sig value - A byte string containing the attestation signature.
                 if (atts.find("sig") == atts.cend() || !atts["sig"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
                 }
                 auto sig = atts["sig"].get_binary();
 
@@ -317,7 +317,7 @@ namespace WebAuthN::Protocol {
                 // Step 4. If neither x5c nor ecdaaKeyId is present, self attestation is in use.
                 return _HandleSelfAttestation(alg, att.AuthData.AttData.CredentialPublicKey, att.RawAuthData, clientDataHash, sig);
             } else {
-                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
+                return MakeError(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
         }
     } // namespace

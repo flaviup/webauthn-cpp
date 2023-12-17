@@ -52,7 +52,7 @@ namespace WebAuthN::WebAuthN {
 
             if (err) {
 
-                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
+                return MakeError(ErrorType(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value()))));
             }
             OpenSSL_add_all_algorithms();
             ERR_load_crypto_strings();
@@ -65,7 +65,7 @@ namespace WebAuthN::WebAuthN {
             auto sodiumInit = sodium_init();
 
             if (sodiumInit < 0) {
-                return unexpected(fmt::format("Could not initialize sodium: error {}", sodiumInit));
+                return MakeError(ErrorType(fmt::format("Could not initialize sodium: error {}", sodiumInit)));
             }
 
             return WebAuthNType(config);
@@ -103,13 +103,13 @@ namespace WebAuthN::WebAuthN {
             auto err = _config.Validate();
 
             if (err) {
-                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value())));
+                return MakeError(ErrorType(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(err.value()))));
             }
 
             auto challengeCreationResult = Protocol::CreateChallenge();
 
             if (!challengeCreationResult) {
-                return unexpected(challengeCreationResult.error());
+                return MakeError(challengeCreationResult.error());
             }
             Util::URLEncodedBase64Type challenge = challengeCreationResult.value();
             Util::URLEncodedBase64Type entityUserID{};
@@ -121,7 +121,7 @@ namespace WebAuthN::WebAuthN {
                 auto idEncodingResult = Util::URLEncodedBase64_Encode(user.GetWebAuthNID());
 
                 if (!idEncodingResult) {
-                    return unexpected(idEncodingResult.error());
+                    return MakeError(idEncodingResult.error());
                 }
                 entityUserID = idEncodingResult.value();
             }
@@ -192,7 +192,7 @@ namespace WebAuthN::WebAuthN {
             auto parsedResponse = Protocol::ParseCredentialCreationResponse(response);
 
             if (!parsedResponse) {
-                return unexpected(parsedResponse.error());
+                return MakeError(parsedResponse.error());
             }
 
             return _CreateCredential(user, sessionData, parsedResponse.value());
@@ -328,7 +328,7 @@ namespace WebAuthN::WebAuthN {
 
             if (credentials.empty()) { // If the user does not have any credentials, we cannot perform an assertion.
 
-                return unexpected(ErrBadRequest().WithDetails("Found no credentials for user"));
+                return MakeError(ErrBadRequest().WithDetails("Found no credentials for user"));
             }
             std::vector<Protocol::CredentialDescriptorType> allowedCredentials(credentials.size());
             size_t n = 0;
@@ -357,7 +357,7 @@ namespace WebAuthN::WebAuthN {
             auto parsedResponse = Protocol::ParseCredentialRequestResponse(response);   
 
             if (!parsedResponse) {
-                return unexpected(parsedResponse.error());
+                return MakeError(parsedResponse.error());
             }
 
             return ValidateLogin(user, sessionData, parsedResponse.value());
@@ -370,11 +370,11 @@ namespace WebAuthN::WebAuthN {
                       const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
             if (user.GetWebAuthNID() != sessionData.UserID.value()) {
-                return unexpected(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
+                return MakeError(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
 
             if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
-                return unexpected(ErrBadRequest().WithDetails("Session has Expired"));
+                return MakeError(ErrBadRequest().WithDetails("Session has Expired"));
             }
 
             return _ValidateLogin(user, sessionData, parsedResponse);
@@ -388,7 +388,7 @@ namespace WebAuthN::WebAuthN {
             auto parsedResponse = Protocol::ParseCredentialRequestResponse(response);   
 
             if (!parsedResponse) {
-                return unexpected(parsedResponse.error());
+                return MakeError(parsedResponse.error());
             }
 
             return ValidateDiscoverableLogin(discoverableUserHandler, sessionData, parsedResponse.value());
@@ -401,16 +401,16 @@ namespace WebAuthN::WebAuthN {
                                   const Protocol::ParsedCredentialAssertionDataType& parsedResponse) noexcept {
 
             if (sessionData.UserID && !sessionData.UserID.value().empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login"));
+                return MakeError(ErrBadRequest().WithDetails("Session was not initiated as a client-side discoverable login"));
             }
 
             if (parsedResponse.Response.UserHandle.empty()) {
-                return unexpected(ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle"));
+                return MakeError(ErrBadRequest().WithDetails("Client-side Discoverable Assertion was attempted with a blank User Handle"));
             }
             auto handlerResult = discoverableUserHandler(parsedResponse.RawID, parsedResponse.Response.UserHandle);
 
             if (!handlerResult || handlerResult.value() == nullptr) {
-                return unexpected(ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
+                return MakeError(ErrBadRequest().WithDetails("Failed to lookup Client-side Discoverable Credential"));
             }
 
             return _ValidateLogin(*handlerResult.value(), sessionData, parsedResponse);
@@ -530,17 +530,17 @@ namespace WebAuthN::WebAuthN {
                           const Protocol::ParsedCredentialCreationDataType& parsedResponse) noexcept {
             
             if (user.GetWebAuthNID() != sessionData.UserID) {
-                return unexpected(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
+                return MakeError(ErrBadRequest().WithDetails("ID mismatch for User and Session"));
             }
 
             if (sessionData.Expires != 0LL && sessionData.Expires <= Util::Time::Timestamp()) {
-                return unexpected(ErrBadRequest().WithDetails("Session has Expired"));
+                return MakeError(ErrBadRequest().WithDetails("Session has Expired"));
             }
             auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
             auto verificationResultError = parsedResponse.Verify(sessionData.Challenge, shouldVerifyUser, _config.RPID, _config.RPOrigins);
 
             if (verificationResultError) {
-                return unexpected(verificationResultError.value());
+                return MakeError(verificationResultError.value());
             }
 
             return CredentialType::Create(parsedResponse);
@@ -557,12 +557,12 @@ namespace WebAuthN::WebAuthN {
             auto validationResult = _config.Validate();
 
             if (validationResult) {
-                return unexpected(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(validationResult.value())));
+                return MakeError(ErrorType(fmt::format(ERR_FMT_CONFIG_VALIDATE, std::string(validationResult.value()))));
             }
             auto challengeCreationResult = Protocol::CreateChallenge();
 
             if (!challengeCreationResult) {
-                return unexpected(challengeCreationResult.error());
+                return MakeError(challengeCreationResult.error());
             }
             auto challenge = challengeCreationResult.value();
             auto assertion = Protocol::CredentialAssertionType{
@@ -631,7 +631,7 @@ namespace WebAuthN::WebAuthN {
                                                         [&allowedCredentialID](const CredentialType& userCredential) { return userCredential.ID == allowedCredentialID; });
 
                     if (!credentialsOwned) {
-                        return unexpected(ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
+                        return MakeError(ErrBadRequest().WithDetails("User does not own all credentials from the allowedCredentialList"));
                     }
                 }
                 credentialFound = std::any_of(sessionData.AllowedCredentialIDs.value().cbegin(), 
@@ -639,7 +639,7 @@ namespace WebAuthN::WebAuthN {
                                               [&parsedResponseRawID](const std::vector<uint8_t>& allowedCredentialID) { return allowedCredentialID == parsedResponseRawID; });
 
                 if (!credentialFound) {
-                    return unexpected(ErrBadRequest().WithDetails("User does not own the credential returned"));
+                    return MakeError(ErrBadRequest().WithDetails("User does not own the credential returned"));
                 }
             }
 
@@ -650,7 +650,7 @@ namespace WebAuthN::WebAuthN {
             auto userHandle = parsedResponse.Response.UserHandle;
             
             if (!userHandle.empty() && userHandle != user.GetWebAuthNID()) {
-                return unexpected(ErrBadRequest().WithDetails("userHandle and User ID do not match"));
+                return MakeError(ErrBadRequest().WithDetails("userHandle and User ID do not match"));
             }
 
             // Step 3. Using credential’s id attribute (or the corresponding rawId, if base64url encoding is inappropriate
@@ -662,7 +662,7 @@ namespace WebAuthN::WebAuthN {
             credentialFound = credIter != userCredentials.end();
 
             if (!credentialFound) {
-                return unexpected(ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));
+                return MakeError(ErrBadRequest().WithDetails("Unable to find the credential for the returned credential ID"));
             }
             CredentialType& credential = *credIter;
             auto shouldVerifyUser = (sessionData.UserVerification == Protocol::UserVerificationRequirementType::Required);
@@ -671,7 +671,7 @@ namespace WebAuthN::WebAuthN {
             auto appIDResult = parsedResponse.GetAppID(sessionData.Extensions, credential.AttestationType);
 
             if (!appIDResult) {
-                return unexpected(appIDResult.error());
+                return MakeError(appIDResult.error());
             }
             auto appID = appIDResult.value();
 
@@ -679,7 +679,7 @@ namespace WebAuthN::WebAuthN {
             auto validError = parsedResponse.Verify(sessionData.Challenge, rpID, rpOrigins, appID, shouldVerifyUser, credential.PublicKey);
 
             if (validError) {
-                return unexpected(validError.value());
+                return MakeError(validError.value());
             }
 
             // Handle step 17.

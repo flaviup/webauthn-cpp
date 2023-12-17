@@ -34,19 +34,19 @@ namespace WebAuthN::Protocol {
             if (std::any_of(att.AuthData.AttData.AAGUID.cbegin(), 
                             att.AuthData.AttData.AAGUID.cend(),
                             [](const uint8_t& b) { return b != 0; })) {
-                return unexpected(ErrUnsupportedAlgorithm().WithDetails("U2F attestation format AAGUID not set to 0x00"s));
+                return MakeError(ErrUnsupportedAlgorithm().WithDetails("U2F attestation format AAGUID not set to 0x00"s));
             }
             auto attCertPubKeyResult = Util::Crypto::ParseCertificateECPublicKeyInfo(att.AuthData.AttData.CredentialPublicKey);
 
             if (!attCertPubKeyResult) {
-                return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing certificate public key from ASN.1 data: {}", std::string(attCertPubKeyResult.error()))));
+                return MakeError(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing certificate public key from ASN.1 data: {}", std::string(attCertPubKeyResult.error()))));
             }
             const auto& [algoNid, curveNid, xCoord, yCoord] = attCertPubKeyResult.value();
             auto algo = WebAuthNCOSE::COSEAlgorithmIdentifierTypeFromNID(algoNid);
 
             if (algo != WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256 &&
                 algo != WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K) {
-                return unexpected(ErrUnsupportedAlgorithm().WithDetails("Non-ES256 Public Key algorithm used"));
+                return MakeError(ErrUnsupportedAlgorithm().WithDetails("Non-ES256 Public Key algorithm used"));
             }
 
             // U2F Step 1. Verify that attStmt is valid CBOR conforming to the syntax defined above
@@ -64,12 +64,12 @@ namespace WebAuthN::Protocol {
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("x5c") == atts.cend()) { // If x5c is not present, return an error
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving x5c value"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving x5c value"));
                 }
                 auto x5c = atts["x5c"];
 
                 if (x5c.empty()) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
 
                 // U2F Step 2. (1) Check that x5c has exactly one element and let attCert be that element. (2) Let certificate public
@@ -78,14 +78,14 @@ namespace WebAuthN::Protocol {
 
                 // Step 2.1
                 if (x5c.size() > 1) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Received more than one element in x5c values"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Received more than one element in x5c values"));
                 }
 
                 // Check for "sig" which is The attestation signature. The signature was calculated over the (raw) U2F
                 // registration response message https://www.w3.org/TR/webauthn/#biblio-fido-u2f-message-formats]
                 // received by the client from the authenticator.
                 if (atts.find("sig") == atts.cend() || !atts["sig"].is_binary()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Error retrieving sig value"));
                 }
                 auto signature = atts["sig"].get_binary();
                 
@@ -101,14 +101,14 @@ namespace WebAuthN::Protocol {
                 try {
                     attCertBytes = x5c[0].get_binary();
                 } catch (const std::exception&) {
-                    return unexpected(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
+                    return MakeError(ErrAttestation().WithDetails("Error getting certificate from x5c cert chain"));
                 }
 
                 // Step 2.3
                 attCertPubKeyResult = Util::Crypto::ParseCertificateECPublicKeyInfo(attCertBytes);
 
                 if (!attCertPubKeyResult) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing certificate public key from ASN.1 data: {}", std::string(attCertPubKeyResult.error()))));
+                    return MakeError(ErrInvalidAttestation().WithDetails(fmt::format("Error parsing certificate public key from ASN.1 data: {}", std::string(attCertPubKeyResult.error()))));
                 }
                 const auto& [algoNid, curveNid, xCoord, yCoord] = attCertPubKeyResult.value();
                 auto algo = WebAuthNCOSE::COSEAlgorithmIdentifierTypeFromNID(algoNid);
@@ -118,7 +118,7 @@ namespace WebAuthN::Protocol {
                 if (algo != WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256 &&
                     algo != WebAuthNCOSE::COSEAlgorithmIdentifierType::AlgES256K &&
                     (!curve || curve.value() != WebAuthNCOSE::COSEEllipticCurveType::P256)) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Attestation certificate is in invalid format"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Attestation certificate is in invalid format"));
                 }
 
                 // Step 3. Extract the claimed rpIdHash from authenticatorData, and the claimed credentialId and credentialPublicKey
@@ -142,7 +142,7 @@ namespace WebAuthN::Protocol {
                 // return an appropriate error.
 
                 if ((xCoord && xCoord.value().size() > 32) || (yCoord && yCoord.value().size() > 32)) {
-                    return unexpected(ErrAttestation().WithDetails("X or Y Coordinate for key is invalid length"));
+                    return MakeError(ErrAttestation().WithDetails("X or Y Coordinate for key is invalid length"));
                 }
 
                 // Let publicKeyU2F be the concatenation 0x04 || x || y.
@@ -169,14 +169,14 @@ namespace WebAuthN::Protocol {
                                                                         signature);
 
                 if (!signatureCheckResult || !signatureCheckResult.value()) {
-                    return unexpected(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
+                    return MakeError(ErrInvalidAttestation().WithDetails(signatureCheckResult ? "Signature validation error" : fmt::format("Signature validation error: {}", std::string(signatureCheckResult.error()))));
                 }
 
                 // Step 7. If successful, return attestation type Basic with the attestation trust path set to x5c.
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::optional<json>{x5c});
             }
 
-            return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
+            return MakeError(ErrAttestationFormat().WithDetails("No attestation statement provided"));
         }
     } // namespace
 

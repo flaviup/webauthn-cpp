@@ -193,18 +193,18 @@ namespace WebAuthN::Protocol {
                 auto atts = att.AttStatement.value();
 
                 if (atts.find("ver") == atts.cend()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Unable to find the version of SafetyNet"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Unable to find the version of SafetyNet"));
                 }
                 auto version = atts["ver"].get<std::string>();
 
                 if (version.empty()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Not a proper version for SafetyNet"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Not a proper version for SafetyNet"));
                 }
 
                 // TODO: provide user the ability to designate their supported versions
 
                 if (atts.find("response") == atts.cend()) {
-                    return unexpected(ErrAttestationFormat().WithDetails("Unable to find the SafetyNet response"));
+                    return MakeError(ErrAttestationFormat().WithDetails("Unable to find the SafetyNet response"));
                 }
                 auto response = atts["response"].get_binary();
                 jwt_t* jwt = nullptr;
@@ -212,7 +212,7 @@ namespace WebAuthN::Protocol {
                 auto ret = jwt_decode_2(&jwt, responseStr.data(), _SafetyNetJwtKeyProvider);
 
                 if (ret != 0 || jwt == nullptr) {
-                    return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
                 }
 
                 // marshall the JWT payload into the SafetyNet response json
@@ -230,7 +230,7 @@ namespace WebAuthN::Protocol {
                         jwt_free_str(grants);
                         jwt_free(jwt);
 
-                        return unexpected(ErrAttestationFormat().WithDetails(fmt::format("Error parsing the SafetyNet response", ex.what())));
+                        return MakeError(ErrAttestationFormat().WithDetails(fmt::format("Error parsing the SafetyNet response", ex.what())));
                     }
                     jwt_free_str(grants);
                 }
@@ -246,7 +246,7 @@ namespace WebAuthN::Protocol {
                 if (!nonceBytesResult || !Util::StringCompare::ConstantTimeEqual(nonceBuffer, nonceBytesResult.value())) {
 
                     jwt_free(jwt);
-                    return unexpected(ErrInvalidAttestation().WithDetails("Invalid nonce for in SafetyNet response"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("Invalid nonce for in SafetyNet response"));
                 }
 
                 // §8.5.4 Let attestationCert be the attestation certificate (https://www.w3.org/TR/webauthn/#attestation-certificate)
@@ -254,19 +254,19 @@ namespace WebAuthN::Protocol {
                 jwt_free(jwt);
 
                 if (certData.empty()) {
-                    return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
                 }
 
                 // §8.5.5 Verify that attestationCert is issued to the hostname "attest.android.com"
                 auto certVerifHostnameResult = Util::Crypto::VerifyCertificateHostname(certData, "attest.android.com");
 
                 if (!certVerifHostnameResult || !certVerifHostnameResult.value()) {
-                    return unexpected(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("Error finding cert issued to correct hostname"));
                 }
 
                 // §8.5.6 Verify that the ctsProfileMatch attribute in the payload of response is true.
                 if (!safetyNetResponse.CtsProfileMatch) {
-                    return unexpected(ErrInvalidAttestation().WithDetails("ctsProfileMatch attribute of the JWT payload is false"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("ctsProfileMatch attribute of the JWT payload is false"));
                 }
 
                 // Verify sanity of timestamp in the payload
@@ -275,13 +275,13 @@ namespace WebAuthN::Protocol {
                 
                 if (safetyNetResponse.TimestampMs > now) {
                     // zero tolerance for post-dated timestamps
-                    return unexpected(ErrInvalidAttestation().WithDetails("SafetyNet response with timestamp after current time"));
+                    return MakeError(ErrInvalidAttestation().WithDetails("SafetyNet response with timestamp after current time"));
                 } else if (safetyNetResponse.TimestampMs < oneMinuteAgo) {
 
                     // allow old timestamp for testing purposes
                     // TODO: Make this user configurable
                     if (Metadata::Conformance) {
-                        return unexpected(ErrInvalidAttestation().WithDetails("SafetyNet response with timestamp before one minute ago"));
+                        return MakeError(ErrInvalidAttestation().WithDetails("SafetyNet response with timestamp before one minute ago"));
                     }
                 }
 
@@ -289,7 +289,7 @@ namespace WebAuthN::Protocol {
                 // trust path attestationCert.
                 return std::make_tuple(json(Metadata::AuthenticatorAttestationType::BasicFull).get<std::string>(), std::nullopt);
             } else {
-                return unexpected(ErrAttestationFormat().WithDetails("No attestation statement provided"));
+                return MakeError(ErrAttestationFormat().WithDetails("No attestation statement provided"));
             }
         }
     } // namespace

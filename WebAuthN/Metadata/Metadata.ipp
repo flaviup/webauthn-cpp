@@ -2110,32 +2110,56 @@ namespace WebAuthN::Metadata {
                 std::move(type),
                 std::move(details)) {
         }
+
+        static void Id() noexcept {}
+
+        virtual uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrIntermediateCertRevoked : public MetadataError {
+    struct ErrIntermediateCertRevoked final : public MetadataError {
 
         ErrIntermediateCertRevoked() noexcept :
             MetadataError(
                 "intermediate_revoked",
                 "Intermediate certificate is on issuers revocation list") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrLeafCertRevoked : public MetadataError {
+    struct ErrLeafCertRevoked final : public MetadataError {
 
         ErrLeafCertRevoked() noexcept :
             MetadataError(
                 "leaf_revoked",
                 "Leaf certificate is on issuers revocation list") {
         }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
+        }
     };
 
-    struct ErrCRLUnavailable : public MetadataError {
+    struct ErrCRLUnavailable final : public MetadataError {
 
         ErrCRLUnavailable() noexcept :
             MetadataError(
                 "crl_unavailable",
                 "Certificate revocation list is unavailable") {
+        }
+
+        static void Id() noexcept {}
+
+        uintptr_t GetClassId() const noexcept override {
+            return reinterpret_cast<uintptr_t>(Id);
         }
     };
 

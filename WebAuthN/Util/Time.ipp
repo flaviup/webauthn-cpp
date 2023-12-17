@@ -56,7 +56,7 @@ namespace WebAuthN::Util::Time {
         }
 
         if (result < 6) {
-            return unexpected("Failed to parse ISO8601 date time string "s + dateTime);
+            return MakeError(ErrorType("Failed to parse ISO8601 date time string "s + dateTime));
         }
 
         std::tm t{
